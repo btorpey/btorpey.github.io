@@ -4,7 +4,7 @@
   <title><![CDATA[Category: wallst | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/wallst/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-22T18:19:49-05:00</updated>
+  <updated>2014-02-22T18:21:05-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,21 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[What's Old Is New Again]]></title>
+    <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
+    <updated>2014-02-11T20:07:41-05:00</updated>
+    <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
+    <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
+you see something like this…</p>
+
+<!--more-->
+
+
+<p><img class="center <a" src="href="http://edison.rutgers.edu/images/xx/xx1325.jpg">http://edison.rutgers.edu/images/xx/xx1325.jpg</a>"></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[FIXing less]]></title>

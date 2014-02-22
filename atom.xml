@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-22T18:17:51-05:00</updated>
+  <updated>2014-02-22T18:19:49-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,5 +12,43 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[FIXing less]]></title>
+    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
+    <updated>2014-02-10T08:37:11-05:00</updated>
+    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
+    <content type="html"><![CDATA[<p>Here&rsquo;s a handy tip for those who (like me) spend a fair amount of time staring
+at FIX logs.</p>
+
+<!--more-->
+
+
+<p>FIX is the protocol that everybody loves to hate, but it doesn&rsquo;t look like it&rsquo;s
+going anywhere, so I guess we all just need to get over it and learn to live with it.</p>
+
+<p>One of the things that is hard to live with, though &mdash; at least for me &mdash; is the
+visual cacophony that results when browsing FIX logs with less.
+<img class="center" src="http://btorpey.github.io/images/less-before.png"></p>
+
+<p>It turns out that it&rsquo;s possible to control how less displays the x&#8217;01&#8217;
+delimiters<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> to make this chore a little easier on the eyes.  In my case, I
+use the following in my .bash_profile:</p>
+
+<p><code>export LESSBINFMT="*u%x"</code></p>
+
+<p>This dials down the visual clutter to a level that I find much easier to deal
+with.
+<img class="center" src="http://btorpey.github.io/images/less-after.png"></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>Note that the man page for less mentions that it&rsquo;s possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I&rsquo;ve tried it &mdash; YMMV.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+]]></content>
+  </entry>
   
 </feed>

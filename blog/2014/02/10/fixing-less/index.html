@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Blog Archive - Confessions of a Wall Street Programmer</title>
+  <title>FIXing less - Confessions of a Wall Street Programmer</title>
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content=" Blog Archive 2014 FIXing less
-Feb 10 2014 posted in linux, tidbits, wallst Recent Posts FIXing less ">
+  <meta name="description" content="Here&rsquo;s a handy tip for those who (like me) spend a fair amount of time staring
+at FIX logs. FIX is the protocol that everybody loves to hate, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +19,7 @@ Feb 10 2014 posted in linux, tidbits, wallst Recent Posts FIXing less ">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://btorpey.github.io/blog/archives">
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/02/10/fixing-less">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
@@ -65,35 +65,109 @@ Feb 10 2014 posted in linux, tidbits, wallst Recent Posts FIXing less ">
   <div id="main">
     <div id="content">
       <div>
-<article role="article">
+<article class="hentry" role="article">
   
   <header>
-    <h1 class="entry-title">Blog Archive</h1>
+    
+      <h1 class="entry-title">FIXing less</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-10T08:37:11-05:00" pubdate data-updated="true">Feb 10<span>th</span>, 2014</time>
+        
+      </p>
     
   </header>
-  
-  <div id="blog-archives">
 
 
+<div class="entry-content"><p>Here&rsquo;s a handy tip for those who (like me) spend a fair amount of time staring
+at FIX logs.</p>
 
-  
-  <h2>2014</h2>
-
-<article>
-  
-<h1><a href="/blog/2014/02/10/fixing-less/">FIXing less</a></h1>
-<time datetime="2014-02-10T08:37:11-05:00" pubdate><span class='month'>Feb</span> <span class='day'>10</span> <span class='year'>2014</span></time>
-
-<footer>
-  <span class="categories">posted in <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/wallst/'>wallst</a></span>
-</footer>
+<!--more-->
 
 
-</article>
+<p>FIX is the protocol that everybody loves to hate, but it doesn&rsquo;t look like it&rsquo;s
+going anywhere, so I guess we all just need to get over it and learn to live with it.</p>
+
+<p>One of the things that is hard to live with, though &mdash; at least for me &mdash; is the
+visual cacophony that results when browsing FIX logs with less.
+<img class="center" src="/images/less-before.png"></p>
+
+<p>It turns out that it&rsquo;s possible to control how less displays the x&#8217;01&#8217;
+delimiters<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> to make this chore a little easier on the eyes.  In my case, I
+use the following in my .bash_profile:</p>
+
+<p><code>export LESSBINFMT="*u%x"</code></p>
+
+<p>This dials down the visual clutter to a level that I find much easier to deal
+with.
+<img class="center" src="/images/less-after.png"></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>Note that the man page for less mentions that it&rsquo;s possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I&rsquo;ve tried it &mdash; YMMV.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
 
 </div>
 
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-10T08:37:11-05:00" pubdate data-updated="true">Feb 10<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/wallst/'>wallst</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+      
+    </p>
+  </footer>
 </article>
 
 </div>

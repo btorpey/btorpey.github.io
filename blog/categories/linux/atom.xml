@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
+  <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://btorpey.github.io/"/>
+  <updated>2014-02-22T18:19:49-05:00</updated>
+  <id>http://btorpey.github.io/</id>
+  <author>
+    <name><![CDATA[Bill Torpey]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[FIXing less]]></title>
+    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
+    <updated>2014-02-10T08:37:11-05:00</updated>
+    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
+    <content type="html"><![CDATA[<p>Here's a handy tip for those who (like me) spend a fair amount of time staring
+at FIX logs.
+
+<!--more-->
+
+FIX is the protocol that everybody loves to hate, but it doesn't look like it's
+going anywhere, so I guess we all just need to get over it and learn to live with it.
+
+One of the things that is hard to live with, though -- at least for me -- is the
+visual cacophony that results when browsing FIX logs with less.
+<img class="center" src="/images/less-before.png"> 
+
+It turns out that it's possible to control how less displays the x'01'
+delimiters[^1] to make this chore a little easier on the eyes.  In my case, I
+use the following in my .bash_profile:
+
+`export LESSBINFMT="*u%x"`
+
+This dials down the visual clutter to a level that I find much easier to deal
+with.
+<img class="center" src="/images/less-after.png"> 
+
+
+[^1]: Note that the man page for less mentions that it's possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I've tried it -- YMMV.
+</p>
+]]></content>
+  </entry>
+  
+</feed>

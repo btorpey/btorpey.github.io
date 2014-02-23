@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T15:00:39-05:00</updated>
+  <updated>2014-02-23T15:02:43-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -485,6 +485,66 @@ researched this article.
 [^6]:  Note that the program must be compiled, as well as run, on the target system -- it uses the presence or absence of pre-processor symbols to determine whether a particular clock source is available.
 
 [^7]: CentOS 6.5 running on a Dell 490 with dual Xeon 5150's at 2.6 GHz.
+
+</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[You may ask yourself - "How did I get here?"]]></title>
+    <link href="http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/"/>
+    <updated>2014-02-13T18:02:27-05:00</updated>
+    <id>http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here</id>
+    <content type="html"><![CDATA[<p>In addition to being a great line from David Byrne and Talking Heads (from "Life
+During Wartime"), this is also a question I often ask myself when
+looking at log files. Today's tip is worth the price of the whole blog (i.e.,
+free), but I predict that you'll be glad you know it.
+
+<!--more-->
+
+It's pretty common to pipe the output of a command, or string of commands, to a
+file to have a record of what happened when executing the command, something
+like this:
+
+`big_gnarly_command_line_with_options 2>&1 | tee logfile.out`
+
+That works great for capturing the *output* of the command, but what about the
+big_gnarly_command_line_with_options itself?
+
+Try this instead:
+
+` bash -x -c "big_gnarly_command_line_with_options" 2>&1 | tee logfile.out`
+
+
+Now, your output file will look like this:
+
+`+ big_gnarly_command_line_with_options`
+`... output of big_gnarly_command_line_with_options ...`
+
+If your gnarly command is actually several gnarly commands, enclose the whole
+gnarly list in parentheses and separate with semicolons (or &&), like so:
+
+` bash -x -c "(big_gnarly_command_line_with_options_1;
+big_gnarly_command_line_with_options_2)" 2>&1 | tee logfile.out`
+
+Normal quoting rules apply:
+
+-   If you enclose the command(s) in double-quotes ("), variable substitution
+    will be done on the command line
+
+-   If you need to include a double-quote within double-quotes, you need to
+    escape it (with the backslash (\\) character)
+
+-   If you enclose the command line(s) in single quotes ('), no variable
+    substitution is done
+
+-   There is no way to include a single-quote within single-quotes, but there is
+    a trick that gives a similar effect, that you can read about HERE.
+
+Now you'll never need to ask yourself "How did I get here"?
+
+  
+  
 
 </p>
 ]]></content>

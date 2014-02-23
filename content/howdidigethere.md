@@ -21,7 +21,7 @@ Try this instead:
 
 Now, your output file will look like this:
 
-`+ big_gnarly_command_line_with_options`
+`+ big_gnarly_command_line_with_options`<br>
 `... output of big_gnarly_command_line_with_options ...`
 
 If your gnarly command is actually several gnarly commands, enclose the whole
@@ -42,7 +42,7 @@ Normal quoting rules apply:
     substitution is done
 
 -   There is no way to include a single-quote within single-quotes, but there is
-    a trick that gives a similar effect, that you can read about HERE.
+    a trick that gives a similar effect, that you can read about here (<http://stackoverflow.com/a/1250279/203044>).
 
 Now you'll never need to ask yourself "How did I get here"?
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T15:08:45-05:00</updated>
+  <updated>2014-02-23T15:09:27-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -525,7 +525,7 @@ big_gnarly_command_line_with_options itself?</p>
 
 <p>Now, your output file will look like this:</p>
 
-<p><code>+ big_gnarly_command_line_with_options</code>
+<p><code>+ big_gnarly_command_line_with_options</code><br>
 <code>... output of big_gnarly_command_line_with_options ...</code></p>
 
 <p>If your gnarly command is actually several gnarly commands, enclose the whole
@@ -544,7 +544,7 @@ escape it (with the backslash (\) character)</p></li>
 <li><p>If you enclose the command line(s) in single quotes (&lsquo;), no variable
 substitution is done</p></li>
 <li><p>There is no way to include a single-quote within single-quotes, but there is
-a trick that gives a similar effect, that you can read about HERE.</p></li>
+a trick that gives a similar effect, that you can read about here (<a href="http://stackoverflow.com/a/1250279/203044">http://stackoverflow.com/a/1250279/203044</a>).</p></li>
 </ul>
 
 

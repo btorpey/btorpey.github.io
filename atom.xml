@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T14:46:09-05:00</updated>
+  <updated>2014-02-23T14:58:03-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -163,8 +163,7 @@ scheduling interval in most Linux variants is either 1 ms or 10 ms).</p></li>
 
 <p>To see the clock sources that are available on the system:</p>
 
-<figure class='code'><figcaption><span>linenos:false </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocsource0/available_clocksource
 </span><span class='line'><span class="go">tsc hpet acpi_pm</span>

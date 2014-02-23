@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T14:46:09-05:00</updated>
+  <updated>2014-02-23T14:58:03-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -161,8 +161,7 @@ relatively low overhead, there are other clock sources that can be used:
 
 To see the clock sources that are available on the system:
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>linenos:false </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocsource0/available_clocksource
 </span><span class='line'><span class="go">tsc hpet acpi_pm</span>

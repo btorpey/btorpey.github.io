@@ -140,7 +140,7 @@ relatively low overhead, there are other clock sources that can be used:
 
 To see the clock sources that are available on the system:
 
-{% codeblock lang:console linenos:false %}
+{% codeblock lang:console %}
 $ cat /sys/devices/system/clocksource/clocsource0/available_clocksource
 tsc hpet acpi_pm
 {% endcodeblock %}

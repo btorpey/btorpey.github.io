@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T15:09:27-05:00</updated>
+  <updated>2014-02-23T15:11:22-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -1410,6 +1410,26 @@ with.
 </ol>
 </div>
 
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Beyond Compare]]></title>
+    <link href="http://btorpey.github.io/blog/2014/01/29/beyond-compare/"/>
+    <updated>2014-01-29T08:42:44-05:00</updated>
+    <id>http://btorpey.github.io/blog/2014/01/29/beyond-compare</id>
+    <content type="html"><![CDATA[<p>I&rsquo;ve been a happy user of <a href="http://scootersoftware.com">Beyond Compare</a> on Windows for many years, so one of my big concerns when switching to Mac a while ago was, what was I going to use in its place?</p>
+
+<!--more-->
+
+
+<p>Well, the gods smiled on me &mdash; Scooter Software released an alpha version of Beyond Compare for Mac right around the time I made the switch.  (And a good thing, too!  I tried everything else out there, and nothing else even comes close).</p>
+
+<p>So, what is Beyond Compare?  It&rsquo;s a comparison program that does visual &ldquo;diffs&rdquo; of directories and folders.  I use it to backup and sync my machines, for reviewing changes prior to commit, and in general just to keep track of what I&rsquo;ve changed as I work.  If you&rsquo;ve never used a visual diff like BC, trust me, you don&rsquo;t know what you&rsquo;re missing.</p>
+
+<p><img src="http://www.scootersoftware.com/images/FolderCompare.png"></p>
+
+<p>It&rsquo;s now out in public beta, and comes highly recommended (<a href="http://www.scootersoftware.com/beta.php">http://www.scootersoftware.com/beta.php</a>) &mdash; it&rsquo;s saved my <em>tuchis</em> more times than I can count.</p>
 ]]></content>
   </entry>
   

@@ -29,7 +29,7 @@ The short version is that for best results you should be using:
 
 -   For intra-machine timing, your best bet is generally going to be to read the
     TSC directly using assembler. On my test machine it takes about 100ns 
-    to read the TSC from software, so that is the limit of this method's accuracy. YMMV, of course, which is why I've included [source code] that you can use to do your own measurements.
+    to read the TSC from software, so that is the limit of this method's accuracy. YMMV, of course, which is why I've included source code (<https://github.com/btorpey/clocks.git>) that you can use to do your own measurements.
     
 The following sections will talk about how clocks work on Linux, how to access
 the various clocks from software, and how to measure the overhead of acessing
@@ -74,7 +74,7 @@ time and the tick count kept by the TSC.
 
 The other thing that happens when the system boots is that the TSC (Time Stamp
 Counter) starts running. The TSC is a register counter that is also driven from
-a crystal oscillator  the same oscillator that is used to generate the clock
+a crystal oscillator -- the same oscillator that is used to generate the clock
 pulses that drive the CPU(s). As such it runs at the frequency of the CPU, so
 for instance a 2GHz clock will tick twice per nanosecond.
 
@@ -171,7 +171,7 @@ strictly speaking these clocks are a mixture of hardware and software. At the
 bottom of it all there's some kind of hardware device that generates periodic
 timing pulses, which are then counted to create the clock. In some cases (e.g.,
 the TSC) the counting is done in hardware, while in others (e.g., jiffies) the
-counting is done in software).
+counting is done in software.
 
 Wall-Clock Time
 ---------------
@@ -309,7 +309,9 @@ by calling an assembler stub that is linked with the C/C++ program. (An example
 can be found at Agner Fog's excellent website (<http://agner.org/optimize/#asmlib>).
 
 Calling gettimeofday() or clock_gettime() is pretty straightforward -- see the
-accompanying clocks.c source file for examples.
+accompanying clocks.c source file (<https://github.com/btorpey/clocks/blob/master/clocks.c>)for examples.
+
+
 
 ### Java
 

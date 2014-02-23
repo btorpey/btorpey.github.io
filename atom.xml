@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T15:11:22-05:00</updated>
+  <updated>2014-02-23T18:28:36-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -46,7 +46,7 @@ boot time.</p></li>
 same machine (intra-machine timing).</p></li>
 <li><p>For intra-machine timing, your best bet is generally going to be to read the
 TSC directly using assembler. On my test machine it takes about 100ns
-to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included [source code] that you can use to do your own measurements.</p></li>
+to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included source code (<a href="https://github.com/btorpey/clocks.git">https://github.com/btorpey/clocks.git</a>) that you can use to do your own measurements.</p></li>
 </ul>
 
 
@@ -92,7 +92,7 @@ time and the tick count kept by the TSC.</p>
 
 <p>The other thing that happens when the system boots is that the TSC (Time Stamp
 Counter) starts running. The TSC is a register counter that is also driven from
-a crystal oscillator  the same oscillator that is used to generate the clock
+a crystal oscillator &mdash; the same oscillator that is used to generate the clock
 pulses that drive the CPU(s). As such it runs at the frequency of the CPU, so
 for instance a 2GHz clock will tick twice per nanosecond.</p>
 
@@ -199,7 +199,7 @@ strictly speaking these clocks are a mixture of hardware and software. At the
 bottom of it all there&rsquo;s some kind of hardware device that generates periodic
 timing pulses, which are then counted to create the clock. In some cases (e.g.,
 the TSC) the counting is done in hardware, while in others (e.g., jiffies) the
-counting is done in software).</p>
+counting is done in software.</p>
 
 <h2>Wall-Clock Time</h2>
 
@@ -344,7 +344,7 @@ by calling an assembler stub that is linked with the C/C++ program. (An example
 can be found at Agner Fog&rsquo;s excellent website (<a href="http://agner.org/optimize/#asmlib">http://agner.org/optimize/#asmlib</a>).</p>
 
 <p>Calling gettimeofday() or clock_gettime() is pretty straightforward &mdash; see the
-accompanying clocks.c source file for examples.</p>
+accompanying clocks.c source file (<a href="https://github.com/btorpey/clocks/blob/master/clocks.c">https://github.com/btorpey/clocks/blob/master/clocks.c</a>)for examples.</p>
 
 <h3>Java</h3>
 

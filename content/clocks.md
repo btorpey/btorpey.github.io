@@ -309,7 +309,7 @@ by calling an assembler stub that is linked with the C/C++ program. (An example
 can be found at Agner Fog's excellent website (<http://agner.org/optimize/#asmlib>).
 
 Calling gettimeofday() or clock_gettime() is pretty straightforward -- see the
-accompanying clocks.c source file (<https://github.com/btorpey/clocks/blob/master/clocks.c>)for examples.
+accompanying clocks.c source file (<https://github.com/btorpey/clocks/blob/master/clocks.c>) for examples.
 
 
 

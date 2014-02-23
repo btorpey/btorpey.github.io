@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T18:28:36-05:00</updated>
+  <updated>2014-02-23T18:32:32-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -344,7 +344,7 @@ by calling an assembler stub that is linked with the C/C++ program. (An example
 can be found at Agner Fog&rsquo;s excellent website (<a href="http://agner.org/optimize/#asmlib">http://agner.org/optimize/#asmlib</a>).</p>
 
 <p>Calling gettimeofday() or clock_gettime() is pretty straightforward &mdash; see the
-accompanying clocks.c source file (<a href="https://github.com/btorpey/clocks/blob/master/clocks.c">https://github.com/btorpey/clocks/blob/master/clocks.c</a>)for examples.</p>
+accompanying clocks.c source file (<a href="https://github.com/btorpey/clocks/blob/master/clocks.c">https://github.com/btorpey/clocks/blob/master/clocks.c</a>) for examples.</p>
 
 <h3>Java</h3>
 

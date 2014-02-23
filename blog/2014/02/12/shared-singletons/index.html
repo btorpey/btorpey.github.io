@@ -1,508 +1,98 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
-  <link href="http://btorpey.github.io/atom.xml" rel="self"/>
-  <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T15:00:39-05:00</updated>
-  <id>http://btorpey.github.io/</id>
-  <author>
-    <name><![CDATA[Bill Torpey]]></name>
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Shared Singleton's - Confessions of a Wall Street Programmer</title>
+  <meta name="author" content="Bill Torpey">
+
+  
+  <meta name="description" content="Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
+yet, there are scenarios where a singleton is just the ticket – for &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/02/12/shared-singletons">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Confessions of a Wall Street Programmer</a></h1>
+  
+    <h2>thoughts on software architecture, design, construction and testing</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:btorpey.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
     
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+      <h1 class="entry-title">Shared Singleton's</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
 
   
-  <entry>
-    <title type="html"><![CDATA[Clock Sources in Linux]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
-    <updated>2014-02-18T20:07:41-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>
-    <content type="html"><![CDATA[<p>For measuring latency in modern systems, we need to be able to measure intervals
-in microseconds at least, and preferably in nanoseconds or better. The good news
-is that with relatively modern hardware and software, it is possible to
-accurately measure time intervals as small as (some smallish number of)
-nanoseconds. But, it&rsquo;s important to understand what you&rsquo;re measuring and what
-the different edge cases might be to ensure that your results are accurate.</p>
 
-<!--more-->
 
+<time datetime="2014-02-12T17:53:36-05:00" pubdate data-updated="true">Feb 12<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
 
-<h2>TL;DR</h2>
 
-<p>The short version is that for best results you should be using:</p>
-
-<ul>
-<li><p>Linux kernel 2.6.18 or above &mdash; this is the first version that includes the
-hrtimers package. Even better is 2.6.32 or above, since this includes
-support for most of the different clock sources.</p></li>
-<li><p>A CPU with a constant, invariant TSC (time-stamp counter). This means that
-the TSC runs at a constant rate across all sockets/cores, regardless of
-frequency changes made to the CPU by power management code. If the CPU
-supports the rdtscp instruction, so much the better.</p></li>
-<li><p>The TSC should be configured as the clock source for the Linux kernel at
-boot time.</p></li>
-<li><p>You should be measuring the interval between two events that happen on the
-same machine (intra-machine timing).</p></li>
-<li><p>For intra-machine timing, your best bet is generally going to be to read the
-TSC directly using assembler. On my test machine it takes about 100ns
-to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included [source code] that you can use to do your own measurements.</p></li>
-</ul>
-
-
-<p>The following sections will talk about how clocks work on Linux, how to access
-the various clocks from software, and how to measure the overhead of acessing
-them.</p>
-
-<h3>Intra-machine vs. Inter-machine Timings</h3>
-
-<p>However, before jumping into the details of the above recommendations, I want to
-talk a little about the different problems in intra-machine vs. inter-machine
-time measurements. Intra-machine timing is the simplest scenario, since it is
-generally pretty easy to ensure that you use the same clock source for all your
-timing measurements.</p>
-
-<p>The problem with inter-machine timing is that, by definition, you&rsquo;re dealing
-with (at least) two different clock sources. (Unless of course you are timing
-round-trip intervals &mdash; if that&rsquo;s the case, you&rsquo;re lucky). And the problem with
-having two clock sources is described somewhat amusingly by Segal&rsquo;s law: &ldquo;A man
-with a watch knows what time it is. A man with two watches is never sure&rdquo;.</p>
-
-<p>For inter-machine timings, you&rsquo;re pretty much stuck with the CLOCK_REALTIME
-clock source (the source for gettimeofday), since you presumably need a clock
-that is synchronized across the two (or more) machines you are testing. In this
-case, the accuracy of your timing measurements will obviously depend on how well
-the clock synchronization works, and in all but the best cases you&rsquo;ll be
-lucky to get accuracy better than some small number of microseconds.<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
-
-<p>We&rsquo;re not going to talk much more about inter-machine timing in this article,
-but may get into it another time.</p>
-
-<h2>How Linux Keeps Time</h2>
-
-<p>With that out of the way, let&rsquo;s take a look at how Linux keeps time. It starts
-when the system boots up, when Linux gets the current time from the RTC (Real
-Time Clock). This is a hardware clock that is powered by a battery so it
-continues to run even when the machine is powered off. In most cases it is not
-particularly accurate, since it is driven from a cheap crystal oscillator whose
-frequency can vary depending on temperature and other factors.<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup> The boot
-time retrieved from the RTC is stored in memory in the kernel, and is used as an
-offset later by code that derives wall-clock time from the combination of boot
-time and the tick count kept by the TSC.</p>
-
-<p>The other thing that happens when the system boots is that the TSC (Time Stamp
-Counter) starts running. The TSC is a register counter that is also driven from
-a crystal oscillator  the same oscillator that is used to generate the clock
-pulses that drive the CPU(s). As such it runs at the frequency of the CPU, so
-for instance a 2GHz clock will tick twice per nanosecond.</p>
-
-<p>There are a number of other clock sources which we&rsquo;ll discuss later, but in most
-cases the TSC is the preferred clock source for two reasons: it is very
-accurate, and it is very cheap to query its value (since it is simply a
-register). But, there are a number of caveats to keep in mind when using the TSC
-as a timing source.</p>
-
-<ul>
-<li><p>In older CPU&rsquo;s, each core had its own TSC, so in order to be sure that two
-measurements were accurate relative to each other, it was necessary to pin
-the measuring code to a single core.</p></li>
-<li><p>Also in older CPU&rsquo;s, the TSC would run at the frequency of the CPU itself,
-and if that changed (for instance, if the frequency was dynamically reduced,
-or the CPU stopped completely for power management), the TSC on that CPU
-would also slow down or stop. (It is sometimes possible to work around this
-problem by disabling power management in the BIOS, so all CPU&rsquo;s always run
-at 100%  no more, no less).</p></li>
-</ul>
-
-
-<p>Both of these problems are solved in more recent CPUs: a <em>constant</em> TSC keeps
-all TSC&rsquo;s synchronized across all cores in a system, and an <em>invariant</em> (or
-<em>nonstop</em>) TSC keeps the TSC running at a constant rate regardless of changes in
-CPU frequency. To check whether your CPU supports one or both, execute the
-following and examine the values output in flags:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">cat /proc/cpuinfo | grep -i tsc</span>
-</span><span class='line'><span class="go">flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The flags have the following meanings:</p>
-
-<p>tsc
-:  The system has a TSC clock.</p>
-
-<p>rdtscp
-:  The rdtscp instruction is available.</p>
-
-<p>constant_tsc
-:  The TSC is synchronized across all sockets/cores.</p>
-
-<p>nonstop_tsc
-:  The TSC is not affected by power management code.</p>
-
-<h3>Other Clock Sources</h3>
-
-<p>While the TSC is generally the preferred clock source, given its accuracy and
-relatively low overhead, there are other clock sources that can be used:</p>
-
-<ul>
-<li><p>The HPET (High Precision Event Timer) was introduced by Microsoft and Intel
-around 2005. Its precision is approximately 100 ns, so it is less accurate
-than the TSC, which can provide sub-nanosecond accuracy. It is also much
-more expensive to query the HPET than the TSC.</p></li>
-<li><p>The acpi_pm clock source has the advantage that its frequency doesn&rsquo;t change
-based on power-management code, but since it runs at 3.58MHz (one tick every
-279 ns), it is not nearly as accurate as the preceding timers.</p></li>
-<li><p>jiffies signifies that the clock source is actually the same timer used for
-scheduling, and as such its resolution is typically quite poor. (The default
-scheduling interval in most Linux variants is either 1 ms or 10 ms).</p></li>
-</ul>
-
-
-<p>To see the clock sources that are available on the system:</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocsource0/available_clocksource
-</span><span class='line'><span class="go">tsc hpet acpi_pm</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>And to see which one is being used:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocksource0/current_clocksource
-</span><span class='line'><span class="go">tsc</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Typically the clock source is set by the kernel automatically at boot time, but
-you can force a particular clock source by including the appropriate
-parameter(s) on the command line that boots Linux (e.g., in
-/boot/grub/grub.conf):</p>
-
-<p><code>ro root=/dev/... *clocksource=tsc*</code></p>
-
-<p>You can also change the clock source while the system is running  e.g., to
-force use of HPET:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> <span class="nb">echo</span> hpet &gt; /sys/devices/system/clocksource/clocksource0/current_clocksource
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The above discusssion refers to what I will call hardware clocks, although
-strictly speaking these clocks are a mixture of hardware and software. At the
-bottom of it all there&rsquo;s some kind of hardware device that generates periodic
-timing pulses, which are then counted to create the clock. In some cases (e.g.,
-the TSC) the counting is done in hardware, while in others (e.g., jiffies) the
-counting is done in software).</p>
-
-<h2>Wall-Clock Time</h2>
-
-<p>The hardware (or hardware/software hybrid) clocks just discussed all have one
-thing in common: they are simply counters, and as such have no direct
-relationship to what most of us think of as time, commonly referred to as
-wall-clock time.</p>
-
-<p>To derive wall-clock time from these counters requires some fairly intricate
-software, at least if the wall-clock time is to be reasonably accurate. What
-reasonably accurate means of course depends on how important it is (i.e., how
-much money is available) to make sure that wall-clock time is accurate.</p>
-
-<p>The whole process of synchronizing multiple distributed clocks is hellishly complicated, and we&rsquo;re not going to go into it here. There are many different mechanisms for synchronizing distributed clocks, from the relatively simple (e.g., NTP<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>) to the not-quite-so-simple (e.g., PTP<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>), up to specialized proprietary solutions<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup>.</p>
-
-<p>The main point is that synchronizing a system&rsquo;s wall-clock time with other
-systems requires a way to adjust the clock to keep it in sync with its peers.
-There are two ways this can be done:</p>
-
-<ul>
-<li><p>Stepping is the process of making (one or more) discontinuous changes to
-the wall-clock component of the system time. This can cause big jumps in the
-wall-clock time, including backwards jumps, although the time adjustment
-software can often be configured to limit the size of a single change. A
-common example is a system that is configured to initialize its clock at
-boot time from an NTP server.</p></li>
-<li><p>Slewing (sometimes called disciplining) involves actually changing the frequency (or frequency
-multiplier) of the oscillator used to drive a hardware counter like the TSC.
-This can cause the clock to run relatively faster or slower, but it cannot
-jump, and so cannot go backwards.</p></li>
-</ul>
-
-
-<h2>Available Clock Sources</h2>
-
-<p>The most common way to get time information in Linux is by calling the
-gettimeofday() system call, which returns the current wall-clock time with
-microsecond precision (although not necessarily microsecond accuracy). Since
-gettimeofday() calls clock_gettime(CLOCK_REALTIME, ), the following discussion
-applies to it as well.</p>
-
-<p>Linux also implements the POSIX clock_gettime() family of functions, which let
-you query different clock sources, including:</p>
-
-<table id="mytab">
-<tbody>
-<tr>
-  <td>CLOCK_REALTIME </td>
-  <td>Represents wall-clock time. Can be both stepped and slewed by time adjustment code (e.g., NTP, PTP).</td>
-</tr>
-<tr>
-  <td>CLOCK_REALTIME_COARSE </td>
-  <td>A lower-resolution version of CLOCK_REALTIME.</td>
-</tr>
-<tr>
-  <td>CLOCK_REALTIME_HR  </td>
-  <td>A higher-resolution version of CLOCK_REALTIME. 
-                        Only available with the real-time kernel.</td>
-</tr>
-<tr>
-  <td>CLOCK_MONOTONIC </td>
-  <td>Represents the interval from an abitrary time. 
-                        Can be slewed but not stepped by time adjustment code. 
-                        As such, it can only move forward, not backward.</td>
-</tr>
-<tr>
-  <td>CLOCK_MONOTONIC_COARSE </td>
-  <td>A lower-resolution version of CLOCK_MONOTONIC.</td>
-</tr>
-<tr>
-  <td>CLOCK_MONOTONIC_RAW </td>
-  <td>A version of CLOCK_MONOTONIC that can neither be slewed nor stepped by time adjustment code.</td>
-</tr>
-<tr>
-  <td>CLOCK_BOOTTIME</td>
-  <td>A version of CLOCK_MONOTONIC that additionally reflects time spent in suspend mode.  Only available in newer (2.6.39+) kernels.</td>
-</tr>
-</tbody>
-</table>
-
-
-<br>
-
-
-<p>The availability of the various clocks, as well as their resolution and
-accuracy, depends on the hardware as well as the specific Linux implementation.
-As part of the accompanying source code for this article (<a href="https://github.com/btorpey/clocks.git">https://github.com/btorpey/clocks.git</a>) I&rsquo;ve
-included a small test program (clocks.c) that when compiled<sup id="fnref:6"><a href="#fn:6" rel="footnote">6</a></sup> and run will
-print the relevant information about the clocks on a system. On my test
-machine<sup id="fnref:7"><a href="#fn:7" rel="footnote">7</a></sup> it shows the following:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">clocks.c</span>
-</span><span class='line'><span class="go">                    clock           res (ns)            secs           nsecs</span>
-</span><span class='line'><span class="go">             gettimeofday              1,000   1,391,886,268     904,379,000</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME                  1   1,391,886,268     904,393,224</span>
-</span><span class='line'><span class="go">    CLOCK_REALTIME_COARSE            999,848   1,391,886,268     903,142,905</span>
-</span><span class='line'><span class="go">          CLOCK_MONOTONIC                  1         136,612     254,536,227</span>
-</span><span class='line'><span class="go">      CLOCK_MONOTONIC_RAW        870,001,632         136,612     381,306,122</span>
-</span><span class='line'><span class="go">   CLOCK_MONOTONIC_COARSE            999,848         136,612     253,271,977</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Note that it&rsquo;s important to pay attention to what clock_getres() returns &mdash; a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday, which politely zeros out those lower-order digits).</p>
-
-<p>Also, the value returned from clock_getres() for CLOCK_MONOTONIC_RAW is clearly garbage, although I&rsquo;ve seen similar results on several machines.</p>
-
-<p>Finally, note that the resolution listed for CLOCK_REALTIME is close to, but not
-quite, 1 million &mdash; this is an artifact of the fact that the oscillator cannot
-generate a frequency of exactly 1000 Hz &mdash; it&rsquo;s actually 1000.15 Hz.</p>
-
-<h2>Getting Clock Values in Software</h2>
-
-<p>Next up is a brief discussion of how to read these different clock values from
-software.</p>
-
-<h3>Assembler</h3>
-
-<p>In assembler language, the RDTSC instruction returns the value of the TSC
-directly in registers edx:eax. However, since modern CPU&rsquo;s support out-of-order
-execution, it has been common practice to insert a serializing instruction (such
-as CPUID) prior to the RDTSC instruction in order to ensure that the execution
-of RDTSC is not reordered by the processor.</p>
-
-<p>More recent CPU&rsquo;s include the RDTSCP instruction, which does any necessary
-serialization itself. This avoids the overhead of the CPUID instruction, which
-can be considerable (and variable). If your CPU supports RDTSCP, use that instead of the
-CPUID/RDTSC combination.</p>
-
-<h3>C/C++</h3>
-
-<p>Obviously, the RDTSC instruction can be called directly from C or C++, using
-whatever mechanism your compiler provides for accessing assembler language, or
-by calling an assembler stub that is linked with the C/C++ program. (An example
-can be found at Agner Fog&rsquo;s excellent website (<a href="http://agner.org/optimize/#asmlib">http://agner.org/optimize/#asmlib</a>).</p>
-
-<p>Calling gettimeofday() or clock_gettime() is pretty straightforward &mdash; see the
-accompanying clocks.c source file for examples.</p>
-
-<h3>Java</h3>
-
-<p>Java has only two methods that are relevant to this discussion:</p>
-
-<ul>
-<li><p>System.currentTimeMillis() returns the current wall-clock time as the number
-of milliseconds since the epoch. It calls gettimeofday(), which in turn
-calls clock_gettime(CLOCK_REALTIME, &hellip;).</p></li>
-<li><p>System.nanoTime returns the number of nanoseconds since some unspecified
-starting point. Depending on the capabilities of the system, it either calls
-gettimeofday(), or clock_gettime(CLOCK_MONOTONIC, ).</p></li>
-</ul>
-
-
-<p>The bad news is that if you need clock values other than the above in Java,
-you&rsquo;re going to need to roll your own, e.g. by calling into C via JNI. The good
-news is that doing so is not much more expensive than calling nanoTime (at least in my tests).</p>
-
-<h3>Overhead of Clock Queries</h3>
-
-<p>The Heisenberg Uncertainty Principle says, in a nutshell, that the act of
-observing a phenomenom changes it. A similar issue exists with getting
-timestamps for latency measurement, since it takes a finite (and sometimes
-variable) amount of time to read any clock source.  In other words, just because the TSC on a 2GHz machine ticks twice per nanosecond doesn&rsquo;t mean we can measure intervals of a nanosecond &mdash; we also need to account for the time it takes to read the TSC from software.</p>
-
-<p>So, how expensive is it to perform these different clock queries? Included is some sample code (<a href="https://github.com/btorpey/clocks.git">https://github.com/btorpey/clocks.git</a>) that you can
-use to measure the time it takes to query various clock sources, from both C++
-and Java (using JNI to call C code).</p>
-
-<p>Both the C++ and Java versions take the same approach: call the particular clock
-function in a tight loop, and store the result. We do this a large number of
-times, and hang on to the results from the final iteration. This has the effect
-of allowing Java to do any jitting it needs to, and for both the C++ and Java
-versions to help ensure that code and data is in the processor&rsquo;s cache memory.</p>
-
-<p>The results of running the test on my test machine are:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">ClockBench.cpp</span>
-</span><span class='line'><span class="go">                   Method       samples     min     max     avg  median   stdev</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99</span>
-</span><span class='line'><span class="go">    CLOCK_REALTIME_COARSE       200        0.00    0.00    0.00    0.00    0.00</span>
-</span><span class='line'><span class="go">          CLOCK_MONOTONIC       200       57.00   84.00   57.52   70.50    2.82</span>
-</span><span class='line'><span class="go">      CLOCK_MONOTONIC_RAW       200      652.00 1104.00  697.26  878.00   60.81</span>
-</span><span class='line'><span class="go">   CLOCK_MONOTONIC_COARSE       200        0.00    0.00    0.00    0.00    0.00</span>
-</span><span class='line'><span class="go">              cpuid+rdtsc       200       96.00  100.00   97.74   98.00    1.57</span>
-</span><span class='line'><span class="go">                    rdtsc       200       27.00   28.00   27.07   27.50    0.26</span>
-</span><span class='line'><span class="go">Using CPU frequency = 2.660000</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ClockBench.java</span>
-</span><span class='line'><span class="go">                   Method       samples     min     max     avg  median   stdev</span>
-</span><span class='line'><span class="go">          System.nanoTime       200      111.00  115.00  113.10  113.00    1.49</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME       200      108.00  114.00  110.16  111.00    1.56</span>
-</span><span class='line'><span class="go">              cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64</span>
-</span><span class='line'><span class="go">                    rdtsc       200       75.00   79.00   77.43   77.00    1.35</span>
-</span><span class='line'><span class="go">Using CPU frequency = 2.660000</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>A few things to note about these results:</p>
-
-<ul>
-<li><p>Both of the COARSE clocks show a latency of zero for getting the clock
-value. This is clearly incorrect, but does show that the time it takes to
-get the clock value is less than the resolution of the clock. (Our previous
-test showed a resolution of 1ms for the COARSE clocks).</p></li>
-<li><p>For some reason, the CLOCK_MONOTONIC_RAW clock is very expensive to query. I
-can&rsquo;t explain this &mdash;  you would think that its lack of adjustment would make
-it faster, not slower. This is unfortunate, as otherwise it would be an
-excellent choice for intra-machine timing.</p></li>
-<li><p>As you might expect, the combination of cpuid and rdtsc is slower than
-rdtscp, which is slower than rdtsc alone. In general, this would lead
-suggest that rdtscp should be preferred if available, with a fallback to
-cpuid+rdtsc if not. (While rdtsc alone is the fastest, the fact that it can
-be inaccurate as a result of out-of-order execution means it is only useful
-for timing relatively long operations where that inaccuracy is not
-significant &mdash; but those are precisely the scenarios where its speed is less
-important).</p></li>
-<li><p>Also as expected, the Java versions are slightly slower than the C++
-versions, presumably due to the overhead of going through JNI.</p></li>
-</ul>
-
-
-<h2>Conclusion</h2>
-
-<p>I thought this would be a very brief and somewhat trivial research project. In
-fact, it turned out to be far more complicated (and less well-documented) than I
-expected. I guess I should have known:  everything related to time and computers
-turns out to be a major pain in the neck!</p>
-
-<p>Anyway, I hope this proves helpful. As always, please feel free to contact me
-directly with comments, suggestions, corrections, etc.</p>
-
-<h2>Additional Resources</h2>
-
-<p>Following are the main anchor points that I kept coming back to you as I
-researched this article.</p>
-
-<p><a href="http://elinux.org/Kernel_Timer_Systems">http://elinux.org/Kernel_Timer_Systems</a></p>
-
-<p><a href="http://elinux.org/High_Resolution_Timers">http://elinux.org/High_Resolution_Timers</a></p>
-
-<p><a href="http://juliusdavies.ca/posix_clocks/clock_realtime_linux_faq.html">http://juliusdavies.ca/posix_clocks/clock_realtime_linux_faq.html</a></p>
-
-<p><a href="http://en.wikipedia.org/wiki/Time_Stamp_Counter">http://en.wikipedia.org/wiki/Time_Stamp_Counter</a></p>
-
-<p><a href="http://stackoverflow.com/questions/10921210/cpu-tsc-fetch-operation-especially-in-multicore-multi-processor-environment">http://stackoverflow.com/questions/10921210/cpu-tsc-fetch-operation-especially-in-multicore-multi-processor-environment</a></p>
-
-<p><a href="http://www.citihub.com/requesting-timestamp-in-applications/">http://www.citihub.com/requesting-timestamp-in-applications/</a></p>
-
-<p><a href="http://www.intel.com/content/www/us/en/intelligent-systems/embedded-systems-training/ia-32-ia-64-benchmark-code-execution-paper.html">http://www.intel.com/content/www/us/en/intelligent-systems/embedded-systems-training/ia-32-ia-64-benchmark-code-execution-paper.html</a></p>
-<div class="footnotes">
-<hr/>
-<ol>
-<li id="fn:1">
-<p>The best case being hardware on each machine with a CSAC (chip-scale atomic clock) or OCXO (oven-controlled crystal oscillator). These can be a bit pricey, however.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
-<li id="fn:2">
-<p>The accuracy of a typical RTC in a PC-type computer is rated at +/&ndash; 20ppm, so it can gain or lose 20 us each second. This turns out to be approximately one minute per month, which may be OK for a cheap digital watch, but for a computer is not too good. For more information, see <a href="http://www.maximintegrated.com/app-notes/index.mvp/id/58">http://www.maximintegrated.com/app-notes/index.mvp/id/58</a>.<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
-<li id="fn:3">
-<p>Network Time Protocol, RFC 1305 (<a href="https://tools.ietf.org/html/rfc1305">https://tools.ietf.org/html/rfc1305</a>)<a href="#fnref:3" rev="footnote">&#8617;</a></p></li>
-<li id="fn:4">
-<p>Precision Time Protocol, IEEE 1588 (<a href="http://www.nist.gov/el/isd/ieee/ieee1588.cfm">http://www.nist.gov/el/isd/ieee/ieee1588.cfm</a>)<a href="#fnref:4" rev="footnote">&#8617;</a></p></li>
-<li id="fn:5">
-<p>From companies like Symmetricon, Corvil, TS Associates and others.<a href="#fnref:5" rev="footnote">&#8617;</a></p></li>
-<li id="fn:6">
-<p>Note that the program must be compiled, as well as run, on the target system &mdash; it uses the presence or absence of pre-processor symbols to determine whether a particular clock source is available.<a href="#fnref:6" rev="footnote">&#8617;</a></p></li>
-<li id="fn:7">
-<p>CentOS 6.5 running on a Dell 490 with dual Xeon 5150&rsquo;s at 2.6 GHz.<a href="#fnref:7" rev="footnote">&#8617;</a></p></li>
-</ol>
-</div>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Shared Singleton's]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/12/shared-singletons/"/>
-    <updated>2014-02-12T17:53:36-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/12/shared-singletons</id>
-    <content type="html"><![CDATA[<p>Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
+<div class="entry-content"><p>Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
 yet, there are scenarios where a singleton is just the ticket – for instance,
 when a relatively expensive and/or long-lived resource needs to be shared among
 a number of independent threads.</p>
@@ -540,7 +130,7 @@ even in this relatively simple case.</p>
 
 <p>Our first attempt looked something like this:</p>
 
-<figure class='code'><figcaption><span> (smart1.cpp)</span> <a href='http://btorpey.github.io/downloads/code/smart/smart1.cpp'>download</a></figcaption>
+<figure class='code'><figcaption><span> (smart1.cpp)</span> <a href='/downloads/code/smart/smart1.cpp'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -708,7 +298,7 @@ even in this relatively simple case.</p>
 the first call to getShared(), and then hands out copies of the shared_ptr to
 each caller. When run, the following output is produced:</p>
 
-<figure class='code'><figcaption><span> (smart1.out)</span> <a href='http://btorpey.github.io/downloads/code/smart/smart1.out'>download</a></figcaption>
+<figure class='code'><figcaption><span> (smart1.out)</span> <a href='/downloads/code/smart/smart1.out'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -785,7 +375,7 @@ prior to returning from main(), but how to do that?</p>
 
 <p>Our next attempt looks like this:</p>
 
-<figure class='code'><figcaption><span> (smart2.cpp)</span> <a href='http://btorpey.github.io/downloads/code/smart/smart2.cpp'>download</a></figcaption>
+<figure class='code'><figcaption><span> (smart2.cpp)</span> <a href='/downloads/code/smart/smart2.cpp'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -973,7 +563,7 @@ reference count is now zero).</p>
 
 <p>When we run this version of the code, we see the following output:</p>
 
-<figure class='code'><figcaption><span> (smart2.out)</span> <a href='http://btorpey.github.io/downloads/code/smart/smart2.out'>download</a></figcaption>
+<figure class='code'><figcaption><span> (smart2.out)</span> <a href='/downloads/code/smart/smart2.out'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -1050,7 +640,7 @@ to directly manipulate reference counts.</p>
 shared_ptr, except that assigning to a weak_ptr does not increment the shared
 reference count:</p>
 
-<figure class='code'><figcaption><span> (smart3.cpp)</span> <a href='http://btorpey.github.io/downloads/code/smart/smart3.cpp'>download</a></figcaption>
+<figure class='code'><figcaption><span> (smart3.cpp)</span> <a href='/downloads/code/smart/smart3.cpp'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -1223,7 +813,7 @@ for the static class member that is initialized on creation of the singleton
 object, and we remove the fiddling with reference counts that we had to do make
 things come out right in the previous example.</p>
 
-<figure class='code'><figcaption><span> (smart3.out)</span> <a href='http://btorpey.github.io/downloads/code/smart/smart3.out'>download</a></figcaption>
+<figure class='code'><figcaption><span> (smart3.out)</span> <a href='/downloads/code/smart/smart3.out'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -1302,60 +892,115 @@ this discussion.</p>
 </ol>
 </div>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[What's Old Is New Again]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
-    <updated>2014-02-11T20:07:41-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
-    <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this…</p>
-
-<!--more-->
-
-
-<p><img class="center" src="http://edison.rutgers.edu/images/xx/xx1325.jpg"></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T08:37:11-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here&rsquo;s a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.</p>
-
-<!--more-->
-
-
-<p>FIX is the protocol that everybody loves to hate, but it doesn&rsquo;t look like it&rsquo;s
-going anywhere, so I guess we all just need to get over it and learn to live with it.</p>
-
-<p>One of the things that is hard to live with, though &mdash; at least for me &mdash; is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="http://btorpey.github.io/images/less-before.png"></p>
-
-<p>It turns out that it&rsquo;s possible to control how less displays the x&#8217;01&#8217;
-delimiters<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:</p>
-
-<p><code>export LESSBINFMT="*u%x"</code></p>
-
-<p>This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="http://btorpey.github.io/images/less-after.png"></p>
-<div class="footnotes">
-<hr/>
-<ol>
-<li id="fn:1">
-<p>Note that the man page for less mentions that it&rsquo;s possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I&rsquo;ve tried it &mdash; YMMV.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
-</ol>
 </div>
 
-]]></content>
-  </entry>
+
+  <footer>
+    <p class="meta">
+      
   
-</feed>
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-12T17:53:36-05:00" pubdate data-updated="true">Feb 12<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/c-plus-plus/'>c++</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/02/11/whats-old-is-new-again/" title="Previous Post: What's Old Is New Again">&laquo; What's Old Is New Again</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/02/18/clock-sources-in-linux/" title="Next Post: Clock Sources in Linux">Clock Sources in Linux &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/02/18/clock-sources-in-linux/">Clock Sources in Linux</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/12/shared-singletons/">Shared Singleton's</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/11/whats-old-is-new-again/">What's Old Is New Again</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/10/fixing-less/">FIXing less</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Bill Torpey. All Rights Reserved. -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+<p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

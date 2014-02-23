@@ -1,0 +1,25 @@
+Entering main
+ContainerClass ctor:0x154b9010
+	before	copy: 0	master: 0
+SharedClass ctor:0x154b9030
+	after	copy: 2	master: 2
+
+ContainerClass ctor:0x154b90a0
+	before	copy: 0	master: 2
+	after	copy: 3	master: 3
+
+ContainerClass dtor:0x154b9010
+	before	copy: 3	master: 3
+
+ContainerClass dtor:0x154b90a0
+	before	copy: 2	master: 2
+
+ContainerClass ctor:0x154b90a0
+	before	copy: 0	master: 1
+	after	copy: 2	master: 2
+
+ContainerClass dtor:0x154b90a0
+	before	copy: 2	master: 2
+
+Exiting main
+SharedClass dtor:0x154b9030

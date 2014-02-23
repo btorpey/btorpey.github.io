@@ -1,24 +1,98 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
-  <link href="http://btorpey.github.io/atom.xml" rel="self"/>
-  <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T14:41:37-05:00</updated>
-  <id>http://btorpey.github.io/</id>
-  <author>
-    <name><![CDATA[Bill Torpey]]></name>
-    
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Clock Sources in Linux - Confessions of a Wall Street Programmer</title>
+  <meta name="author" content="Bill Torpey">
 
   
-  <entry>
-    <title type="html"><![CDATA[Clock Sources in Linux]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
-    <updated>2014-02-18T20:07:41-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>
-    <content type="html"><![CDATA[<p>For measuring latency in modern systems, we need to be able to measure intervals
+  <meta name="description" content="For measuring latency in modern systems, we need to be able to measure intervals
+in microseconds at least, and preferably in nanoseconds or better. &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Confessions of a Wall Street Programmer</a></h1>
+  
+    <h2>thoughts on software architecture, design, construction and testing</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:btorpey.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Clock Sources in Linux</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-18T20:07:41-05:00" pubdate data-updated="true">Feb 18<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
@@ -495,60 +569,109 @@ researched this article.</p>
 </ol>
 </div>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[What's Old Is New Again]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
-    <updated>2014-02-11T20:07:41-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
-    <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this…</p>
-
-<!--more-->
-
-
-<p><img class="center" src="http://edison.rutgers.edu/images/xx/xx1325.jpg"></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T08:37:11-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here&rsquo;s a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.</p>
-
-<!--more-->
-
-
-<p>FIX is the protocol that everybody loves to hate, but it doesn&rsquo;t look like it&rsquo;s
-going anywhere, so I guess we all just need to get over it and learn to live with it.</p>
-
-<p>One of the things that is hard to live with, though &mdash; at least for me &mdash; is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="http://btorpey.github.io/images/less-before.png"></p>
-
-<p>It turns out that it&rsquo;s possible to control how less displays the x&#8217;01&#8217;
-delimiters<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:</p>
-
-<p><code>export LESSBINFMT="*u%x"</code></p>
-
-<p>This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="http://btorpey.github.io/images/less-after.png"></p>
-<div class="footnotes">
-<hr/>
-<ol>
-<li id="fn:1">
-<p>Note that the man page for less mentions that it&rsquo;s possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I&rsquo;ve tried it &mdash; YMMV.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
-</ol>
 </div>
 
-]]></content>
-  </entry>
+
+  <footer>
+    <p class="meta">
+      
   
-</feed>
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-18T20:07:41-05:00" pubdate data-updated="true">Feb 18<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>linux</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/02/11/whats-old-is-new-again/" title="Previous Post: What's Old Is New Again">&laquo; What's Old Is New Again</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/02/18/clock-sources-in-linux/">Clock Sources in Linux</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/11/whats-old-is-new-again/">What's Old Is New Again</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/10/fixing-less/">FIXing less</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Bill Torpey. All Rights Reserved. -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+<p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

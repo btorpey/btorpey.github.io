@@ -1,24 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-
-  <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
-  <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
-  <link href="http://btorpey.github.io/"/>
-  <updated>2014-02-23T14:41:37-05:00</updated>
-  <id>http://btorpey.github.io/</id>
-  <author>
-    <name><![CDATA[Bill Torpey]]></name>
-    
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
-
-  
-  <entry>
-    <title type="html"><![CDATA[Clock Sources in Linux]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
-    <updated>2014-02-18T20:07:41-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>
-    <content type="html"><![CDATA[<p>For measuring latency in modern systems, we need to be able to measure intervals
+For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
@@ -121,11 +101,10 @@ all TSC's synchronized across all cores in a system, and an *invariant* (or
 CPU frequency. To check whether your CPU supports one or both, execute the
 following and examine the values output in flags:
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">cat /proc/cpuinfo | grep -i tsc</span>
-</span><span class='line'><span class="go">flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+```console
+cat /proc/cpuinfo | grep -i tsc
+flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
+```
 
 The flags have the following meanings:
 
@@ -161,20 +140,17 @@ relatively low overhead, there are other clock sources that can be used:
 
 To see the clock sources that are available on the system:
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>linenos:false </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocsource0/available_clocksource
-</span><span class='line'><span class="go">tsc hpet acpi_pm</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+{% codeblock lang:console linenos:false %}
+$ cat /sys/devices/system/clocksource/clocsource0/available_clocksource
+tsc hpet acpi_pm
+{% endcodeblock %}
 
 And to see which one is being used:
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocksource0/current_clocksource
-</span><span class='line'><span class="go">tsc</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+``` console
+$ cat /sys/devices/system/clocksource/clocksource0/current_clocksource
+tsc
+```
 
 Typically the clock source is set by the kernel automatically at boot time, but
 you can force a particular clock source by including the appropriate
@@ -186,9 +162,9 @@ parameter(s) on the command line that boots Linux (e.g., in
 You can also change the clock source while the system is running  e.g., to
 force use of HPET:
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> <span class="nb">echo</span> hpet &gt; /sys/devices/system/clocksource/clocksource0/current_clocksource
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+``` console
+$ echo hpet > /sys/devices/system/clocksource/clocksource0/current_clocksource
+```
 
 The above discusssion refers to what I will call hardware clocks, although
 strictly speaking these clocks are a mixture of hardware and software. At the
@@ -287,23 +263,16 @@ print the relevant information about the clocks on a system. On my test
 machine[^7] it shows the following:
 
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">clocks.c</span>
-</span><span class='line'><span class="go">                    clock	       res (ns)	           secs	          nsecs</span>
-</span><span class='line'><span class="go">             gettimeofday	          1,000	  1,391,886,268	    904,379,000</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME	              1	  1,391,886,268	    904,393,224</span>
-</span><span class='line'><span class="go">    CLOCK_REALTIME_COARSE	        999,848	  1,391,886,268	    903,142,905</span>
-</span><span class='line'><span class="go">          CLOCK_MONOTONIC	              1	        136,612	    254,536,227</span>
-</span><span class='line'><span class="go">      CLOCK_MONOTONIC_RAW	    870,001,632	        136,612	    381,306,122</span>
-</span><span class='line'><span class="go">   CLOCK_MONOTONIC_COARSE	        999,848	        136,612	    253,271,977</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+``` console
+clocks.c
+                    clock	       res (ns)	           secs	          nsecs
+             gettimeofday	          1,000	  1,391,886,268	    904,379,000
+           CLOCK_REALTIME	              1	  1,391,886,268	    904,393,224
+    CLOCK_REALTIME_COARSE	        999,848	  1,391,886,268	    903,142,905
+          CLOCK_MONOTONIC	              1	        136,612	    254,536,227
+      CLOCK_MONOTONIC_RAW	    870,001,632	        136,612	    381,306,122
+   CLOCK_MONOTONIC_COARSE	        999,848	        136,612	    253,271,977
+```
 
 Note that it's important to pay attention to what clock_getres() returns -- a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday, which politely zeros out those lower-order digits).
 
@@ -377,43 +346,27 @@ versions to help ensure that code and data is in the processor's cache memory.
 
 The results of running the test on my test machine are:
 
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">ClockBench.cpp</span>
-</span><span class='line'><span class="go">                   Method       samples     min     max     avg  median   stdev</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99</span>
-</span><span class='line'><span class="go">    CLOCK_REALTIME_COARSE       200        0.00    0.00    0.00    0.00    0.00</span>
-</span><span class='line'><span class="go">          CLOCK_MONOTONIC       200       57.00   84.00   57.52   70.50    2.82</span>
-</span><span class='line'><span class="go">      CLOCK_MONOTONIC_RAW       200      652.00 1104.00  697.26  878.00   60.81</span>
-</span><span class='line'><span class="go">   CLOCK_MONOTONIC_COARSE       200        0.00    0.00    0.00    0.00    0.00</span>
-</span><span class='line'><span class="go">              cpuid+rdtsc       200       96.00  100.00   97.74   98.00    1.57</span>
-</span><span class='line'><span class="go">                    rdtsc       200       27.00   28.00   27.07   27.50    0.26</span>
-</span><span class='line'><span class="go">Using CPU frequency = 2.660000</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ClockBench.java</span>
-</span><span class='line'><span class="go">                   Method       samples     min     max     avg  median   stdev</span>
-</span><span class='line'><span class="go">          System.nanoTime       200      111.00  115.00  113.10  113.00    1.49</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME       200      108.00  114.00  110.16  111.00    1.56</span>
-</span><span class='line'><span class="go">              cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64</span>
-</span><span class='line'><span class="go">                    rdtsc       200       75.00   79.00   77.43   77.00    1.35</span>
-</span><span class='line'><span class="go">Using CPU frequency = 2.660000</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+``` console
+
+ClockBench.cpp
+                   Method       samples     min     max     avg  median   stdev
+           CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99
+    CLOCK_REALTIME_COARSE       200        0.00    0.00    0.00    0.00    0.00
+          CLOCK_MONOTONIC       200       57.00   84.00   57.52   70.50    2.82
+      CLOCK_MONOTONIC_RAW       200      652.00 1104.00  697.26  878.00   60.81
+   CLOCK_MONOTONIC_COARSE       200        0.00    0.00    0.00    0.00    0.00
+              cpuid+rdtsc       200       96.00  100.00   97.74   98.00    1.57
+                    rdtsc       200       27.00   28.00   27.07   27.50    0.26
+Using CPU frequency = 2.660000
+
+ClockBench.java
+                   Method       samples     min     max     avg  median   stdev
+          System.nanoTime       200      111.00  115.00  113.10  113.00    1.49
+           CLOCK_REALTIME       200      108.00  114.00  110.16  111.00    1.56
+              cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64
+                    rdtsc       200       75.00   79.00   77.43   77.00    1.35
+Using CPU frequency = 2.660000
+```
 
 
 A few things to note about these results:
@@ -487,41 +440,3 @@ researched this article.
 
 [^7]: CentOS 6.5 running on a Dell 490 with dual Xeon 5150's at 2.6 GHz.
 
-</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T08:37:11-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here's a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.
-
-<!--more-->
-
-FIX is the protocol that everybody loves to hate, but it doesn't look like it's
-going anywhere, so I guess we all just need to get over it and learn to live with it.
-
-One of the things that is hard to live with, though -- at least for me -- is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="/images/less-before.png"> 
-
-It turns out that it's possible to control how less displays the x'01'
-delimiters[^1] to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:
-
-`export LESSBINFMT="*u%x"`
-
-This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="/images/less-after.png"> 
-
-
-[^1]: Note that the man page for less mentions that it's possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I've tried it -- YMMV.
-</p>
-]]></content>
-  </entry>
-  
-</feed>

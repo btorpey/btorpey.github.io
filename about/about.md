@@ -5,14 +5,14 @@
 
 So, what is this blog all about?
 
-Well, I’ve been building software for customers on Wall Street for a while now
+Well, I’ve been building software for customers on Wall Street for a while now.
 (How long a while, you ask? Do you remember “Quotron”?)
 
 I’ve learned a few things along the way, and this blog is an attempt to organize
 some of that learning, to make it available to others, to refine it (with your
 help, I hope), and to continue learning (also with your help).
 
-My goal is to create something useful (hence the "practical" in the header), and
+My goal is to create something useful (hence the "practical" in the header), as well as 
 from time to time to surface ideas that may be less well-known than they could
 be (hence the "un-common knowledge").
 

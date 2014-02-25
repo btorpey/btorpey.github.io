@@ -14,7 +14,7 @@ help, I hope), and to continue learning (also with your help).
 
 My goal is to create something useful (hence the "practical" in the header), as well as 
 from time to time to surface ideas that may be less well-known than they could
-be (hence the "un-common knowledge").
+be (the "un-common knowledge" part).
 
 I'd also like to take an "engineering" approach here: so if I state something as fact,
 I'm going to try to back it up -- preferably with code that you can run

@@ -72,12 +72,12 @@ platform (in the case of Red Hat/CentOS 6.5, that is the relatively ancient gcc
 
 Building with Asan
 -------------
-Including support for Asan in your build is pretty simple -- just include the "-fsanitize=address"
+Including support for Asan in your build is pretty simple -- just include the `-fsanitize=address`
 flag in both the compile and build step.  (Note that this means you need to invoke the linker via the compiler
 driver, rather than directly.  In practice, this means that the executable you specify for the link step should be 
-"g++" (or "gcc"), not "ld").  
+g++ (or gcc), not ld).  
 
-While not strictly required, it's also a very good idea to include the "-fno-omit-frame-pointer" flag
+While not strictly required, it's also a very good idea to include the `-fno-omit-frame-pointer` flag
 in the compile step.  This will prevent the compiler from optimizing away the frame pointer (ebp) register.  While
 disabling any optimization might seem like a bad idea, in this case the performance benefit is minimal at best[^5], but the 
 inability to get accurate stack frames is a show-stopper.
@@ -85,12 +85,12 @@ inability to get accurate stack frames is a show-stopper.
 Running with Asan
 -------------
 If you're checking an executable that you build yourself, the prior steps are all you need -- libasan.so will get linked
-into your executable by virtue of the "-fsanitize=address" flag.
+into your executable by virtue of the `-fsanitize=address` flag.
 
 In my case, though, the goal was to be able to instrument code running in the JVM.  In this case, I had to force libasan.so
-into the executable at runtime, using LD_PRELOAD like so:
+into the executable at runtime using `LD_PRELOAD`, like so:
 
-`LD_PRELOAD=libasan.so java ...`
+`LD_PRELOAD=/usr/local/lib64/libasan.so.0 java ...`
 
 And that's it!
 
@@ -98,22 +98,33 @@ Tailoring Asan
 ---------------
 
 There are a bunch of options available to tailor the way Asan works: at compile-time you can supply a "blacklist" of functions that
-Asan should NOT instrument, and at run-time you can further customize Asan using the ASAN_OPTIONS environment variable, which
+Asan should NOT instrument, and at run-time you can further customize Asan using the `ASAN_OPTIONS` environment variable, which
 is discussed [here](<http://code.google.com/p/address-sanitizer/wiki/Flags>).
  
-By default, Asan is silent, so you may not be certain that it's actually working unless it aborts with an error, which would look like 
-[this](<http://code.google.com/p/address-sanitizer/wiki/ExampleUseAfterFree>).  You can check that Asan is linked in to your executable
-using ldd:
+By default, Asan is silent, so you may not be certain that it's actually working unless it aborts with an error, which would look like
+[one of these](http://en.wikipedia.org/wiki/AddressSanitizer#Examples").
 
-ldd a.out
+You can check that Asan is linked in to your executable using ldd:
 
+<pre>
+$ ldd a.out
+	linux-vdso.so.1 =>  (0x00007fff749ff000)
+	libasan.so.0 => /usr/local/lib64/libasan.so.0 (0x00007f57065f7000)
+	libstdc++.so.6 => /usr/local/lib64/libstdc++.so.6 (0x00007f57062ed000)
+	libm.so.6 => /lib64/libm.so.6 (0x0000003dacc00000)
+	libgcc_s.so.1 => /usr/local/lib64/libgcc_s.so.1 (0x00007f57060bd000)
+	libc.so.6 => /lib64/libc.so.6 (0x0000003dad000000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x0000003dad800000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x0000003dad400000)
+	/lib64/ld-linux-x86-64.so.2 (0x0000003dac800000)
+</pre>
 
 You can also up the default verbosity level of Asan to get an idea of what is going on at run-time:
 
 `export ASAN_OPTIONS="verbosity=1:..."`
 
 
-If you're using LD_PRELOAD to inject Asan into an executable that was not built
+If you're using `LD_PRELOAD` to inject Asan into an executable that was not built
 using Asan, you may see output that looks like the following:
 
 <pre>
@@ -204,7 +215,9 @@ Resources
 
 <http://en.wikipedia.org/wiki/AddressSanitizer>
 
-<http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680>
+http://code.google.com/p/address-sanitizer/
+
+http://clang.llvm.org/docs/AddressSanitizer.html
 
 
 

@@ -165,12 +165,12 @@ platform (in the case of Red Hat/CentOS 6.5, that is the relatively ancient gcc
 
 <h2>Building with Asan</h2>
 
-<p>Including support for Asan in your build is pretty simple &mdash; just include the &ldquo;-fsanitize=address&rdquo;
+<p>Including support for Asan in your build is pretty simple &mdash; just include the <code>-fsanitize=address</code>
 flag in both the compile and build step.  (Note that this means you need to invoke the linker via the compiler
 driver, rather than directly.  In practice, this means that the executable you specify for the link step should be
-&ldquo;g++&rdquo; (or &ldquo;gcc&rdquo;), not &ldquo;ld&rdquo;).</p>
+g++ (or gcc), not ld).</p>
 
-<p>While not strictly required, it&rsquo;s also a very good idea to include the &ldquo;-fno-omit-frame-pointer&rdquo; flag
+<p>While not strictly required, it&rsquo;s also a very good idea to include the <code>-fno-omit-frame-pointer</code> flag
 in the compile step.  This will prevent the compiler from optimizing away the frame pointer (ebp) register.  While
 disabling any optimization might seem like a bad idea, in this case the performance benefit is minimal at best<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>, but the
 inability to get accurate stack frames is a show-stopper.</p>
@@ -178,32 +178,45 @@ inability to get accurate stack frames is a show-stopper.</p>
 <h2>Running with Asan</h2>
 
 <p>If you&rsquo;re checking an executable that you build yourself, the prior steps are all you need &mdash; libasan.so will get linked
-into your executable by virtue of the &ldquo;-fsanitize=address&rdquo; flag.</p>
+into your executable by virtue of the <code>-fsanitize=address</code> flag.</p>
 
 <p>In my case, though, the goal was to be able to instrument code running in the JVM.  In this case, I had to force libasan.so
-into the executable at runtime, using LD_PRELOAD like so:</p>
+into the executable at runtime using <code>LD_PRELOAD</code>, like so:</p>
 
-<p><code>LD_PRELOAD=libasan.so java ...</code></p>
+<p><code>LD_PRELOAD=/usr/local/lib64/libasan.so.0 java ...</code></p>
 
 <p>And that&rsquo;s it!</p>
 
 <h2>Tailoring Asan</h2>
 
 <p>There are a bunch of options available to tailor the way Asan works: at compile-time you can supply a &ldquo;blacklist&rdquo; of functions that
-Asan should NOT instrument, and at run-time you can further customize Asan using the ASAN_OPTIONS environment variable, which
+Asan should NOT instrument, and at run-time you can further customize Asan using the <code>ASAN_OPTIONS</code> environment variable, which
 is discussed <a href="http://code.google.com/p/address-sanitizer/wiki/Flags">here</a>.</p>
 
 <p>By default, Asan is silent, so you may not be certain that it&rsquo;s actually working unless it aborts with an error, which would look like
-<a href="http://code.google.com/p/address-sanitizer/wiki/ExampleUseAfterFree">this</a>.  You can check that Asan is linked in to your executable
-using ldd:</p>
+<a href="http://en.wikipedia.org/wiki/AddressSanitizer#Examples" title="">one of these</a>.</p>
 
-<p>ldd a.out</p>
+<p>You can check that Asan is linked in to your executable using ldd:</p>
+
+<pre>
+$ ldd a.out
+    linux-vdso.so.1 =>  (0x00007fff749ff000)
+    libasan.so.0 => /usr/local/lib64/libasan.so.0 (0x00007f57065f7000)
+    libstdc++.so.6 => /usr/local/lib64/libstdc++.so.6 (0x00007f57062ed000)
+    libm.so.6 => /lib64/libm.so.6 (0x0000003dacc00000)
+    libgcc_s.so.1 => /usr/local/lib64/libgcc_s.so.1 (0x00007f57060bd000)
+    libc.so.6 => /lib64/libc.so.6 (0x0000003dad000000)
+    libpthread.so.0 => /lib64/libpthread.so.0 (0x0000003dad800000)
+    libdl.so.2 => /lib64/libdl.so.2 (0x0000003dad400000)
+    /lib64/ld-linux-x86-64.so.2 (0x0000003dac800000)
+</pre>
+
 
 <p>You can also up the default verbosity level of Asan to get an idea of what is going on at run-time:</p>
 
 <p><code>export ASAN_OPTIONS="verbosity=1:..."</code></p>
 
-<p>If you&rsquo;re using LD_PRELOAD to inject Asan into an executable that was not built
+<p>If you&rsquo;re using <code>LD_PRELOAD</code> to inject Asan into an executable that was not built
 using Asan, you may see output that looks like the following:</p>
 
 <pre>
@@ -295,7 +308,9 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
 
 <p><a href="http://en.wikipedia.org/wiki/AddressSanitizer">http://en.wikipedia.org/wiki/AddressSanitizer</a></p>
 
-<p><a href="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680">http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680</a></p>
+<p><a href="http://code.google.com/p/address-sanitizer/">http://code.google.com/p/address-sanitizer/</a></p>
+
+<p><a href="http://clang.llvm.org/docs/AddressSanitizer.html">http://clang.llvm.org/docs/AddressSanitizer.html</a></p>
 <div class="footnotes">
 <hr/>
 <ol>

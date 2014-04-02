@@ -402,8 +402,10 @@ fact, it turned out to be far more complicated (and less well-documented) than I
 expected. I guess I should have known: everything related to time and computers
 turns out to be a major pain in the neck!
 
-Anyway, I hope this proves helpful. (I know I would have been very happy to have had this when I started looking into clock sources).  
-As always, please feel free to [contact me](<mailto:wallstprog@gmail.com>) 
+Anyway, I hope this proves helpful. (I know I would have been very happy to have
+had this when I started looking into clock sources).  
+
+As always, please feel free to [contact me](<mailto:wallstprog@gmail.com>)
 directly with comments, suggestions, corrections, etc.
 
 Additional Resources

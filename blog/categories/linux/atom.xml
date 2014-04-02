@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-02T17:14:00-04:00</updated>
+  <updated>2014-04-02T17:49:38-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -422,8 +422,10 @@ fact, it turned out to be far more complicated (and less well-documented) than I
 expected. I guess I should have known: everything related to time and computers
 turns out to be a major pain in the neck!
 
-Anyway, I hope this proves helpful. (I know I would have been very happy to have had this when I started looking into clock sources).  
-As always, please feel free to [contact me](<mailto:wallstprog@gmail.com>) 
+Anyway, I hope this proves helpful. (I know I would have been very happy to have
+had this when I started looking into clock sources).  
+
+As always, please feel free to [contact me](<mailto:wallstprog@gmail.com>)
 directly with comments, suggestions, corrections, etc.
 
 Additional Resources

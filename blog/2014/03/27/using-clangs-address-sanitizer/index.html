@@ -1,0 +1,418 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Using clang's Address Sanitizer (without clang) - Confessions of a Wall Street Programmer</title>
+  <meta name="author" content="Bill Torpey">
+
+  
+  <meta name="description" content="Valgrind has been an indispensable tool for C/C++ programmers for a long
+time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Confessions of a Wall Street Programmer</a></h1>
+  
+    <h2>practical ideas (and perhaps some uncommon knowledge) on software architecture, design, construction and testing</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:btorpey.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Using clang's Address Sanitizer (without clang)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-27T08:30:22-04:00" pubdate data-updated="true">Mar 27<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Valgrind has been an indispensable tool for C/C++ programmers for a long
+time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous tool for doing dynamic
+analysis of program behavior at run time. valgrind<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> can detect reads of
+uninitialized memory, heap buffer overruns, memory leaks, and other errors that
+can be difficult or impossible to find by eyeballing the code, or by static
+analysis tools.  But that comes with a price, which in some cases can be quite steep, and some new
+tools promise to provide some or all of the functionality valgrind provides without the drawbacks.</p>
+
+<!--more-->
+
+
+<p>For one thing, valgrind can
+be <em>extremely</em> slow.  That is an unavoidable side-effect of one of valgrind&rsquo;s
+strengths, which is that it doesn&rsquo;t require that the program under test be
+instrumented beforehand &mdash; it can analyze any executable (including shared
+objects) &ldquo;right out of the box&rdquo;.  That works because valgrind effectively
+emulates the hardware the program runs on, but that leads to a potential
+problem: valgrind instruments <em>all</em> the code, including shared objects &mdash;and
+that includes third-party code (e.g., libraries, etc.) that you may not have any
+control over.</p>
+
+<p>In my case, that ended up being a real problem.  The main reason
+being that a significant portion of the application I work with is hosted in a
+JVM (because it runs in-proc to a Java-based FIX engine, using a thin JNI
+layer).  The valgrind folks say that the slowdown using their tool can be up to
+20x, but it seemed like more, because the entire JVM was being emulated.</p>
+
+<p>And, because valgrind emulates <em>everything</em>, it also detects and reports
+problems in the JVM itself.  Well, it turns out that the JVM plays a lot of
+tricks that valgrind doesn&rsquo;t like, and the result is a flood of complaints that
+overwhelm any potential issues in the application itself.</p>
+
+<p>So, I was very interested in learning about a similar technology that promised
+to address some of these problems.  Address Sanitizer (Asan from here on) was
+originally developed as part of the clang project, and largely by folks at Google.
+They took a different approach: while valgrind emulates the machine at run-time, Asan works by instrumenting
+the code at compile-time.</p>
+
+<p>That helps to solve the two big problems that I was having with valgrind: its
+slowness, and the difficulty of excluding third-party libraries from the
+analysis.</p>
+
+<h2>Asan with clang</h2>
+
+<p>Since I was already building the application using clang for its excellent
+diagnostics and static analysis features, I thought it would be relatively
+straightforward to introduce the Asan feature into the build.  Turns out there
+is a bump in that road: clang&rsquo;s version of Asan is supplied only as a
+static library that is linked into the main executable.  And while it should be
+possible to re-jigger things to make it work as a shared library, that would
+turn into a bit of science project.  That, and the fact that the wiki page discussing it
+(<a href="http://code.google.com/p/address-sanitizer/wiki/AsanAsDso">http://code.google.com/p/address-sanitizer/wiki/AsanAsDso</a>) didn&rsquo;t sound
+particularly encouraging (&ldquo;however the devil is in the detail&rdquo; &mdash; uhh, thanks, no).</p>
+
+<p>Rats!  However, the wiki page
+did mention that there was a version of Asan that worked with gcc, and that
+version apparently did support deployment as a shared object.  So, I decided to give that a try&hellip;</p>
+
+<h2>Asan with gcc</h2>
+
+<p>It turns out that the gcc developers haven&rsquo;t been sitting still &mdash; in
+fact, it looks like there is a bit of a healthy rivalry between the clang and gcc
+folks, and that&rsquo;s a good thing for you and me.  Starting with version 4.8 of the
+gcc collection, Asan is available with gcc as well.<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup></p>
+
+<p>Getting the latest gcc version (4.8.2 as of this writing), building and
+installing it was relatively straight-forward.  By default, the source build
+installs into /usr/local, so it can co-exist nicely with the native gcc for the
+platform (in the case of Red Hat/CentOS 6.5, that is the relatively ancient gcc
+4.4 branch).</p>
+
+<h2>Building with Asan</h2>
+
+<p>Including support for Asan in your build is pretty simple &mdash; just include the &ldquo;-fsanitize=address&rdquo;
+flag in both the compile and build step.  (Note that this means you need to invoke the linker via the compiler
+driver, rather than directly.  In practice, this means that the executable you specify for the link step should be
+&ldquo;g++&rdquo; (or &ldquo;gcc&rdquo;), not &ldquo;ld&rdquo;).</p>
+
+<p>While not strictly required, it&rsquo;s also a very good idea to include the &ldquo;-fno-omit-frame-pointer&rdquo; flag
+in the compile step.  This will prevent the compiler from optimizing away the frame pointer (ebp) register.  While
+disabling any optimization might seem like a bad idea, in this case the performance benefit is minimal at best<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>, but the
+inability to get accurate stack frames is a show-stopper.</p>
+
+<h2>Running with Asan</h2>
+
+<p>If you&rsquo;re checking an executable that you build yourself, the prior steps are all you need &mdash; libasan.so will get linked
+into your executable by virtue of the &ldquo;-fsanitize=address&rdquo; flag.</p>
+
+<p>In my case, though, the goal was to be able to instrument code running in the JVM.  In this case, I had to force libasan.so
+into the executable at runtime, using LD_PRELOAD like so:</p>
+
+<p><code>LD_PRELOAD=libasan.so java ...</code></p>
+
+<p>And that&rsquo;s it!</p>
+
+<h2>Tailoring Asan</h2>
+
+<p>There are a bunch of options available to tailor the way Asan works: at compile-time you can supply a &ldquo;blacklist&rdquo; of functions that
+Asan should NOT instrument, and at run-time you can further customize Asan using the ASAN_OPTIONS environment variable, which
+is discussed <a href="http://code.google.com/p/address-sanitizer/wiki/Flags">here</a>.</p>
+
+<p>By default, Asan is silent, so you may not be certain that it&rsquo;s actually working unless it aborts with an error, which would look like
+<a href="http://code.google.com/p/address-sanitizer/wiki/ExampleUseAfterFree">this</a>.  You can check that Asan is linked in to your executable
+using ldd:</p>
+
+<p>ldd a.out</p>
+
+<p>You can also up the default verbosity level of Asan to get an idea of what is going on at run-time:</p>
+
+<p><code>export ASAN_OPTIONS="verbosity=1:..."</code></p>
+
+<p>If you&rsquo;re using LD_PRELOAD to inject Asan into an executable that was not built
+using Asan, you may see output that looks like the following:</p>
+
+<pre>
+==25140== AddressSanitizer: failed to intercept 'memset'
+==25140== AddressSanitizer: failed to intercept 'strcat'
+==25140== AddressSanitizer: failed to intercept 'strchr'
+==25140== AddressSanitizer: failed to intercept 'strcmp'
+==25140== AddressSanitizer: failed to intercept 'strcpy'
+==25140== AddressSanitizer: failed to intercept 'strlen'
+==25140== AddressSanitizer: failed to intercept 'strncmp'
+==25140== AddressSanitizer: failed to intercept 'strncpy'
+==25140== AddressSanitizer: failed to intercept 'pthread_create'
+==25140== AddressSanitizer: libc interceptors initialized
+</pre>
+
+
+<p>Don&rsquo;t worry &mdash; it turns out that is a bogus warning related to running Asan as a shared object.  Unfortunately, the Asan
+developers don&rsquo;t seem to want to fix this (<a href="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680">http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680</a>).</p>
+
+<h2>Conclusion</h2>
+
+<p>So, how did this all turn out?  Well, it&rsquo;s pretty early in the process, but Asan
+has already caught a memory corruption problem that would have been extremely
+difficult to track down otherwise.  (Short version is that due to some
+unintended name collissions between shared libraries, we were trying to put 10
+pounds of bologna in a 5 pound sack.  Or, as one of my colleagues more accurately pointed out, 8 pounds
+of bologna in a 4 pund sack :&ndash;)</p>
+
+<p>valgrind is still an extremely valuable tool, especially because of its
+convenience and versatility; but in certain edge cases Asan can bring things to
+the table, like speed and selectivity, that make it the better choice.</p>
+
+<h2>Postscript </h2>
+
+<p>Before closing there are a few more things I want to mention about Asan in
+comparison to valgrind:</p>
+
+<ul>
+<li><p>If you look at the processes using Asan with top, etc. you may be a bit
+shocked at first to see they are using 4TB (or more) of memory.  Relax &mdash;
+it&rsquo;s not real memory, it&rsquo;s virtual memory (i.e., address space).  The
+algorithm used by Asan to track memory &ldquo;shadows&rdquo; actual memory (one bit for
+every byte), so it needs that whole address space.  Actual memory use is
+greater with Asan as well, but not nearly as bad as it appears at first
+glance.  Even so, Asan disables core files by default, at least in 64-bit
+mode.</p></li>
+<li><p>As hoped, Asan is way faster than valgrind, especially in my &ldquo;worst-case&rdquo;
+scenario with the JVM, since the only code that&rsquo;s paying the price of
+tracking memory accesses is the code that is deliberately instrumented.
+That also eliminates false positives from the JVM, which is a very good
+thing.</p></li>
+<li><p>As for false positives, the Asan folks apparently don&rsquo;t believe in them,
+because there is no &ldquo;suppression&rdquo; mechanism like there is in valgrind.
+Instead, the Asan folks ask that if you find what you think is a false
+positive, you file a bug report with them.  In fact, when Asan finds a
+memory error it immediately aborts &mdash; the rationale being that allowing Asan
+to continue after a memory error would be much more work, and would make
+Asan much slower.  Let&rsquo;s hope they&rsquo;re right about the absence of false
+positives, but even so this &ldquo;feature&rdquo; is bound to make the debug cycle
+longer, so there are probably cases where valgrind is a better choice &mdash; at
+least for initial debugging.</p></li>
+<li><p>Asan and valgrind have slightly different capabilities, too:</p>
+
+<ul>
+<li><p>Asan can find stack corruption errors, while valgrind only tracks heap
+allocations.</p></li>
+<li><p>Both valgrind and Asan can detect memory leaks (although Asan&rsquo;s leak
+checking support is &ldquo;still experimental&rdquo; &ndash; see
+<a href="http://code.google.com/p/address-sanitizer/wiki/LeakSanitizer">http://code.google.com/p/address-sanitizer/wiki/LeakSanitizer</a>).</p></li>
+<li><p>valgrind also detects reads of un-initialized memory, which Asan does
+not.</p>
+
+<ul>
+<li>The related <a href="https://code.google.com/p/memory-sanitizer/wiki/MemorySanitizer">Memory Sanitizer</a>
+tool apparently can do that.  It has an additional restriction that
+the main program must be built with -fpie to enable
+position-independent code, which may make it difficult to use in
+certain cases, e.g. for debugging code hosted in a JVM.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>A detailed comparison of Asan, valgrind and other tools can be found <a href="http://code.google.com/p/address-sanitizer/wiki/ComparisonOfMemoryTools">here</a>.</p>
+
+<h2>Resources</h2>
+
+<p><a href="http://en.wikipedia.org/wiki/AddressSanitizer">http://en.wikipedia.org/wiki/AddressSanitizer</a></p>
+
+<p><a href="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680">http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58680</a></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>In this paper, I use the term valgrind, but I really mean valgrind with the memcheck tool.  valgrind includes a bunch of other tools as well &mdash; see <a href="http://valgrind.org">http://valgrind.org</a> for details.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p>As is another tool, the Thread Sanitizer, which detects data races between threads at run-time.  More on that in an upcoming post.<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+<li id="fn:3">
+<p>Omitting the frame pointer makes another register (ebp) available to the compiler, but since there are already at least a dozen other registers for the compiler to use, this extra register is unlikely to be critical.  The compiler can also omit the code that saves and restores the register, but that&rsquo;s a couple of instructions moving data between registers and L1 cache. <a href="#fnref:3" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-27T08:30:22-04:00" pubdate data-updated="true">Mar 27<span>th</span>, 2014</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/02/18/clock-sources-in-linux/" title="Previous Post: Clock Sources in Linux">&laquo; Clock Sources in Linux</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/03/27/using-clangs-address-sanitizer/">Using clang's Address Sanitizer (without clang)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/18/clock-sources-in-linux/">Clock Sources in Linux</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/13/how-did-i-get-here/">You may ask yourself - "How did I get here?"</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/12/shared-singletons/">Shared Singleton's</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/11/whats-old-is-new-again/">What's Old Is New Again</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  
+  <a href="/about/index.html"><h1>About...</h1></a>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+Copyright &copy; 2014 - Bill Torpey. &nbsp; All Rights Reserved.
+<br>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+<br>
+<span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

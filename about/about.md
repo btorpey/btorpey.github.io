@@ -47,3 +47,5 @@ I mostly work in C++ on Linux, with a smattering of other technlogies (Windows,
 two areas: performance measurement/improvement and software correctness.
 Perhaps surprisingly, there tends to be a lot of overlap in the methods and
 techniques that enable both.
+
+Please feel free to [contact me](<mailto:wallstprog@gmail.com>) with any comments, suggestions, etc.

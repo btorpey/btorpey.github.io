@@ -120,7 +120,7 @@ boot time.</p></li>
 same machine (intra-machine timing).</p></li>
 <li><p>For intra-machine timing, your best bet is generally going to be to read the
 TSC directly using assembler. On my test machine it takes about 100ns
-to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included source code (<a href="https://github.com/btorpey/clocks.git">https://github.com/btorpey/clocks.git</a>) that you can use to do your own measurements.</p></li>
+to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included <a href="https://github.com/btorpey/clocks.git">source code</a> that you can use to do your own measurements.</p></li>
 </ul>
 
 
@@ -195,11 +195,10 @@ all TSC&rsquo;s synchronized across all cores in a system, and an <em>invariant<
 CPU frequency. To check whether your CPU supports one or both, execute the
 following and examine the values output in flags:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">cat /proc/cpuinfo | grep -i tsc</span>
-</span><span class='line'><span class="go">flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre>
+$ cat /proc/cpuinfo | grep -i tsc
+flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
+</pre>
 
 
 <p>The flags have the following meanings:</p>
@@ -237,20 +236,18 @@ scheduling interval in most Linux variants is either 1 ms or 10 ms).</p></li>
 
 <p>To see the clock sources that are available on the system:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocsource0/available_clocksource
-</span><span class='line'><span class="go">tsc hpet acpi_pm</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre>
+$ cat /sys/devices/system/clocksource/clocsource0/available_clocksource
+tsc hpet acpi_pm
+</pre>
 
 
 <p>And to see which one is being used:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> cat /sys/devices/system/clocksource/clocksource0/current_clocksource
-</span><span class='line'><span class="go">tsc</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre>
+$ cat /sys/devices/system/clocksource/clocksource0/current_clocksource
+tsc
+</pre>
 
 
 <p>Typically the clock source is set by the kernel automatically at boot time, but
@@ -263,9 +260,9 @@ parameter(s) on the command line that boots Linux (e.g., in
 <p>You can also change the clock source while the system is running  e.g., to
 force use of HPET:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="gp">$</span> <span class="nb">echo</span> hpet &gt; /sys/devices/system/clocksource/clocksource0/current_clocksource
-</span></code></pre></td></tr></table></div></figure>
+<pre>
+$ echo hpet > /sys/devices/system/clocksource/clocksource0/current_clocksource
+</pre>
 
 
 <p>The above discusssion refers to what I will call hardware clocks, although
@@ -365,26 +362,19 @@ included a small test program (clocks.c) that when compiled<sup id="fnref:6"><a 
 print the relevant information about the clocks on a system. On my test
 machine<sup id="fnref:7"><a href="#fn:7" rel="footnote">7</a></sup> it shows the following:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">clocks.c</span>
-</span><span class='line'><span class="go">                    clock           res (ns)            secs           nsecs</span>
-</span><span class='line'><span class="go">             gettimeofday              1,000   1,391,886,268     904,379,000</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME                  1   1,391,886,268     904,393,224</span>
-</span><span class='line'><span class="go">    CLOCK_REALTIME_COARSE            999,848   1,391,886,268     903,142,905</span>
-</span><span class='line'><span class="go">          CLOCK_MONOTONIC                  1         136,612     254,536,227</span>
-</span><span class='line'><span class="go">      CLOCK_MONOTONIC_RAW        870,001,632         136,612     381,306,122</span>
-</span><span class='line'><span class="go">   CLOCK_MONOTONIC_COARSE            999,848         136,612     253,271,977</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre>
+clocks.c
+                    clock          res (ns)            secs           nsecs
+             gettimeofday             1,000   1,391,886,268     904,379,000
+           CLOCK_REALTIME                 1   1,391,886,268     904,393,224
+    CLOCK_REALTIME_COARSE           999,848   1,391,886,268     903,142,905
+          CLOCK_MONOTONIC                 1         136,612     254,536,227
+      CLOCK_MONOTONIC_RAW       870,001,632         136,612     381,306,122
+   CLOCK_MONOTONIC_COARSE           999,848         136,612     253,271,977
+</pre>
 
 
-<p>Note that it&rsquo;s important to pay attention to what clock_getres() returns &mdash; a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday, which politely zeros out those lower-order digits).</p>
+<p>Note that it&rsquo;s important to pay attention to what clock_getres() returns &mdash; a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday &mdash; since it returns a timeval, which is denominated in micros, the lower-order digits are all zeros).</p>
 
 <p>Also, the value returned from clock_getres() for CLOCK_MONOTONIC_RAW is clearly garbage, although I&rsquo;ve seen similar results on several machines.</p>
 
@@ -415,10 +405,10 @@ CPUID/RDTSC combination.</p>
 <p>Obviously, the RDTSC instruction can be called directly from C or C++, using
 whatever mechanism your compiler provides for accessing assembler language, or
 by calling an assembler stub that is linked with the C/C++ program. (An example
-can be found at Agner Fog&rsquo;s excellent website (<a href="http://agner.org/optimize/#asmlib">http://agner.org/optimize/#asmlib</a>).</p>
+can be found at <a href="http://agner.org/optimize/#asmlib">Agner Fog&rsquo;s excellent website</a>.</p>
 
 <p>Calling gettimeofday() or clock_gettime() is pretty straightforward &mdash; see the
-accompanying clocks.c source file (<a href="https://github.com/btorpey/clocks/blob/master/clocks.c">https://github.com/btorpey/clocks/blob/master/clocks.c</a>) for examples.</p>
+accompanying <a href="https://github.com/btorpey/clocks/blob/master/clocks.c">clocks.c source file</a> for examples.</p>
 
 <h3>Java</h3>
 
@@ -457,43 +447,26 @@ versions to help ensure that code and data is in the processor&rsquo;s cache mem
 
 <p>The results of running the test on my test machine are:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">ClockBench.cpp</span>
-</span><span class='line'><span class="go">                   Method       samples     min     max     avg  median   stdev</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99</span>
-</span><span class='line'><span class="go">    CLOCK_REALTIME_COARSE       200        0.00    0.00    0.00    0.00    0.00</span>
-</span><span class='line'><span class="go">          CLOCK_MONOTONIC       200       57.00   84.00   57.52   70.50    2.82</span>
-</span><span class='line'><span class="go">      CLOCK_MONOTONIC_RAW       200      652.00 1104.00  697.26  878.00   60.81</span>
-</span><span class='line'><span class="go">   CLOCK_MONOTONIC_COARSE       200        0.00    0.00    0.00    0.00    0.00</span>
-</span><span class='line'><span class="go">              cpuid+rdtsc       200       96.00  100.00   97.74   98.00    1.57</span>
-</span><span class='line'><span class="go">                    rdtsc       200       27.00   28.00   27.07   27.50    0.26</span>
-</span><span class='line'><span class="go">Using CPU frequency = 2.660000</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ClockBench.java</span>
-</span><span class='line'><span class="go">                   Method       samples     min     max     avg  median   stdev</span>
-</span><span class='line'><span class="go">          System.nanoTime       200      111.00  115.00  113.10  113.00    1.49</span>
-</span><span class='line'><span class="go">           CLOCK_REALTIME       200      108.00  114.00  110.16  111.00    1.56</span>
-</span><span class='line'><span class="go">              cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64</span>
-</span><span class='line'><span class="go">                    rdtsc       200       75.00   79.00   77.43   77.00    1.35</span>
-</span><span class='line'><span class="go">Using CPU frequency = 2.660000</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre>
+ClockBench.cpp
+                   Method       samples     min     max     avg  median   stdev
+           CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99
+    CLOCK_REALTIME_COARSE       200        0.00    0.00    0.00    0.00    0.00
+          CLOCK_MONOTONIC       200       57.00   84.00   57.52   70.50    2.82
+      CLOCK_MONOTONIC_RAW       200      652.00 1104.00  697.26  878.00   60.81
+   CLOCK_MONOTONIC_COARSE       200        0.00    0.00    0.00    0.00    0.00
+              cpuid+rdtsc       200       96.00  100.00   97.74   98.00    1.57
+                    rdtsc       200       27.00   28.00   27.07   27.50    0.26
+Using CPU frequency = 2.660000
+
+ClockBench.java
+                   Method       samples     min     max     avg  median   stdev
+          System.nanoTime       200      111.00  115.00  113.10  113.00    1.49
+           CLOCK_REALTIME       200      108.00  114.00  110.16  111.00    1.56
+              cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64
+                    rdtsc       200       75.00   79.00   77.43   77.00    1.35
+Using CPU frequency = 2.660000
+</pre>
 
 
 <p>A few things to note about these results:</p>
@@ -524,10 +497,11 @@ versions, presumably due to the overhead of going through JNI.</p></li>
 
 <p>I thought this would be a very brief and somewhat trivial research project. In
 fact, it turned out to be far more complicated (and less well-documented) than I
-expected. I guess I should have known:  everything related to time and computers
+expected. I guess I should have known: everything related to time and computers
 turns out to be a major pain in the neck!</p>
 
-<p>Anyway, I hope this proves helpful. As always, please feel free to contact me
+<p>Anyway, I hope this proves helpful. (I know I would have been very happy to have had this when I started looking into clock sources).<br/>
+As always, please feel free to <a href="mailto:wallstprog@gmail.com">contact me</a>
 directly with comments, suggestions, corrections, etc.</p>
 
 <h2>Additional Resources</h2>
@@ -614,6 +588,8 @@ researched this article.</p>
         <a class="basic-alignment left" href="/blog/2014/02/13/how-did-i-get-here/" title="Previous Post: You may ask yourself - "How did I get here?"">&laquo; You may ask yourself - "How did I get here?"</a>
       
       
+        <a class="basic-alignment right" href="/blog/2014/03/27/using-clangs-address-sanitizer/" title="Next Post: Using clang's Address Sanitizer (without clang)">Using clang's Address Sanitizer (without clang) &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -625,6 +601,10 @@ researched this article.</p>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/03/27/using-clangs-address-sanitizer/">Using clang's Address Sanitizer (without clang)</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2014/02/18/clock-sources-in-linux/">Clock Sources in Linux</a>
@@ -642,10 +622,6 @@ researched this article.</p>
         <a href="/blog/2014/02/11/whats-old-is-new-again/">What's Old Is New Again</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/02/10/fixing-less/">FIXing less</a>
-      </li>
-    
   </ul>
 </section>
 <section>
@@ -660,11 +636,11 @@ researched this article.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2014 - Bill Torpey. All Rights Reserved. -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
-<p>
+Copyright &copy; 2014 - Bill Torpey. &nbsp; All Rights Reserved.
+<br>
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+<br>
+<span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
 </footer>

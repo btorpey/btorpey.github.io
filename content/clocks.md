@@ -29,7 +29,7 @@ The short version is that for best results you should be using:
 
 -   For intra-machine timing, your best bet is generally going to be to read the
     TSC directly using assembler. On my test machine it takes about 100ns 
-    to read the TSC from software, so that is the limit of this method's accuracy. YMMV, of course, which is why I've included source code (<https://github.com/btorpey/clocks.git>) that you can use to do your own measurements.
+    to read the TSC from software, so that is the limit of this method's accuracy. YMMV, of course, which is why I've included [source code](<https://github.com/btorpey/clocks.git>) that you can use to do your own measurements.
     
 The following sections will talk about how clocks work on Linux, how to access
 the various clocks from software, and how to measure the overhead of acessing
@@ -45,9 +45,9 @@ timing measurements.
 
 The problem with inter-machine timing is that, by definition, you're dealing
 with (at least) two different clock sources. (Unless of course you are timing
-round-trip intervals -- if that's the case, you're lucky). And the problem with
-having two clock sources is described somewhat amusingly by Segal's law: "A man
-with a watch knows what time it is. A man with two watches is never sure".
+round-trip intervals -- if that's the case, you're lucky). And the problem with
+having two clock sources is described somewhat amusingly by Segal's law: "A man
+with a watch knows what time it is. A man with two watches is never sure".
 
 For inter-machine timings, you're pretty much stuck with the CLOCK_REALTIME
 clock source (the source for gettimeofday), since you presumably need a clock
@@ -74,7 +74,7 @@ time and the tick count kept by the TSC.
 
 The other thing that happens when the system boots is that the TSC (Time Stamp
 Counter) starts running. The TSC is a register counter that is also driven from
-a crystal oscillator -- the same oscillator that is used to generate the clock
+a crystal oscillator -- the same oscillator that is used to generate the clock
 pulses that drive the CPU(s). As such it runs at the frequency of the CPU, so
 for instance a 2GHz clock will tick twice per nanosecond.
 
@@ -93,7 +93,7 @@ as a timing source.
     or the CPU stopped completely for power management), the TSC on that CPU
     would also slow down or stop. (It is sometimes possible to work around this
     problem by disabling power management in the BIOS, so all CPU's always run
-    at 100%  no more, no less).
+    at 100%  no more, no less).
 
 Both of these problems are solved in more recent CPUs: a *constant* TSC keeps
 all TSC's synchronized across all cores in a system, and an *invariant* (or
@@ -101,10 +101,10 @@ all TSC's synchronized across all cores in a system, and an *invariant* (or
 CPU frequency. To check whether your CPU supports one or both, execute the
 following and examine the values output in flags:
 
-```console
-cat /proc/cpuinfo | grep -i tsc
-flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
-```
+<pre>
+$ cat /proc/cpuinfo | grep -i tsc
+flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
+</pre>
 
 The flags have the following meanings:
 
@@ -140,17 +140,17 @@ relatively low overhead, there are other clock sources that can be used:
 
 To see the clock sources that are available on the system:
 
-{% codeblock lang:console %}
+<pre>
 $ cat /sys/devices/system/clocksource/clocsource0/available_clocksource
 tsc hpet acpi_pm
-{% endcodeblock %}
+</pre>
 
 And to see which one is being used:
 
-``` console
+<pre>
 $ cat /sys/devices/system/clocksource/clocksource0/current_clocksource
 tsc
-```
+</pre>
 
 Typically the clock source is set by the kernel automatically at boot time, but
 you can force a particular clock source by including the appropriate
@@ -159,12 +159,12 @@ parameter(s) on the command line that boots Linux (e.g., in
 
 `ro root=/dev/... *clocksource=tsc*`
 
-You can also change the clock source while the system is running  e.g., to
+You can also change the clock source while the system is running  e.g., to
 force use of HPET:
 
-``` console
-$ echo hpet > /sys/devices/system/clocksource/clocksource0/current_clocksource
-```
+<pre>
+$ echo hpet > /sys/devices/system/clocksource/clocksource0/current_clocksource
+</pre>
 
 The above discusssion refers to what I will call hardware clocks, although
 strictly speaking these clocks are a mixture of hardware and software. At the
@@ -179,11 +179,11 @@ Wall-Clock Time
 The hardware (or hardware/software hybrid) clocks just discussed all have one
 thing in common: they are simply counters, and as such have no direct
 relationship to what most of us think of as time, commonly referred to as
-wall-clock time.
+wall-clock time.
 
 To derive wall-clock time from these counters requires some fairly intricate
 software, at least if the wall-clock time is to be reasonably accurate. What
-reasonably accurate means of course depends on how important it is (i.e., how
+reasonably accurate means of course depends on how important it is (i.e., how
 much money is available) to make sure that wall-clock time is accurate. 
 
 The whole process of synchronizing multiple distributed clocks is hellishly complicated, and we're not going to go into it here. There are many different mechanisms for synchronizing distributed clocks, from the relatively simple (e.g., NTP[^3]) to the not-quite-so-simple (e.g., PTP[^4]), up to specialized proprietary solutions[^5].
@@ -192,17 +192,17 @@ The main point is that synchronizing a system's wall-clock time with other
 systems requires a way to adjust the clock to keep it in sync with its peers.
 There are two ways this can be done:
 
--   Stepping is the process of making (one or more) discontinuous changes to
+-   Stepping is the process of making (one or more) discontinuous changes to
     the wall-clock component of the system time. This can cause big jumps in the
-    wall-clock time, including backwards jumps, although the time adjustment
+    wall-clock time, including backwards jumps, although the time adjustment
     software can often be configured to limit the size of a single change. A
     common example is a system that is configured to initialize its clock at
     boot time from an NTP server.
 
--   Slewing (sometimes called disciplining) involves actually changing the frequency (or frequency
+-   Slewing (sometimes called disciplining) involves actually changing the frequency (or frequency
     multiplier) of the oscillator used to drive a hardware counter like the TSC.
     This can cause the clock to run relatively faster or slower, but it cannot
-    jump, and so cannot go backwards.
+    jump, and so cannot go backwards.
     
 
 
@@ -212,7 +212,7 @@ Available Clock Sources
 The most common way to get time information in Linux is by calling the
 gettimeofday() system call, which returns the current wall-clock time with
 microsecond precision (although not necessarily microsecond accuracy). Since
-gettimeofday() calls clock_gettime(CLOCK_REALTIME, ), the following discussion
+gettimeofday() calls clock_gettime(CLOCK_REALTIME, ), the following discussion
 applies to it as well.
 
 Linux also implements the POSIX clock_gettime() family of functions, which let
@@ -263,7 +263,7 @@ print the relevant information about the clocks on a system. On my test
 machine[^7] it shows the following:
 
 
-``` console
+<pre>
 clocks.c
                     clock	       res (ns)	           secs	          nsecs
              gettimeofday	          1,000	  1,391,886,268	    904,379,000
@@ -272,15 +272,15 @@ clocks.c
           CLOCK_MONOTONIC	              1	        136,612	    254,536,227
       CLOCK_MONOTONIC_RAW	    870,001,632	        136,612	    381,306,122
    CLOCK_MONOTONIC_COARSE	        999,848	        136,612	    253,271,977
-```
+</pre>
 
-Note that it's important to pay attention to what clock_getres() returns -- a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday, which politely zeros out those lower-order digits).
+Note that it's important to pay attention to what clock_getres() returns -- a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday -- since it returns a timeval, which is denominated in micros, the lower-order digits are all zeros).
 
 Also, the value returned from clock_getres() for CLOCK_MONOTONIC_RAW is clearly garbage, although I've seen similar results on several machines.
 
 Finally, note that the resolution listed for CLOCK_REALTIME is close to, but not
-quite, 1 million -- this is an artifact of the fact that the oscillator cannot
-generate a frequency of exactly 1000 Hz -- it's actually 1000.15 Hz.
+quite, 1 million -- this is an artifact of the fact that the oscillator cannot
+generate a frequency of exactly 1000 Hz -- it's actually 1000.15 Hz.
 
 Getting Clock Values in Software
 --------------------------------
@@ -306,10 +306,10 @@ CPUID/RDTSC combination.
 Obviously, the RDTSC instruction can be called directly from C or C++, using
 whatever mechanism your compiler provides for accessing assembler language, or
 by calling an assembler stub that is linked with the C/C++ program. (An example
-can be found at Agner Fog's excellent website (<http://agner.org/optimize/#asmlib>).
+can be found at [Agner Fog's excellent website](<http://agner.org/optimize/#asmlib>).
 
-Calling gettimeofday() or clock_gettime() is pretty straightforward -- see the
-accompanying clocks.c source file (<https://github.com/btorpey/clocks/blob/master/clocks.c>) for examples.
+Calling gettimeofday() or clock_gettime() is pretty straightforward -- see the
+accompanying [clocks.c source file](<https://github.com/btorpey/clocks/blob/master/clocks.c>) for examples.
 
 
 
@@ -323,7 +323,7 @@ Java has only two methods that are relevant to this discussion:
 
 -   System.nanoTime returns the number of nanoseconds since some unspecified
     starting point. Depending on the capabilities of the system, it either calls
-    gettimeofday(), or clock_gettime(CLOCK_MONOTONIC, ).
+    gettimeofday(), or clock_gettime(CLOCK_MONOTONIC, ).
 
 The bad news is that if you need clock values other than the above in Java,
 you're going to need to roll your own, e.g. by calling into C via JNI. The good
@@ -348,8 +348,7 @@ versions to help ensure that code and data is in the processor's cache memory.
 
 The results of running the test on my test machine are:
 
-``` console
-
+<pre>
 ClockBench.cpp
                    Method       samples     min     max     avg  median   stdev
            CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99
@@ -368,7 +367,7 @@ ClockBench.java
               cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64
                     rdtsc       200       75.00   79.00   77.43   77.00    1.35
 Using CPU frequency = 2.660000
-```
+</pre>
 
 
 A few things to note about these results:
@@ -389,7 +388,7 @@ A few things to note about these results:
     cpuid+rdtsc if not. (While rdtsc alone is the fastest, the fact that it can
     be inaccurate as a result of out-of-order execution means it is only useful
     for timing relatively long operations where that inaccuracy is not
-    significant -- but those are precisely the scenarios where its speed is less
+    significant -- but those are precisely the scenarios where its speed is less
     important).
 
 -   Also as expected, the Java versions are slightly slower than the C++
@@ -400,16 +399,17 @@ Conclusion
 
 I thought this would be a very brief and somewhat trivial research project. In
 fact, it turned out to be far more complicated (and less well-documented) than I
-expected. I guess I should have known:  everything related to time and computers
+expected. I guess I should have known: everything related to time and computers
 turns out to be a major pain in the neck!
 
-Anyway, I hope this proves helpful. As always, please feel free to contact me
+Anyway, I hope this proves helpful. (I know I would have been very happy to have had this when I started looking into clock sources).  
+As always, please feel free to [contact me](<mailto:wallstprog@gmail.com>) 
 directly with comments, suggestions, corrections, etc.
 
 Additional Resources
 --------------------
 
-Following are the main anchor points that I kept coming back to you as I
+Following are the main anchor points that I kept coming back to you as I
 researched this article.
 
 <http://elinux.org/Kernel_Timer_Systems>

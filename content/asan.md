@@ -79,7 +79,7 @@ g++ (or gcc), not ld).
 
 While not strictly required, it's also a very good idea to include the `-fno-omit-frame-pointer` flag
 in the compile step.  This will prevent the compiler from optimizing away the frame pointer (ebp) register.  While
-disabling any optimization might seem like a bad idea, in this case the performance benefit is minimal at best[^5], but the 
+disabling any optimization might seem like a bad idea, in this case the performance benefit is likely minimal at best[^5], but the 
 inability to get accurate stack frames is a show-stopper.
 
 Running with Asan

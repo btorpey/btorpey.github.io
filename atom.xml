@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-02T18:02:38-04:00</updated>
+  <updated>2014-04-02T18:09:48-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -98,7 +98,7 @@ g++ (or gcc), not ld).</p>
 
 <p>While not strictly required, it&rsquo;s also a very good idea to include the <code>-fno-omit-frame-pointer</code> flag
 in the compile step.  This will prevent the compiler from optimizing away the frame pointer (ebp) register.  While
-disabling any optimization might seem like a bad idea, in this case the performance benefit is minimal at best<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>, but the
+disabling any optimization might seem like a bad idea, in this case the performance benefit is likely minimal at best<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>, but the
 inability to get accurate stack frames is a show-stopper.</p>
 
 <h2>Running with Asan</h2>

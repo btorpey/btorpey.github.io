@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-02T19:56:40-04:00</updated>
+  <updated>2014-04-03T19:29:06-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -304,8 +304,10 @@ timing measurements.</p>
 <p>The problem with inter-machine timing is that, by definition, you&rsquo;re dealing
 with (at least) two different clock sources. (Unless of course you are timing
 round-trip intervals &mdash; if that&rsquo;s the case, you&rsquo;re lucky). And the problem with
-having two clock sources is described somewhat amusingly by Segal&rsquo;s law: &ldquo;A man
-with a watch knows what time it is. A man with two watches is never sure&rdquo;.</p>
+having two clock sources is described somewhat amusingly by this old chestnut:</p>
+
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
+
 
 <p>For inter-machine timings, you&rsquo;re pretty much stuck with the CLOCK_REALTIME
 clock source (the source for gettimeofday), since you presumably need a clock
@@ -420,7 +422,7 @@ you can force a particular clock source by including the appropriate
 parameter(s) on the command line that boots Linux (e.g., in
 /boot/grub/grub.conf):</p>
 
-<p><code>ro root=/dev/... *clocksource=tsc*</code></p>
+<p><code>ro root=/dev/... clocksource=tsc</code></p>
 
 <p>You can also change the clock source while the system is running  e.g., to
 force use of HPET:</p>
@@ -522,7 +524,7 @@ you query different clock sources, including:</p>
 
 <p>The availability of the various clocks, as well as their resolution and
 accuracy, depends on the hardware as well as the specific Linux implementation.
-As part of the accompanying source code for this article (<a href="https://github.com/btorpey/clocks.git">https://github.com/btorpey/clocks.git</a>) I&rsquo;ve
+As part of the <a href="https://github.com/btorpey/clocks.git">accompanying source code</a> for this article I&rsquo;ve
 included a small test program (clocks.c) that when compiled<sup id="fnref:6"><a href="#fn:6" rel="footnote">6</a></sup> and run will
 print the relevant information about the clocks on a system. On my test
 machine<sup id="fnref:7"><a href="#fn:7" rel="footnote">7</a></sup> it shows the following:</p>
@@ -570,7 +572,7 @@ CPUID/RDTSC combination.</p>
 <p>Obviously, the RDTSC instruction can be called directly from C or C++, using
 whatever mechanism your compiler provides for accessing assembler language, or
 by calling an assembler stub that is linked with the C/C++ program. (An example
-can be found at <a href="http://agner.org/optimize/#asmlib">Agner Fog&rsquo;s excellent website</a>.</p>
+can be found at <a href="http://agner.org/optimize/#asmlib">Agner Fog&rsquo;s excellent website</a>).</p>
 
 <p>Calling gettimeofday() or clock_gettime() is pretty straightforward &mdash; see the
 accompanying <a href="https://github.com/btorpey/clocks/blob/master/clocks.c">clocks.c source file</a> for examples.</p>
@@ -600,7 +602,7 @@ observing a phenomenom changes it. A similar issue exists with getting
 timestamps for latency measurement, since it takes a finite (and sometimes
 variable) amount of time to read any clock source.  In other words, just because the TSC on a 2GHz machine ticks twice per nanosecond doesn&rsquo;t mean we can measure intervals of a nanosecond &mdash; we also need to account for the time it takes to read the TSC from software.</p>
 
-<p>So, how expensive is it to perform these different clock queries? Included is some sample code (<a href="https://github.com/btorpey/clocks.git">https://github.com/btorpey/clocks.git</a>) that you can
+<p>So, how expensive is it to perform these different clock queries? Included is some <a href="https://github.com/btorpey/clocks.git">sample code</a> that you can
 use to measure the time it takes to query various clock sources, from both C++
 and Java (using JNI to call C code).</p>
 
@@ -638,7 +640,7 @@ Using CPU frequency = 2.660000
 
 <ul>
 <li><p>Both of the COARSE clocks show a latency of zero for getting the clock
-value. This is clearly incorrect, but does show that the time it takes to
+value. This tells us that the time it takes to
 get the clock value is less than the resolution of the clock. (Our previous
 test showed a resolution of 1ms for the COARSE clocks).</p></li>
 <li><p>For some reason, the CLOCK_MONOTONIC_RAW clock is very expensive to query. I
@@ -646,7 +648,7 @@ can&rsquo;t explain this &mdash;  you would think that its lack of adjustment wo
 it faster, not slower. This is unfortunate, as otherwise it would be an
 excellent choice for intra-machine timing.</p></li>
 <li><p>As you might expect, the combination of cpuid and rdtsc is slower than
-rdtscp, which is slower than rdtsc alone. In general, this would lead
+rdtscp, which is slower than rdtsc alone. In general, this would
 suggest that rdtscp should be preferred if available, with a fallback to
 cpuid+rdtsc if not. (While rdtsc alone is the fastest, the fact that it can
 be inaccurate as a result of out-of-order execution means it is only useful
@@ -1587,6 +1589,16 @@ you see something like this…</p>
 
 
 <p><img class="center" src="http://edison.rutgers.edu/images/xx/xx1325.jpg"></p>
+
+<p>Source: The Thomas Edison Papers, Rutgers University <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p><a href="http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;">http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;</a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
 ]]></content>
   </entry>
   
@@ -1632,7 +1644,7 @@ with.
 <!--more-->
 
 
-<p>Well, the gods smiled on me &mdash; Scooter Software released an alpha version of Beyond Compare for Mac right around the time I made the switch.  (And a good thing, too!  I tried everything else out there, and nothing else even comes close).</p>
+<p>Well, for once I got the timing right &mdash; Scooter Software released an alpha version of Beyond Compare for Mac right around the time I made the switch.  (And a good thing, too!  I tried everything else out there, and nothing else even comes close).</p>
 
 <p>So, what is Beyond Compare?  It&rsquo;s a comparison program that does visual &ldquo;diffs&rdquo; of directories and files.  I use it to backup and sync my machines, for reviewing changes prior to commit, and in general just to keep track of what I&rsquo;ve changed as I work.  If you&rsquo;ve never used a visual diff like BC, trust me, your life could get a whole lot easier.</p>
 

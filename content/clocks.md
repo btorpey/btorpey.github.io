@@ -46,8 +46,9 @@ timing measurements.
 The problem with inter-machine timing is that, by definition, you're dealing
 with (at least) two different clock sources. (Unless of course you are timing
 round-trip intervals -- if that's the case, you're lucky). And the problem with
-having two clock sources is described somewhat amusingly by Segal's law: "A man
-with a watch knows what time it is. A man with two watches is never sure".
+having two clock sources is described somewhat amusingly by this old chestnut: 
+
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal's Law</cite></footer></blockquote>
 
 For inter-machine timings, you're pretty much stuck with the CLOCK_REALTIME
 clock source (the source for gettimeofday), since you presumably need a clock
@@ -157,7 +158,7 @@ you can force a particular clock source by including the appropriate
 parameter(s) on the command line that boots Linux (e.g., in
 /boot/grub/grub.conf):
 
-`ro root=/dev/... *clocksource=tsc*`
+`ro root=/dev/... clocksource=tsc`
 
 You can also change the clock source while the system is running  e.g., to
 force use of HPET:
@@ -257,11 +258,10 @@ you query different clock sources, including:
 
 The availability of the various clocks, as well as their resolution and
 accuracy, depends on the hardware as well as the specific Linux implementation.
-As part of the accompanying source code for this article (<https://github.com/btorpey/clocks.git>) I've
+As part of the [accompanying source code](<https://github.com/btorpey/clocks.git>) for this article I've
 included a small test program (clocks.c) that when compiled[^6] and run will
 print the relevant information about the clocks on a system. On my test
 machine[^7] it shows the following:
-
 
 <pre>
 clocks.c
@@ -306,7 +306,7 @@ CPUID/RDTSC combination.
 Obviously, the RDTSC instruction can be called directly from C or C++, using
 whatever mechanism your compiler provides for accessing assembler language, or
 by calling an assembler stub that is linked with the C/C++ program. (An example
-can be found at [Agner Fog's excellent website](<http://agner.org/optimize/#asmlib>).
+can be found at [Agner Fog's excellent website](<http://agner.org/optimize/#asmlib>)).
 
 Calling gettimeofday() or clock_gettime() is pretty straightforward -- see the
 accompanying [clocks.c source file](<https://github.com/btorpey/clocks/blob/master/clocks.c>) for examples.
@@ -336,7 +336,7 @@ observing a phenomenom changes it. A similar issue exists with getting
 timestamps for latency measurement, since it takes a finite (and sometimes
 variable) amount of time to read any clock source.  In other words, just because the TSC on a 2GHz machine ticks twice per nanosecond doesn't mean we can measure intervals of a nanosecond -- we also need to account for the time it takes to read the TSC from software.
 
-So, how expensive is it to perform these different clock queries? Included is some sample code (<https://github.com/btorpey/clocks.git>) that you can
+So, how expensive is it to perform these different clock queries? Included is some [sample code](<https://github.com/btorpey/clocks.git>) that you can
 use to measure the time it takes to query various clock sources, from both C++
 and Java (using JNI to call C code).
 
@@ -373,7 +373,7 @@ Using CPU frequency = 2.660000
 A few things to note about these results:
 
 -   Both of the COARSE clocks show a latency of zero for getting the clock
-    value. This is clearly incorrect, but does show that the time it takes to
+    value. This tells us that the time it takes to
     get the clock value is less than the resolution of the clock. (Our previous
     test showed a resolution of 1ms for the COARSE clocks).
 
@@ -383,7 +383,7 @@ A few things to note about these results:
     excellent choice for intra-machine timing.
 
 -   As you might expect, the combination of cpuid and rdtsc is slower than
-    rdtscp, which is slower than rdtsc alone. In general, this would lead
+    rdtscp, which is slower than rdtsc alone. In general, this would
     suggest that rdtscp should be preferred if available, with a fallback to
     cpuid+rdtsc if not. (While rdtsc alone is the fastest, the fact that it can
     be inaccurate as a result of out-of-order execution means it is only useful

@@ -73,7 +73,7 @@ platform (in the case of Red Hat/CentOS 6.5, that is the relatively ancient gcc
 Building with Asan
 -------------
 Including support for Asan in your build is pretty simple -- just include the `-fsanitize=address`
-flag in both the compile and build step.  (Note that this means you need to invoke the linker via the compiler
+flag in both the compile and link step.  (Note that this means you need to invoke the linker via the compiler
 driver, rather than directly.  In practice, this means that the executable you specify for the link step should be 
 g++ (or gcc), not ld).  
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-03T19:29:06-04:00</updated>
+  <updated>2014-04-13T19:43:23-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -92,7 +92,7 @@ platform (in the case of Red Hat/CentOS 6.5, that is the relatively ancient gcc
 <h2>Building with Asan</h2>
 
 <p>Including support for Asan in your build is pretty simple &mdash; just include the <code>-fsanitize=address</code>
-flag in both the compile and build step.  (Note that this means you need to invoke the linker via the compiler
+flag in both the compile and link step.  (Note that this means you need to invoke the linker via the compiler
 driver, rather than directly.  In practice, this means that the executable you specify for the link step should be
 g++ (or gcc), not ld).</p>
 

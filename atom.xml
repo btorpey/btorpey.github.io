@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-13T19:43:23-04:00</updated>
+  <updated>2014-04-29T21:12:06-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,35 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[A Picture is Worth 1K Words]]></title>
+    <link href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/"/>
+    <updated>2014-04-29T19:23:07-04:00</updated>
+    <id>http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words</id>
+    <content type="html"><![CDATA[<p>You know those mutiple-choice tests that put you in one of four quadrants based
+on your answers to a bunch of seemingly irrelevant questions? We&rsquo;ve all taken
+them, and if you&rsquo;re like me they&rsquo;re kind of like reading your horoscope &mdash; it
+all seems so right and true when you&rsquo;re reading it, but you wonder if it would
+still seem just as right and true if the horoscopes got jumbled at random?</p>
+
+<p>Well, I took one of these a while back that wasn&rsquo;t like that &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
+test, and what it said about me is that I&rsquo;m waaaayyy over at the end of the
+scale when it comes to visual thinking. That gave me an insight into the way my
+brain works that I&rsquo;ve found really helpful since. So, this next bit was right up my alley,
+but I&rsquo;m guessing you&rsquo;ll like it too.</p>
+
+<p>We read a lot lately about NUMA architecture and how it presents a fundamental
+change in the way we approach writing efficient code: it&rsquo;s no longer about the
+CPU, it&rsquo;s all about RAM. We all nod and say &ldquo;Sure, I get that!&rdquo;  Well, I thought
+I got it too, but until I saw <a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html">this web page</a>,
+I really didn&rsquo;t.</p>
+
+<p><a href=http://www.overbyte.com.au/misc/Lesson3/CacheFun.html><img src=http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png></a></p>
+
+<p>See the full discussion at <a href="http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck">http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Using clang's Address Sanitizer (without clang)]]></title>

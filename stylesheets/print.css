@@ -1,0 +1,25 @@
+@import url("screen.css");
+
+/* Article printing */
+
+body>header,
+nav,
+footer,
+aside,
+.toggle-sidebar,
+.pagination
+{
+  display: none;
+}
+
+html,
+body,
+article,
+#main,
+#content
+{
+  background-color:#FFF;
+  border-width:0px;
+  margin: 0px;
+  padding: 0px;
+}

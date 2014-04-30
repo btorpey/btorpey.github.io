@@ -4,10 +4,10 @@ them, and if you're like me they're kind of like reading your horoscope -- it
 all seems so right and true when you're reading it, but you wonder if it would
 still seem just as right and true if the horoscopes got jumbled at random?
 
-Well, I took one of these a while back that wasn't like that -- it was the "Learning-Style Inventory"
+Well, I took one of these tests a while back that wasn't like that -- it was the "Learning-Style Inventory"
 test, and what it said about me is that I'm waaaayyy over at the end of the
 scale when it comes to visual thinking. That gave me an insight into the way my
-brain works that I've found really helpful since. So, this next bit was right up my alley,
+brain works that I've found really helpful ever since. So, this next bit was right up my alley,
 but I'm guessing you'll like it too.
 
 We read a lot lately about NUMA architecture and how it presents a fundamental

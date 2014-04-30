@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-29T21:49:47-04:00</updated>
+  <updated>2014-04-30T17:01:56-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -282,7 +282,7 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Clock Sources in Linux]]></title>
+    <title type="html"><![CDATA[Measuring Latency in Linux]]></title>
     <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
     <updated>2014-02-18T20:07:41-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>

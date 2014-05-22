@@ -94,12 +94,29 @@ in microseconds at least, and preferably in nanoseconds or better. &hellip;">
   </header>
 
 
-<div class="entry-content"><p>For measuring latency in modern systems, we need to be able to measure intervals
+<div class="entry-content">
+
+<table>
+    <tr>
+        <td>
+For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
-nanoseconds. But, it&rsquo;s important to understand what you&rsquo;re measuring and what
-the different edge cases might be to ensure that your results are accurate.</p>
+nanoseconds. 
+
+But, it&#8217;s important to understand what you&#8217;re measuring and what
+the different edge cases might be to ensure that your results are accurate.          
+        </td>
+        <td>
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
+        
+        </td>
+    </tr>
+</table>
+
+
+<p></p>
 
 <!--more-->
 
@@ -141,7 +158,7 @@ timing measurements.</p>
 <p>The problem with inter-machine timing is that, by definition, you&rsquo;re dealing
 with (at least) two different clock sources. (Unless of course you are timing
 round-trip intervals &mdash; if that&rsquo;s the case, you&rsquo;re lucky). And the problem with
-having two clock sources is described somewhat amusingly by this old chestnut:</p>
+having two clock sources is described somewhat amusingly by the old chestnut that leads off this article:</p>
 
 <blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
 
@@ -615,6 +632,10 @@ researched this article.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/16/visualizing-latency/">Visualizing Latency</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/04/29/a-picture-is-worth-1k-words/">A Picture is Worth 1K Words</a>
       </li>
     
@@ -628,10 +649,6 @@ researched this article.</p>
     
       <li class="post">
         <a href="/blog/2014/02/13/how-did-i-get-here/">You may ask yourself - "How did I get here?"</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/02/12/shared-singletons/">Shared Singleton's</a>
       </li>
     
   </ul>

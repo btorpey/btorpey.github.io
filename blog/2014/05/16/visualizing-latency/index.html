@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Visualizing Latency - Confessions of a Wall Street Programmer</title>
+  <meta name="author" content="Bill Torpey">
+
+  
+  <meta name="description" content="I&rsquo;m a visual thinker (I think I may have mentioned that before ),
+so when I&rsquo;m analyzing performance, latency, etc. I find it really &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+  
+  <link href="/stylesheets/print.css" media="print" rel="stylesheet" type="text/css">  
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Confessions of a Wall Street Programmer</a></h1>
+  
+    <h2>practical ideas (and perhaps some uncommon knowledge) on software architecture, design, construction and testing</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:btorpey.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Visualizing Latency</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-16T08:42:58-04:00" pubdate data-updated="true">May 16<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><img class="right" src="/images/ping.png" width="320" height="240"></p>
+
+<p>I&rsquo;m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
+so when I&rsquo;m analyzing performance, latency, etc. I find it really helpful to be
+able to visualize what is going on on the machine.</p>
+
+<p>As a result, I had gotten
+reasonably good at using Excel to produce charts, which sometimes helped to correlate observed
+behaviors like latency spikes with other events on the machine.</p>
+
+<p>For a bunch of reasons I wanted to move away from Excel, though, and find
+another tool that would give me the same or better functionality.</p>
+
+<!--more-->
+
+
+<p>For one thing, a little over a year ago I switched to a Mac as my main machine
+after years of using Windows. There was a certain amount of adjustment, but for
+the most part it&rsquo;s been smooth sailing. More than that, I was actually able to
+recapture some of the fun and excitement I remember from my first Apple (an
+Apple ][).</p>
+
+<p>I also wanted something that would run on both the Mac and Linux, where I do
+most of my testing. Last but not least, I wanted something that would be
+scriptable so I could easily produce consistent charts for multiple test runs.</p>
+
+<p>I looked briefly at R, but ditched it when it used up all the 8GB in my laptop,
+plus the entire hard disk as swap, for a single dataset of 100,000 points.
+Probably my bad, but I didn&rsquo;t have the patience to figure out what I might be
+doing wrong.</p>
+
+<p>At that point I turned to venerable (some would say crusty) gnuplot. It&rsquo;s a bit
+long in the tooth, but I just wanted to plot latency over time, so how hard
+could that be? Well, I guess it&rsquo;s pretty easy if you already know how, but
+starting from scratch is another story.</p>
+
+<p>Which brings me to my rant of the day, directed at techies in general, and to the
+(us?) Linux/Unix techies in particular.</p>
+
+<p>Short version: I don&rsquo;t want to learn gnuplot. I don&rsquo;t even want to <em>have
+learned</em> gnuplot &mdash; even if I could do that by just taking a pill. What I want
+is to be able to produce decent-looking charts <em>without</em> knowing <em>anything</em>
+about gnuplot.</p>
+
+<blockquote><p>When all else fails, read the instructions.</p></blockquote>
+
+<p>To be fair, the gnuplot docs did have some examples &mdash; more anyway than you
+would find in a typical man page, although that&rsquo;s admittedly a low bar. And
+while my google-fu is usually pretty good, I just couldn&rsquo;t find anything on the
+intertubes that would work for me, so I had to learn <em>just a little</em> gnuplot.</p>
+
+<p>It turns out that gnuplot works pretty well, and will probably work even better
+once I learn (sigh) how to use it better.</p>
+
+<p>But you don&rsquo;t have to learn diddly if you don&rsquo;t want to. <a href="https://github.com/btorpey/latency-utils.git">Here is the first</a> in
+what will hopefully be a series of recipes that you can use with little or no
+modification.  Once you&rsquo;ve downloaded the repo, enter the following at the command prompt:</p>
+
+<p><code>./tsd.sh ping.csv x11</code></p>
+
+<p>Which should result in something like this:</p>
+
+<p><img class="center" src="/images/gnuplot.png"></p>
+
+<p>It&rsquo;s primitive, but that very primitiveness has its own appeal, especially for
+those of us for whom &ldquo;UI&rdquo; means bash, vi or emacs.</p>
+
+<p>A couple of points about the gnuplot command files:</p>
+
+<ul>
+<li><p>Sometimes you care about the actual time that an event took place, so you
+can correlate it with some other event; sometimes you don&rsquo;t. Accordingly, I&rsquo;ve
+created two different files: one which displays actual time (ts.gp), the other
+which calculates and displays deltaT (tsd.gp).</p></li>
+<li><p>I&rsquo;ve been programming in C (and later C++) for many years, but I don&rsquo;t think
+I&rsquo;ve ever purposely used the comma operator before. Well, expressions in gnuplot
+follow C language rules for operators, precedence, etc. and that comma operator
+turns out to be handy &mdash; in this case it lets us
+update the origin in the same expression that calculates deltaT.
+(The return value of the comma
+operator is the right-hand expression).</p></li>
+</ul>
+
+
+<p>&mdash; (Note that the above requires something like gnuplot 4.6)</p>
+
+<ul>
+<li>I&rsquo;ve left the default terminal in the gnuplot command files, but you can
+specify a different one on the command line.  To get a list of terminals supported
+in your version:
+<code>gnuplot -e "set terminal"</code>.</li>
+</ul>
+
+
+<p>Comments, suggestions, pull requests, etc. welcome.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-16T08:42:58-04:00" pubdate data-updated="true">May 16<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/tools/'>tools</a>, <a class='category' href='/blog/categories/wallst/'>wallst</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/04/29/a-picture-is-worth-1k-words/" title="Previous Post: A Picture is Worth 1K Words">&laquo; A Picture is Worth 1K Words</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/05/16/visualizing-latency/">Visualizing Latency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/04/29/a-picture-is-worth-1k-words/">A Picture is Worth 1K Words</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/03/27/using-clangs-address-sanitizer/">Using clang's Address Sanitizer (without clang)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/18/clock-sources-in-linux/">Measuring Latency in Linux</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/02/13/how-did-i-get-here/">You may ask yourself - "How did I get here?"</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  
+  <a href="/about/index.html"><h1>About...</h1></a>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+Copyright &copy; 2014 - Bill Torpey. &nbsp; All Rights Reserved.
+<br>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+<br>
+<span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'wallstprog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://btorpey.github.io/blog/2014/05/16/visualizing-latency/';
+        var disqus_url = 'http://btorpey.github.io/blog/2014/05/16/visualizing-latency/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

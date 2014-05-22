@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-04-30T17:01:56-04:00</updated>
+  <updated>2014-05-22T09:57:53-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,109 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Visualizing Latency]]></title>
+    <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
+    <updated>2014-05-16T08:42:58-04:00</updated>
+    <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
+    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/ping.png" width="320" height="240"></p>
+
+<p>I&rsquo;m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
+so when I&rsquo;m analyzing performance, latency, etc. I find it really helpful to be
+able to visualize what is going on on the machine.</p>
+
+<p>As a result, I had gotten
+reasonably good at using Excel to produce charts, which sometimes helped to correlate observed
+behaviors like latency spikes with other events on the machine.</p>
+
+<p>For a bunch of reasons I wanted to move away from Excel, though, and find
+another tool that would give me the same or better functionality.</p>
+
+<!--more-->
+
+
+<p>For one thing, a little over a year ago I switched to a Mac as my main machine
+after years of using Windows. There was a certain amount of adjustment, but for
+the most part it&rsquo;s been smooth sailing. More than that, I was actually able to
+recapture some of the fun and excitement I remember from my first Apple (an
+Apple ][).</p>
+
+<p>I also wanted something that would run on both the Mac and Linux, where I do
+most of my testing. Last but not least, I wanted something that would be
+scriptable so I could easily produce consistent charts for multiple test runs.</p>
+
+<p>I looked briefly at R, but ditched it when it used up all the 8GB in my laptop,
+plus the entire hard disk as swap, for a single dataset of 100,000 points.
+Probably my bad, but I didn&rsquo;t have the patience to figure out what I might be
+doing wrong.</p>
+
+<p>At that point I turned to venerable (some would say crusty) gnuplot. It&rsquo;s a bit
+long in the tooth, but I just wanted to plot latency over time, so how hard
+could that be? Well, I guess it&rsquo;s pretty easy if you already know how, but
+starting from scratch is another story.</p>
+
+<p>Which brings me to my rant of the day, directed at techies in general, and to the
+(us?) Linux/Unix techies in particular.</p>
+
+<p>Short version: I don&rsquo;t want to learn gnuplot. I don&rsquo;t even want to <em>have
+learned</em> gnuplot &mdash; even if I could do that by just taking a pill. What I want
+is to be able to produce decent-looking charts <em>without</em> knowing <em>anything</em>
+about gnuplot.</p>
+
+<blockquote><p>When all else fails, read the instructions.</p></blockquote>
+
+<p>To be fair, the gnuplot docs did have some examples &mdash; more anyway than you
+would find in a typical man page, although that&rsquo;s admittedly a low bar. And
+while my google-fu is usually pretty good, I just couldn&rsquo;t find anything on the
+intertubes that would work for me, so I had to learn <em>just a little</em> gnuplot.</p>
+
+<p>It turns out that gnuplot works pretty well, and will probably work even better
+once I learn (sigh) how to use it better.</p>
+
+<p>But you don&rsquo;t have to learn diddly if you don&rsquo;t want to. <a href="https://github.com/btorpey/latency-utils.git">Here is the first</a> in
+what will hopefully be a series of recipes that you can use with little or no
+modification.  Once you&rsquo;ve downloaded the repo, enter the following at the command prompt:</p>
+
+<p><code>./tsd.sh ping.csv x11</code></p>
+
+<p>Which should result in something like this:</p>
+
+<p><img class="center" src="http://btorpey.github.io/images/gnuplot.png"></p>
+
+<p>It&rsquo;s primitive, but that very primitiveness has its own appeal, especially for
+those of us for whom &ldquo;UI&rdquo; means bash, vi or emacs.</p>
+
+<p>A couple of points about the gnuplot command files:</p>
+
+<ul>
+<li><p>Sometimes you care about the actual time that an event took place, so you
+can correlate it with some other event; sometimes you don&rsquo;t. Accordingly, I&rsquo;ve
+created two different files: one which displays actual time (ts.gp), the other
+which calculates and displays deltaT (tsd.gp).</p></li>
+<li><p>I&rsquo;ve been programming in C (and later C++) for many years, but I don&rsquo;t think
+I&rsquo;ve ever purposely used the comma operator before. Well, expressions in gnuplot
+follow C language rules for operators, precedence, etc. and that comma operator
+turns out to be handy &mdash; in this case it lets us
+update the origin in the same expression that calculates deltaT.
+(The return value of the comma
+operator is the right-hand expression).</p></li>
+</ul>
+
+
+<p>&mdash; (Note that the above requires something like gnuplot 4.6)</p>
+
+<ul>
+<li>I&rsquo;ve left the default terminal in the gnuplot command files, but you can
+specify a different one on the command line.  To get a list of terminals supported
+in your version:
+<code>gnuplot -e "set terminal"</code>.</li>
+</ul>
+
+
+<p>Comments, suggestions, pull requests, etc. welcome.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[A Picture is Worth 1K Words]]></title>
@@ -24,19 +127,19 @@ them, and if you&rsquo;re like me they&rsquo;re kind of like reading your horosc
 all seems so right and true when you&rsquo;re reading it, but you wonder if it would
 still seem just as right and true if the horoscopes got jumbled at random?</p>
 
-<p>Well, I took one of these tests a while back that wasn&rsquo;t like that &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
+<p>Well, I took one of these tests a while back that actually told me something about myself &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
 test, and what it said about me is that I&rsquo;m waaaayyy over at the end of the
 scale when it comes to visual thinking. That gave me an insight into the way my
 brain works that I&rsquo;ve found really helpful ever since. So, this next bit was right up my alley,
 but I&rsquo;m guessing you&rsquo;ll like it too.</p>
+
+<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240"></a></p>
 
 <p>We read a lot lately about NUMA architecture and how it presents a fundamental
 change in the way we approach writing efficient code: it&rsquo;s no longer about the
 CPU, it&rsquo;s all about RAM. We all nod and say &ldquo;Sure, I get that!&rdquo;  Well, I thought
 I got it too, but until I saw <a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html">this web page</a>,
 I really didn&rsquo;t.</p>
-
-<p><a href=http://www.overbyte.com.au/misc/Lesson3/CacheFun.html><img src=http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png></a></p>
 
 <p>See the full discussion at <a href="http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck">http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck</a>.</p>
 ]]></content>
@@ -47,7 +150,9 @@ I really didn&rsquo;t.</p>
     <link href="http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer/"/>
     <updated>2014-03-27T08:30:22-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer</id>
-    <content type="html"><![CDATA[<p>Valgrind has been an indispensable tool for C/C++ programmers for a long
+    <content type="html"><![CDATA[<p><img class="right" src="http://planet.clang.org/images/DragonSmall.png"></p>
+
+<p>Valgrind has been an indispensable tool for C/C++ programmers for a long
 time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous tool for doing dynamic
 analysis of program behavior at run time. valgrind<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> can detect reads of
 uninitialized memory, heap buffer overruns, memory leaks, and other errors that
@@ -286,12 +391,29 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
     <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
     <updated>2014-02-18T20:07:41-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>
-    <content type="html"><![CDATA[<p>For measuring latency in modern systems, we need to be able to measure intervals
+    <content type="html"><![CDATA[
+
+<table>
+    <tr>
+        <td>
+For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
-nanoseconds. But, it&rsquo;s important to understand what you&rsquo;re measuring and what
-the different edge cases might be to ensure that your results are accurate.</p>
+nanoseconds. 
+
+But, it&#8217;s important to understand what you&#8217;re measuring and what
+the different edge cases might be to ensure that your results are accurate.          
+        </td>
+        <td>
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
+        
+        </td>
+    </tr>
+</table>
+
+
+<p></p>
 
 <!--more-->
 
@@ -333,7 +455,7 @@ timing measurements.</p>
 <p>The problem with inter-machine timing is that, by definition, you&rsquo;re dealing
 with (at least) two different clock sources. (Unless of course you are timing
 round-trip intervals &mdash; if that&rsquo;s the case, you&rsquo;re lucky). And the problem with
-having two clock sources is described somewhat amusingly by this old chestnut:</p>
+having two clock sources is described somewhat amusingly by the old chestnut that leads off this article:</p>
 
 <blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
 

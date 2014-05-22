@@ -9,8 +9,8 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="You know those mutiple-choice tests that put you in one of four quadrants based
-on your answers to a bunch of seemingly irrelevant questions? We& &hellip;">
+  <meta name="description" content="I&rsquo;m a visual thinker (I think I may have mentioned that before ),
+so when I&rsquo;m analyzing performance, latency, etc. I find it really &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -74,6 +74,58 @@ on your answers to a bunch of seemingly irrelevant questions? We& &hellip;">
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2014/05/16/visualizing-latency/">Visualizing Latency</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-16T08:42:58-04:00" pubdate data-updated="true">May 16<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><img class="right" src="/images/ping.png" width="320" height="240"></p>
+
+<p>I&rsquo;m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
+so when I&rsquo;m analyzing performance, latency, etc. I find it really helpful to be
+able to visualize what is going on on the machine.</p>
+
+<p>As a result, I had gotten
+reasonably good at using Excel to produce charts, which sometimes helped to correlate observed
+behaviors like latency spikes with other events on the machine.</p>
+
+<p>For a bunch of reasons I wanted to move away from Excel, though, and find
+another tool that would give me the same or better functionality.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/05/16/visualizing-latency/">&#8230;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2014/04/29/a-picture-is-worth-1k-words/">A Picture is Worth 1K Words</a></h1>
     
     
@@ -103,19 +155,19 @@ them, and if you&rsquo;re like me they&rsquo;re kind of like reading your horosc
 all seems so right and true when you&rsquo;re reading it, but you wonder if it would
 still seem just as right and true if the horoscopes got jumbled at random?</p>
 
-<p>Well, I took one of these tests a while back that wasn&rsquo;t like that &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
+<p>Well, I took one of these tests a while back that actually told me something about myself &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
 test, and what it said about me is that I&rsquo;m waaaayyy over at the end of the
 scale when it comes to visual thinking. That gave me an insight into the way my
 brain works that I&rsquo;ve found really helpful ever since. So, this next bit was right up my alley,
 but I&rsquo;m guessing you&rsquo;ll like it too.</p>
+
+<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240"></a></p>
 
 <p>We read a lot lately about NUMA architecture and how it presents a fundamental
 change in the way we approach writing efficient code: it&rsquo;s no longer about the
 CPU, it&rsquo;s all about RAM. We all nod and say &ldquo;Sure, I get that!&rdquo;  Well, I thought
 I got it too, but until I saw <a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html">this web page</a>,
 I really didn&rsquo;t.</p>
-
-<p><a href=http://www.overbyte.com.au/misc/Lesson3/CacheFun.html><img src=http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png></a></p>
 
 <p>See the full discussion at <a href="http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck">http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck</a>.</p>
 </div>
@@ -153,7 +205,9 @@ I really didn&rsquo;t.</p>
   </header>
 
 
-  <div class="entry-content"><p>Valgrind has been an indispensable tool for C/C++ programmers for a long
+  <div class="entry-content"><p><img class="right" src="http://planet.clang.org/images/DragonSmall.png"></p>
+
+<p>Valgrind has been an indispensable tool for C/C++ programmers for a long
 time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous tool for doing dynamic
 analysis of program behavior at run time. valgrind<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> can detect reads of
 uninitialized memory, heap buffer overruns, memory leaks, and other errors that
@@ -200,12 +254,29 @@ tools promise to provide some or all of the functionality valgrind provides with
   </header>
 
 
-  <div class="entry-content"><p>For measuring latency in modern systems, we need to be able to measure intervals
+  <div class="entry-content">
+
+<table>
+    <tr>
+        <td>
+For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
-nanoseconds. But, it&rsquo;s important to understand what you&rsquo;re measuring and what
-the different edge cases might be to ensure that your results are accurate.</p>
+nanoseconds. 
+
+But, it&#8217;s important to understand what you&#8217;re measuring and what
+the different edge cases might be to ensure that your results are accurate.          
+        </td>
+        <td>
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
+        
+        </td>
+    </tr>
+</table>
+
+
+<p></p>
 
 </div>
   
@@ -447,6 +518,10 @@ at FIX logs.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/05/16/visualizing-latency/">Visualizing Latency</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/04/29/a-picture-is-worth-1k-words/">A Picture is Worth 1K Words</a>
       </li>
     
@@ -460,10 +535,6 @@ at FIX logs.</p>
     
       <li class="post">
         <a href="/blog/2014/02/13/how-did-i-get-here/">You may ask yourself - &#8220;How did I get here?&#8221;</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/02/12/shared-singletons/">Shared Singleton&#8217;s</a>
       </li>
     
   </ul>

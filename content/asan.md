@@ -1,3 +1,5 @@
+{% img right http://planet.clang.org/images/DragonSmall.png %} 
+
 Valgrind has been an indispensable tool for C/C++ programmers for a long
 time, and I've used it quite happily -- it's a tremendous tool for doing dynamic
 analysis of program behavior at run time. valgrind[^3] can detect reads of

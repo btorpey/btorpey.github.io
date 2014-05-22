@@ -1,24 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-
-  <title><![CDATA[Category: wallst | Confessions of a Wall Street Programmer]]></title>
-  <link href="http://btorpey.github.io/blog/categories/wallst/atom.xml" rel="self"/>
-  <link href="http://btorpey.github.io/"/>
-  <updated>2014-05-22T09:57:53-04:00</updated>
-  <id>http://btorpey.github.io/</id>
-  <author>
-    <name><![CDATA[Bill Torpey]]></name>
-    
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
-
-  
-  <entry>
-    <title type="html"><![CDATA[Visualizing Latency]]></title>
-    <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
-    <updated>2014-05-16T08:42:58-04:00</updated>
-    <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
-    <content type="html"><![CDATA[<p><img class="right" src="/images/ping.png" width="320" height="240"> 
+{% img right /images/ping.png 320 240 %} 
 
 I'm a visual thinker (I think I may have [mentioned that before](http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/) ),
 so when I'm analyzing performance, latency, etc. I find it really helpful to be
@@ -79,7 +59,7 @@ modification.  Once you've downloaded the repo, enter the following at the comma
 
 Which should result in something like this:
 
-<img class="center" src="/images/gnuplot.png"> 
+{% img center /images/gnuplot.png %} 
 
 It's primitive, but that very primitiveness has its own appeal, especially for
 those of us for whom "UI" means bash, vi or emacs.
@@ -107,66 +87,4 @@ specify a different one on the command line.  To get a list of terminals support
 in your version:
 `gnuplot -e "set terminal"`.
 
-Comments, suggestions, pull requests, etc. welcome.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[What's Old Is New Again]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
-    <updated>2014-02-11T20:07:41-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
-    <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this…</p>
-
-<!--more-->
-
-
-<p><img class="center <a" src="href="http://edison.rutgers.edu/images/xx/xx1325.jpg">http://edison.rutgers.edu/images/xx/xx1325.jpg</a>"></p>
-
-<p>Source: The Thomas Edison Papers, Rutgers University <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
-<div class="footnotes">
-<hr/>
-<ol>
-<li id="fn:1">
-<p><a href="http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;">http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;</a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
-</ol>
-</div>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T08:37:11-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here's a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.
-
-<!--more-->
-
-FIX may be the protocol that everybody loves to hate, but it doesn't look like it's
-going anywhere, so I guess we all just need to get over it and learn to live with it.
-
-One of the things that is hard to live with, though -- at least for me -- is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="/images/less-before.png"> 
-
-It turns out that it's possible to control how less displays the x'01'
-delimiters to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:
-
-`export LESSBINFMT="*u%x"`
-
-This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="/images/less-after.png"> 
-
-
-(Note that the man page for less mentions that it's possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I've tried it -- YMMV).
-</p>
-]]></content>
-  </entry>
-  
-</feed>
+Comments, suggestions, pull requests, etc. welcome.

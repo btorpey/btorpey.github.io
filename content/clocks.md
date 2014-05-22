@@ -12,7 +12,7 @@ But, it's important to understand what you're measuring and what
 the different edge cases might be to ensure that your results are accurate.          
         </td>
         <td>
-<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal's Law</cite></footer></blockquote>
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.</blockquote>
         
         </td>
     </tr>

@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-05-22T09:57:53-04:00</updated>
+  <updated>2014-05-22T10:00:02-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -406,7 +406,7 @@ But, it&#8217;s important to understand what you&#8217;re measuring and what
 the different edge cases might be to ensure that your results are accurate.          
         </td>
         <td>
-<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
+<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.</blockquote>
         
         </td>
     </tr>

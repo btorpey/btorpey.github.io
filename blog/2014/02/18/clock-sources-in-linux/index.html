@@ -258,7 +258,7 @@ scheduling interval in most Linux variants is either 1 ms or 10 ms).</p></li>
 <p>To see the clock sources that are available on the system:</p>
 
 <pre>
-$ cat /sys/devices/system/clocksource/clocsource0/available_clocksource
+$ cat /sys/devices/system/clocksource/clocksource0/available_clocksource
 tsc hpet acpi_pm
 </pre>
 
@@ -466,26 +466,27 @@ times, and hang on to the results from the final iteration. This has the effect
 of allowing Java to do any jitting it needs to, and for both the C++ and Java
 versions to help ensure that code and data is in the processor&rsquo;s cache memory.</p>
 
-<p>The results of running the test on my test machine are:</p>
+<p>The results of running the test on my test machine are (all timings are in nanoseconds):</p>
 
 <pre>
+
 ClockBench.cpp
                    Method       samples     min     max     avg  median   stdev
-           CLOCK_REALTIME       200       57.00   81.00   58.24   69.00    2.99
-    CLOCK_REALTIME_COARSE       200        0.00    0.00    0.00    0.00    0.00
-          CLOCK_MONOTONIC       200       57.00   84.00   57.52   70.50    2.82
-      CLOCK_MONOTONIC_RAW       200      652.00 1104.00  697.26  878.00   60.81
-   CLOCK_MONOTONIC_COARSE       200        0.00    0.00    0.00    0.00    0.00
-              cpuid+rdtsc       200       96.00  100.00   97.74   98.00    1.57
-                    rdtsc       200       27.00   28.00   27.07   27.50    0.26
+           CLOCK_REALTIME       255       51.00   57.00   53.60   54.00    1.22
+    CLOCK_REALTIME_COARSE       255        0.00    0.00    0.00    0.00    0.00
+          CLOCK_MONOTONIC       255       51.00   57.00   53.80   54.00    1.10
+      CLOCK_MONOTONIC_RAW       255      653.00 1011.00  691.04  832.00   48.31
+   CLOCK_MONOTONIC_COARSE       255        0.00    0.00    0.00    0.00    0.00
+              cpuid+rdtsc       255       93.00   94.00   93.23   93.50    0.42
+                    rdtsc       255       24.00   28.00   25.18   26.00    1.49
 Using CPU frequency = 2.660000
 
 ClockBench.java
                    Method       samples     min     max     avg  median   stdev
-          System.nanoTime       200      111.00  115.00  113.10  113.00    1.49
-           CLOCK_REALTIME       200      108.00  114.00  110.16  111.00    1.56
-              cpuid+rdtsc       200      153.00  160.00  154.83  156.50    1.64
-                    rdtsc       200       75.00   79.00   77.43   77.00    1.35
+          System.nanoTime       255       54.00   58.00   55.31   56.00    1.51
+           CLOCK_REALTIME       255        0.00 1000.00   66.67  500.00  249.44
+              cpuid+rdtsc       255      108.00  109.00  108.27  108.50    0.44
+                    rdtsc       255       39.00   43.00   39.48   41.00    1.04
 Using CPU frequency = 2.660000
 </pre>
 
@@ -513,6 +514,16 @@ important).</p></li>
 versions, presumably due to the overhead of going through JNI.</p></li>
 </ul>
 
+
+<h3>Update</h3>
+
+<p>Well, I admit that Java is not my strong suit, but I nevertheless understand the implications
+of &ldquo;warm-up&rdquo; and JIT-ing when benchmarking Java code.  My understanding (and the docs seem to agree)
+is that Java methods get JIT-ed after approx. 10,000 invocations.  I also thought (and still do) that
+100 iterations of 200 invocations would be more than 10,000.  Whatever &mdash; I adjusted the number of iterations
+for the Java benchmark, and that made a big difference &mdash; especially in the timings for System.nanotime, which now
+agree much more closely with other published benchmarks, specifically the results published in
+<a href="http://shipilev.net/blog/2014/nanotrusting-nanotime/">&ldquo;Nanotrusting the Nanotime&rdquo;</a>.  Thanks, Aleksey!</p>
 
 <h2>Conclusion</h2>
 

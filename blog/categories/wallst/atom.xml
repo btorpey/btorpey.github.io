@@ -4,7 +4,7 @@
   <title><![CDATA[Category: wallst | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/wallst/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-05-22T10:00:02-04:00</updated>
+  <updated>2014-05-31T10:12:24-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -61,12 +61,12 @@ learned* gnuplot -- even if I could do that by just taking a pill. What I want
 is to be able to produce decent-looking charts *without* knowing *anything*
 about gnuplot.
 
-> When all else fails, read the instructions.
-
 To be fair, the gnuplot docs did have some examples -- more anyway than you
 would find in a typical man page, although that's admittedly a low bar. And
 while my google-fu is usually pretty good, I just couldn't find anything on the
 intertubes that would work for me, so I had to learn *just a little* gnuplot.
+
+> When all else fails, read the instructions.
 
 It turns out that gnuplot works pretty well, and will probably work even better
 once I learn (sigh) how to use it better.

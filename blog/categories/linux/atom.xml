@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-05-22T10:00:02-04:00</updated>
+  <updated>2014-05-31T10:12:24-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,81 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Where Am I?]]></title>
+    <link href="http://btorpey.github.io/blog/2014/05/29/where-am-i/"/>
+    <updated>2014-05-29T09:09:31-04:00</updated>
+    <id>http://btorpey.github.io/blog/2014/05/29/where-am-i</id>
+    <content type="html"><![CDATA[<p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"> 
+
+From *Robinson Crusoe* to *Gilligan's Island* to *Lost*, tales of being
+stranded on a desert island seem to resonate with people in a special way. Some
+of that likely has to do with the exotic locales, and the practical challenges
+of getting water, food and shelter.
+
+But an even more basic part is the unanswered question: "Where am I?" that makes
+things so -- well, *mysterious*.
+
+Shell scripting can be pretty mysterious too at times, but in this installment
+we'll learn how to answer that basic question of "Where am I?" to make shell
+scripting a little less mysterious.
+
+<!--more-->
+
+One of the tenets of the Unix way is brevity, and one consequence of that is
+that well-behaved programs should be able to find whatever other resources they
+need without having to be told where they are. Windows attempts to
+solve this problem with the (gack!) registry, but Unix tends to use a simpler
+approach: needed resources are placed either in well-known locations (e.g., /etc
+for system programs), or where they can be found relative to the location of the
+program itself.
+
+Another attribute of a well-behaved Unix program is that it
+should be able to run from any location, whether it's invoked with a full path,
+or found via the PATH variable.
+
+So, how do we reconcile those two requirements? And specifically, how do we do
+that in shell scripts? Since -- regardless of what your "main" language is, if
+you're programming in Unix/Linux, you're probably also writing a boatload of
+shell scripts too.
+
+It turns out that, at least in bash, there is a
+simple but non-obvious way to do get the location of the script file itself,
+which goes something like this:
+
+    SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) && /bin/pwd) 
+
+Let's follow this through and see how it works:
+
+-   The `$( ... )` construct invokes a sub-shell. This is handy since it
+allows us to change the environment of the sub-shell (e.g., current directory)
+without affecting the current environment.
+
+-   `$BASH_SOURCE` is a builtin variable that gives us the path to the shell
+script itself. For instance, if we invoke a script with `./scriptname.sh`,
+then that's what will end up in `${BASH_SOURCE}`.
+
+-   To get the full path then we extract just the path part with `dirname`, again
+in a sub-shell.
+
+-   We then `cd` into that directory, and if successful get the full pathname
+with `/bin/pwd`.
+    -   Note that we use `/bin/pwd` to get the path. This version resolves any
+    symbolic links to return the actual physical path. There is also a `pwd`
+    built-in to bash, but that one does not expand symbolic links by default.
+<br>
+-   Finally, the result is assigned to SCRIPT_DIR.
+
+We now have the full path of the script file itself, and can use that to locate
+any other resources needed by the script. For a real-world example, you can
+check out the [these scripts](<https://github.com/btorpey/latency-utils.git>) from
+ [my earlier post on visualizing latency](</blog/2014/05/16/visualizing-latency/>).
+
+
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Visualizing Latency]]></title>
@@ -61,12 +136,12 @@ learned* gnuplot -- even if I could do that by just taking a pill. What I want
 is to be able to produce decent-looking charts *without* knowing *anything*
 about gnuplot.
 
-> When all else fails, read the instructions.
-
 To be fair, the gnuplot docs did have some examples -- more anyway than you
 would find in a typical man page, although that's admittedly a low bar. And
 while my google-fu is usually pretty good, I just couldn't find anything on the
 intertubes that would work for me, so I had to learn *just a little* gnuplot.
+
+> When all else fails, read the instructions.
 
 It turns out that gnuplot works pretty well, and will probably work even better
 once I learn (sigh) how to use it better.
@@ -844,66 +919,6 @@ researched this article.
 [^6]:  Note that the program must be compiled, as well as run, on the target system -- it uses the presence or absence of pre-processor symbols to determine whether a particular clock source is available.
 
 [^7]: CentOS 6.5 running on a Dell 490 with dual Xeon 5150's at 2.6 GHz.
-
-</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[You may ask yourself - "How did I get here?"]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/"/>
-    <updated>2014-02-13T18:02:27-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here</id>
-    <content type="html"><![CDATA[<p>In addition to being a great line from David Byrne and Talking Heads (from "Life
-During Wartime"), this is also a question I often ask myself when
-looking at log files. Today's tip is worth the price of the whole blog (i.e.,
-free), but I predict that you'll be glad you know it.
-
-<!--more-->
-
-It's pretty common to pipe the output of a command, or string of commands, to a
-file to have a record of what happened when executing the command, something
-like this:
-
-`big_gnarly_command_line_with_options 2>&1 | tee logfile.out`
-
-That works great for capturing the *output* of the command, but what about the
-big_gnarly_command_line_with_options itself?
-
-Try this instead:
-
-` bash -x -c "big_gnarly_command_line_with_options" 2>&1 | tee logfile.out`
-
-
-Now, your output file will look like this:
-
-`+ big_gnarly_command_line_with_options`<br>
-`... output of big_gnarly_command_line_with_options ...`
-
-If your gnarly command is actually several gnarly commands, enclose the whole
-gnarly list in parentheses and separate with semicolons (or &&), like so:
-
-` bash -x -c "(big_gnarly_command_line_with_options_1;
-big_gnarly_command_line_with_options_2)" 2>&1 | tee logfile.out`
-
-Normal quoting rules apply:
-
--   If you enclose the command(s) in double-quotes ("), variable substitution
-    will be done on the command line
-
--   If you need to include a double-quote within double-quotes, you need to
-    escape it (with the backslash (\\) character)
-
--   If you enclose the command line(s) in single quotes ('), no variable
-    substitution is done
-
--   There is no way to include a single-quote within single-quotes, but there is
-    a trick that gives a similar effect, that you can read about here (<http://stackoverflow.com/a/1250279/203044>).
-
-Now you'll never need to ask yourself "How did I get here"?
-
-  
-  
 
 </p>
 ]]></content>

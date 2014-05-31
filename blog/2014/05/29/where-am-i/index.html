@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>A Picture is Worth 1K Words - Confessions of a Wall Street Programmer</title>
+  <title>Where Am I? - Confessions of a Wall Street Programmer</title>
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="You know those mutiple-choice tests that put you in one of four quadrants based
-on your answers to a bunch of seemingly irrelevant questions? We& &hellip;">
+  <meta name="description" content="From Robinson Crusoe to Gilligan&rsquo;s Island to Lost, tales of being
+stranded on a desert island seem to resonate with people in a special way. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +19,7 @@ on your answers to a bunch of seemingly irrelevant questions? We& &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words">
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/05/29/where-am-i">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
@@ -71,7 +71,7 @@ on your answers to a bunch of seemingly irrelevant questions? We& &hellip;">
   
   <header>
     
-      <h1 class="entry-title">A Picture is Worth 1K Words</h1>
+      <h1 class="entry-title">Where Am I?</h1>
     
     
       <p class="meta">
@@ -87,34 +87,89 @@ on your answers to a bunch of seemingly irrelevant questions? We& &hellip;">
   
 
 
-<time datetime="2014-04-29T19:23:07-04:00" pubdate data-updated="true">Apr 29<span>th</span>, 2014</time>
+<time datetime="2014-05-29T09:09:31-04:00" pubdate data-updated="true">May 29<span>th</span>, 2014</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>You know those mutiple-choice tests that put you in one of four quadrants based
-on your answers to a bunch of seemingly irrelevant questions? We&rsquo;ve all taken
-them, and if you&rsquo;re like me they&rsquo;re kind of like reading your horoscope &mdash; it
-all seems so right and true when you&rsquo;re reading it, but you wonder if it would
-still seem just as right and true if the horoscopes got jumbled at random?</p>
+<div class="entry-content"><p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"></p>
 
-<p>Well, I took one of these tests a while back that actually told me something about myself &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
-test, and what it said about me is that I&rsquo;m waaaayyy over at the end of the
-scale when it comes to visual thinking. That gave me an insight into the way my
-brain works that I&rsquo;ve found really helpful ever since. So, this next bit was right up my alley,
-but I&rsquo;m guessing you&rsquo;ll like it too.</p>
+<p>From <em>Robinson Crusoe</em> to <em>Gilligan&rsquo;s Island</em> to <em>Lost</em>, tales of being
+stranded on a desert island seem to resonate with people in a special way. Some
+of that likely has to do with the exotic locales, and the practical challenges
+of getting water, food and shelter.</p>
 
-<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240"></a></p>
+<p>But an even more basic part is the unanswered question: &ldquo;Where am I?&rdquo; that makes
+things so &mdash; well, <em>mysterious</em>.</p>
 
-<p>We read a lot lately about NUMA architecture and how it presents a fundamental
-change in the way we approach writing efficient code: it&rsquo;s no longer about the
-CPU, it&rsquo;s all about RAM. We all nod and say &ldquo;Sure, I get that!&rdquo;  Well, I thought
-I got it too, but until I saw <a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html">this web page</a>,
-I really didn&rsquo;t.</p>
+<p>Shell scripting can be pretty mysterious too at times, but in this installment
+we&rsquo;ll learn how to answer that basic question of &ldquo;Where am I?&rdquo; to make shell
+scripting a little less mysterious.</p>
 
-<p>See the full discussion at <a href="http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck">http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck</a>.</p>
+<!--more-->
+
+
+<p>One of the tenets of the Unix way is brevity, and one consequence of that is
+that well-behaved programs should be able to find whatever other resources they
+need without having to be told where they are. Windows attempts to
+solve this problem with the (gack!) registry, but Unix tends to use a simpler
+approach: needed resources are placed either in well-known locations (e.g., /etc
+for system programs), or where they can be found relative to the location of the
+program itself.</p>
+
+<p>Another attribute of a well-behaved Unix program is that it
+should be able to run from any location, whether it&rsquo;s invoked with a full path,
+or found via the PATH variable.</p>
+
+<p>So, how do we reconcile those two requirements? And specifically, how do we do
+that in shell scripts? Since &mdash; regardless of what your &ldquo;main&rdquo; language is, if
+you&rsquo;re programming in Unix/Linux, you&rsquo;re probably also writing a boatload of
+shell scripts too.</p>
+
+<p>It turns out that, at least in bash, there is a
+simple but non-obvious way to do get the location of the script file itself,
+which goes something like this:</p>
+
+<pre><code>SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) &amp;&amp; /bin/pwd) 
+</code></pre>
+
+<p>Let&rsquo;s follow this through and see how it works:</p>
+
+<ul>
+<li><p>The <code>$( ... )</code> construct invokes a sub-shell. This is handy since it
+allows us to change the environment of the sub-shell (e.g., current directory)
+without affecting the current environment.</p></li>
+<li><p><code>$BASH_SOURCE</code> is a builtin variable that gives us the path to the shell
+script itself. For instance, if we invoke a script with <code>./scriptname.sh</code>,
+then that&rsquo;s what will end up in <code>${BASH_SOURCE}</code>.</p></li>
+<li><p>To get the full path then we extract just the path part with <code>dirname</code>, again
+in a sub-shell.</p></li>
+<li><p>We then <code>cd</code> into that directory, and if successful get the full pathname
+with <code>/bin/pwd</code>.</p>
+
+<ul>
+<li>Note that we use <code>/bin/pwd</code> to get the path. This version resolves any
+symbolic links to return the actual physical path. There is also a <code>pwd</code>
+built-in to bash, but that one does not expand symbolic links by default.</li>
+</ul>
+</li>
+</ul>
+
+
+<br>
+
+
+<ul>
+<li>Finally, the result is assigned to SCRIPT_DIR.</li>
+</ul>
+
+
+<p>We now have the full path of the script file itself, and can use that to locate
+any other resources needed by the script. For a real-world example, you can
+check out the <a href="https://github.com/btorpey/latency-utils.git">these scripts</a> from
+ <a href="/blog/2014/05/16/visualizing-latency/">my earlier post on visualizing latency</a>.</p>
 </div>
 
 
@@ -137,12 +192,12 @@ I really didn&rsquo;t.</p>
   
 
 
-<time datetime="2014-04-29T19:23:07-04:00" pubdate data-updated="true">Apr 29<span>th</span>, 2014</time>
+<time datetime="2014-05-29T09:09:31-04:00" pubdate data-updated="true">May 29<span>th</span>, 2014</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>
+    <a class='category' href='/blog/categories/bash/'>bash</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
   
 </span>
 
@@ -158,10 +213,8 @@ I really didn&rsquo;t.</p>
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2014/03/27/using-clangs-address-sanitizer/" title="Previous Post: Using clang's Address Sanitizer (without clang)">&laquo; Using clang's Address Sanitizer (without clang)</a>
+        <a class="basic-alignment left" href="/blog/2014/05/16/visualizing-latency/" title="Previous Post: Visualizing Latency">&laquo; Visualizing Latency</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2014/05/16/visualizing-latency/" title="Next Post: Visualizing Latency">Visualizing Latency &raquo;</a>
       
     </p>
   </footer>
@@ -230,8 +283,8 @@ Copyright &copy; 2014 - Bill Torpey. &nbsp; All Rights Reserved.
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/';
-        var disqus_url = 'http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/';
+        var disqus_identifier = 'http://btorpey.github.io/blog/2014/05/29/where-am-i/';
+        var disqus_url = 'http://btorpey.github.io/blog/2014/05/29/where-am-i/';
         var disqus_script = 'embed.js';
       
     (function () {

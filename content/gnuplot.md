@@ -41,12 +41,12 @@ learned* gnuplot -- even if I could do that by just taking a pill. What I want
 is to be able to produce decent-looking charts *without* knowing *anything*
 about gnuplot.
 
-> When all else fails, read the instructions.
-
 To be fair, the gnuplot docs did have some examples -- more anyway than you
 would find in a typical man page, although that's admittedly a low bar. And
 while my google-fu is usually pretty good, I just couldn't find anything on the
 intertubes that would work for me, so I had to learn *just a little* gnuplot.
+
+> When all else fails, read the instructions.
 
 It turns out that gnuplot works pretty well, and will probably work even better
 once I learn (sigh) how to use it better.

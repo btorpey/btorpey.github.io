@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-05-22T10:00:02-04:00</updated>
+  <updated>2014-05-31T10:12:24-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,90 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Where Am I?]]></title>
+    <link href="http://btorpey.github.io/blog/2014/05/29/where-am-i/"/>
+    <updated>2014-05-29T09:09:31-04:00</updated>
+    <id>http://btorpey.github.io/blog/2014/05/29/where-am-i</id>
+    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/gilligans-island-tv-show.jpg" width="320" height="240"></p>
+
+<p>From <em>Robinson Crusoe</em> to <em>Gilligan&rsquo;s Island</em> to <em>Lost</em>, tales of being
+stranded on a desert island seem to resonate with people in a special way. Some
+of that likely has to do with the exotic locales, and the practical challenges
+of getting water, food and shelter.</p>
+
+<p>But an even more basic part is the unanswered question: &ldquo;Where am I?&rdquo; that makes
+things so &mdash; well, <em>mysterious</em>.</p>
+
+<p>Shell scripting can be pretty mysterious too at times, but in this installment
+we&rsquo;ll learn how to answer that basic question of &ldquo;Where am I?&rdquo; to make shell
+scripting a little less mysterious.</p>
+
+<!--more-->
+
+
+<p>One of the tenets of the Unix way is brevity, and one consequence of that is
+that well-behaved programs should be able to find whatever other resources they
+need without having to be told where they are. Windows attempts to
+solve this problem with the (gack!) registry, but Unix tends to use a simpler
+approach: needed resources are placed either in well-known locations (e.g., /etc
+for system programs), or where they can be found relative to the location of the
+program itself.</p>
+
+<p>Another attribute of a well-behaved Unix program is that it
+should be able to run from any location, whether it&rsquo;s invoked with a full path,
+or found via the PATH variable.</p>
+
+<p>So, how do we reconcile those two requirements? And specifically, how do we do
+that in shell scripts? Since &mdash; regardless of what your &ldquo;main&rdquo; language is, if
+you&rsquo;re programming in Unix/Linux, you&rsquo;re probably also writing a boatload of
+shell scripts too.</p>
+
+<p>It turns out that, at least in bash, there is a
+simple but non-obvious way to do get the location of the script file itself,
+which goes something like this:</p>
+
+<pre><code>SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) &amp;&amp; /bin/pwd) 
+</code></pre>
+
+<p>Let&rsquo;s follow this through and see how it works:</p>
+
+<ul>
+<li><p>The <code>$( ... )</code> construct invokes a sub-shell. This is handy since it
+allows us to change the environment of the sub-shell (e.g., current directory)
+without affecting the current environment.</p></li>
+<li><p><code>$BASH_SOURCE</code> is a builtin variable that gives us the path to the shell
+script itself. For instance, if we invoke a script with <code>./scriptname.sh</code>,
+then that&rsquo;s what will end up in <code>${BASH_SOURCE}</code>.</p></li>
+<li><p>To get the full path then we extract just the path part with <code>dirname</code>, again
+in a sub-shell.</p></li>
+<li><p>We then <code>cd</code> into that directory, and if successful get the full pathname
+with <code>/bin/pwd</code>.</p>
+
+<ul>
+<li>Note that we use <code>/bin/pwd</code> to get the path. This version resolves any
+symbolic links to return the actual physical path. There is also a <code>pwd</code>
+built-in to bash, but that one does not expand symbolic links by default.</li>
+</ul>
+</li>
+</ul>
+
+
+<br>
+
+
+<ul>
+<li>Finally, the result is assigned to SCRIPT_DIR.</li>
+</ul>
+
+
+<p>We now have the full path of the script file itself, and can use that to locate
+any other resources needed by the script. For a real-world example, you can
+check out the <a href="https://github.com/btorpey/latency-utils.git">these scripts</a> from
+ <a href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/">my earlier post on visualizing latency</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Visualizing Latency]]></title>
@@ -62,12 +146,12 @@ learned</em> gnuplot &mdash; even if I could do that by just taking a pill. What
 is to be able to produce decent-looking charts <em>without</em> knowing <em>anything</em>
 about gnuplot.</p>
 
-<blockquote><p>When all else fails, read the instructions.</p></blockquote>
-
 <p>To be fair, the gnuplot docs did have some examples &mdash; more anyway than you
 would find in a typical man page, although that&rsquo;s admittedly a low bar. And
 while my google-fu is usually pretty good, I just couldn&rsquo;t find anything on the
 intertubes that would work for me, so I had to learn <em>just a little</em> gnuplot.</p>
+
+<blockquote><p>When all else fails, read the instructions.</p></blockquote>
 
 <p>It turns out that gnuplot works pretty well, and will probably work even better
 once I learn (sigh) how to use it better.</p>

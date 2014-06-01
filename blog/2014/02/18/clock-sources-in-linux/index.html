@@ -132,7 +132,7 @@ support for most of the different clock sources.</p></li>
 <li><p>A CPU with a constant, invariant TSC (time-stamp counter). This means that
 the TSC runs at a constant rate across all sockets/cores, regardless of
 frequency changes made to the CPU by power management code. If the CPU
-supports the rdtscp instruction, so much the better.</p></li>
+supports the RDTSCP instruction, so much the better.</p></li>
 <li><p>The TSC should be configured as the clock source for the Linux kernel at
 boot time.</p></li>
 <li><p>You should be measuring the interval between two events that happen on the
@@ -237,7 +237,7 @@ flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
 :  The system has a TSC clock.</p>
 
 <p>rdtscp
-:  The rdtscp instruction is available.</p>
+:  The RDTSCP instruction is available.</p>
 
 <p>constant_tsc
 :  The TSC is synchronized across all sockets/cores.</p>
@@ -513,10 +513,10 @@ test showed a resolution of 1ms for the COARSE clocks).</p></li>
 can&rsquo;t explain this &mdash;  you would think that its lack of adjustment would make
 it faster, not slower. This is unfortunate, as otherwise it would be an
 excellent choice for intra-machine timing.</p></li>
-<li><p>As you might expect, the combination of cpuid and rdtsc is slower than
-rdtscp, which is slower than rdtsc alone. In general, this would
-suggest that rdtscp should be preferred if available, with a fallback to
-cpuid+rdtsc if not. (While rdtsc alone is the fastest, the fact that it can
+<li><p>As you might expect, the combination of CPUID and RDTSC is slower than
+RDTSCP, which is slower than RDTSC alone. In general, this would
+suggest that RDTSCP should be preferred if available, with a fallback to
+CPUID+RDTSC if not. (While RDTSC alone is the fastest, the fact that it can
 be inaccurate as a result of out-of-order execution means it is only useful
 for timing relatively long operations where that inaccuracy is not
 significant &mdash; but those are precisely the scenarios where its speed is less

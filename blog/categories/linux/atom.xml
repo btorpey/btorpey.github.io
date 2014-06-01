@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-06-01T11:58:20-04:00</updated>
+  <updated>2014-06-01T12:05:56-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -495,7 +495,7 @@ The short version is that for best results you should be using:
 -   A CPU with a constant, invariant TSC (time-stamp counter). This means that
     the TSC runs at a constant rate across all sockets/cores, regardless of
     frequency changes made to the CPU by power management code. If the CPU
-    supports the rdtscp instruction, so much the better.
+    supports the RDTSCP instruction, so much the better.
 
 -   The TSC should be configured as the clock source for the Linux kernel at
     boot time.
@@ -594,7 +594,7 @@ tsc
 :  The system has a TSC clock.
 
 rdtscp
-:  The rdtscp instruction is available.
+:  The RDTSCP instruction is available.
 
 constant_tsc
 :  The TSC is synchronized across all sockets/cores.
@@ -865,10 +865,10 @@ A few things to note about these results:
     it faster, not slower. This is unfortunate, as otherwise it would be an
     excellent choice for intra-machine timing.
 
--   As you might expect, the combination of cpuid and rdtsc is slower than
-    rdtscp, which is slower than rdtsc alone. In general, this would
-    suggest that rdtscp should be preferred if available, with a fallback to
-    cpuid+rdtsc if not. (While rdtsc alone is the fastest, the fact that it can
+-   As you might expect, the combination of CPUID and RDTSC is slower than
+    RDTSCP, which is slower than RDTSC alone. In general, this would
+    suggest that RDTSCP should be preferred if available, with a fallback to
+    CPUID+RDTSC if not. (While RDTSC alone is the fastest, the fact that it can
     be inaccurate as a result of out-of-order execution means it is only useful
     for timing relatively long operations where that inaccuracy is not
     significant -- but those are precisely the scenarios where its speed is less

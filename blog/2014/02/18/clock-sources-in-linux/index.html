@@ -139,7 +139,16 @@ boot time.</p></li>
 same machine (intra-machine timing).</p></li>
 <li><p>For intra-machine timing, your best bet is generally going to be to read the
 TSC directly using assembler. On my test machine it takes about 100ns
-to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included <a href="https://github.com/btorpey/clocks.git">source code</a> that you can use to do your own measurements.</p></li>
+to read the TSC from software, so that is the limit of this method&rsquo;s accuracy. YMMV, of course, which is why I&rsquo;ve included <a href="https://github.com/btorpey/clocks.git">source code</a> that you can use to do your own measurements.</p>
+
+<ul>
+<li>Note that the 100ns mentioned above is largely due to the fact that my Linux box
+doesn&rsquo;t support the RDTSCP instruction, so to get reasonably accurate timings it&rsquo;s also necessary
+to issue a CPUID instruction prior to RDTSC to serialize its execution. On another machine that supports
+the RDTSCP instruction (a recent MacBook Air), overhead is down around 14ns.  More on that
+<a href="#rdtscp">later&hellip;</a></li>
+</ul>
+</li>
 </ul>
 
 
@@ -407,6 +416,8 @@ generate a frequency of exactly 1000 Hz &mdash; it&rsquo;s actually 1000.15 Hz.<
 
 <p>Next up is a brief discussion of how to read these different clock values from
 software.</p>
+
+<p><a name="rdtscp"></a></p>
 
 <h3>Assembler</h3>
 

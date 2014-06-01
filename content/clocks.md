@@ -44,6 +44,11 @@ The short version is that for best results you should be using:
 -   For intra-machine timing, your best bet is generally going to be to read the
     TSC directly using assembler. On my test machine it takes about 100ns 
     to read the TSC from software, so that is the limit of this method's accuracy. YMMV, of course, which is why I've included [source code](<https://github.com/btorpey/clocks.git>) that you can use to do your own measurements.
+    - Note that the 100ns mentioned above is largely due to the fact that my Linux box
+    doesn't support the RDTSCP instruction, so to get reasonably accurate timings it's also necessary
+    to issue a CPUID instruction prior to RDTSC to serialize its execution. On another machine that supports
+    the RDTSCP instruction (a recent MacBook Air), overhead is down around 14ns.  More on that 
+    <a href="#rdtscp">later...</a>
     
 The following sections will talk about how clocks work on Linux, how to access
 the various clocks from software, and how to measure the overhead of acessing
@@ -302,6 +307,7 @@ Getting Clock Values in Software
 Next up is a brief discussion of how to read these different clock values from
 software.
 
+<a name="rdtscp"></a>
 ### Assembler
 
 In assembler language, the RDTSC instruction returns the value of the TSC

@@ -1,3 +1,4 @@
+{% img left /images/caddyshack-11.jpg 320 240 %}
 
 Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
 yet, there are scenarios where a singleton is just the ticket – for instance,

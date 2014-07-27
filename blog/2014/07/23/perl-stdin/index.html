@@ -5,12 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Where Am I? - Confessions of a Wall Street Programmer</title>
+  <title>Guess What Day It Is! - Confessions of a Wall Street Programmer</title>
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="From Robinson Crusoe to Gilligan&rsquo;s Island to Lost, tales of being
-stranded on a desert island seem to resonate with people in a special way. &hellip;">
+  <meta name="description" content="No, not that &mdash; it&rsquo;s Perl day. (Well, actually it&rsquo;s just Wednesday, but you get the idea). Sometimes it seems that everybody likes &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +18,7 @@ stranded on a desert island seem to resonate with people in a special way. &hell
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://btorpey.github.io/blog/2014/05/29/where-am-i">
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/07/23/perl-stdin">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
@@ -71,7 +70,7 @@ stranded on a desert island seem to resonate with people in a special way. &hell
   
   <header>
     
-      <h1 class="entry-title">Where Am I?</h1>
+      <h1 class="entry-title">Guess What Day It Is!</h1>
     
     
       <p class="meta">
@@ -87,89 +86,54 @@ stranded on a desert island seem to resonate with people in a special way. &hell
   
 
 
-<time datetime="2014-05-29T09:09:31-04:00" pubdate data-updated="true">May 29<span>th</span>, 2014</time>
+<time datetime="2014-07-23T08:56:53-04:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2014</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"></p>
+<div class="entry-content"><p><img class="left" src="/images/phl.pm.org-camel.png" width="320" height="240"></p>
 
-<p>From <em>Robinson Crusoe</em> to <em>Gilligan&rsquo;s Island</em> to <em>Lost</em>, tales of being
-stranded on a desert island seem to resonate with people in a special way. Some
-of that likely has to do with the exotic locales, and the practical challenges
-of getting water, food and shelter.</p>
+<p>No, not that &mdash; it&rsquo;s Perl day.  (Well, actually it&rsquo;s just Wednesday, but you get the idea).</p>
 
-<p>But an even more basic part is the unanswered question: &ldquo;Where am I?&rdquo; that makes
-things so &mdash; well, <em>mysterious</em>.</p>
+<p>Sometimes it seems that everybody likes to hate on Perl, but I think their
+animus is misdirected. It&rsquo;s not Perl that&rsquo;s the problem, it&rsquo;s those ^&#92;$(.#!)?$
+regular expressions.</p>
 
-<p>Shell scripting can be pretty mysterious too at times, but in this installment
-we&rsquo;ll learn how to answer that basic question of &ldquo;Where am I?&rdquo; to make shell
-scripting a little less mysterious.</p>
+<p>Or, as Jamie Zawinski once said <a href="http://en.wikiquote.org/wiki/Jamie_Zawinski">&ldquo;Some people, when confronted with a problem, think &#8220;I know, I&rsquo;ll use regular expressions.&rdquo;
+Now they have two problems.&#8221;</a>.</p>
+
+<p>Well, I&rsquo;m here to tell you that it&rsquo;s possible to write whole Perl programs that
+actually accomplish useful work,<em> without any regular expressions at all!</em> And, if you do
+that, you can actually <em>read the code!</em></p>
+
+<p>It turns out that Perl is a dandy scripting language, and while some may take issue
+with its flexibility (&ldquo;There&rsquo;s more than one way to do it&rdquo;), others (including me) find that flexibility very useful.</p>
 
 <!--more-->
 
 
-<p>One of the tenets of the Unix way is brevity, and one consequence of that is
-that well-behaved programs should be able to find whatever other resources they
-need without having to be told where they are. Windows attempts to
-solve this problem with the (gack!) registry, but Unix tends to use a simpler
-approach: needed resources are placed either in well-known locations (e.g., /etc
-for system programs), or where they can be found relative to the location of the
-program itself.</p>
+<p>One example of that flexibility is how easy it is to create a Perl program that
+can read input either from stdin, or from a file specified on the command line.</p>
 
-<p>Another attribute of a well-behaved Unix program is that it
-should be able to run from any location, whether it&rsquo;s invoked with a full path,
-or found via the PATH variable.</p>
+<pre><code>local *INFILE;
+if (defined($ARGV[0])) {
+    open(INFILE, "&lt;:crlf", "$ARGV[0]") or die "Cant open $ARGV[0]\n";
+}
+else {
+    *INFILE = *STDIN;
+}
 
-<p>So, how do we reconcile those two requirements? And specifically, how do we do
-that in shell scripts? Since &mdash; regardless of what your &ldquo;main&rdquo; language is, if
-you&rsquo;re programming in Unix/Linux, you&rsquo;re probably also writing a boatload of
-shell scripts too.</p>
+while (&lt;INFILE&gt;) {
+}
 
-<p>It turns out that, at least in bash, there is a
-simple but non-obvious way to do get the location of the script file itself,
-which goes something like this:</p>
-
-<pre><code>SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) &amp;&amp; /bin/pwd) 
+close(INFILE);
 </code></pre>
 
-<p>Let&rsquo;s follow this through and see how it works:</p>
-
-<ul>
-<li><p>The <code>$( ... )</code> construct invokes a sub-shell. This is handy since it
-allows us to change the environment of the sub-shell (e.g., current directory)
-without affecting the current environment.</p></li>
-<li><p><code>$BASH_SOURCE</code> is a builtin variable that gives us the path to the shell
-script itself. For instance, if we invoke a script with <code>./scriptname.sh</code>,
-then that&rsquo;s what will end up in <code>${BASH_SOURCE}</code>.</p></li>
-<li><p>To get the full path then we extract just the path part with <code>dirname</code>, again
-in a sub-shell.</p></li>
-<li><p>We then <code>cd</code> into that directory, and if successful get the full pathname
-with <code>/bin/pwd</code>.</p>
-
-<ul>
-<li>Note that we use <code>/bin/pwd</code> to get the path. This version resolves any
-symbolic links to return the actual physical path. There is also a <code>pwd</code>
-built-in to bash, but that one does not expand symbolic links by default.</li>
-</ul>
-</li>
-</ul>
-
-
-<br>
-
-
-<ul>
-<li>Finally, the result is assigned to SCRIPT_DIR.</li>
-</ul>
-
-
-<p>We now have the full path of the script file itself, and can use that to locate
-any other resources needed by the script. For a real-world example, you can
-check out the <a href="https://github.com/btorpey/latency-utils.git">these scripts</a> from
- <a href="/blog/2014/05/16/visualizing-latency/">my earlier post on visualizing latency</a>.</p>
+<p>The above snippet does just that, and also works well with command-line parsers
+(e.g., <code>GetOpt</code>) that eat their parameters by removing them from the ARGV
+array.</p>
 </div>
 
 
@@ -192,12 +156,12 @@ check out the <a href="https://github.com/btorpey/latency-utils.git">these scrip
   
 
 
-<time datetime="2014-05-29T09:09:31-04:00" pubdate data-updated="true">May 29<span>th</span>, 2014</time>
+<time datetime="2014-07-23T08:56:53-04:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2014</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/bash/'>bash</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
+    <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/perl/'>perl</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
   
 </span>
 
@@ -213,10 +177,8 @@ check out the <a href="https://github.com/btorpey/latency-utils.git">these scrip
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2014/05/16/visualizing-latency/" title="Previous Post: Visualizing Latency">&laquo; Visualizing Latency</a>
+        <a class="basic-alignment left" href="/blog/2014/05/29/where-am-i/" title="Previous Post: Where Am I?">&laquo; Where Am I?</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2014/07/23/perl-stdin/" title="Next Post: Guess What Day It Is!">Guess What Day It Is! &raquo;</a>
       
     </p>
   </footer>
@@ -285,8 +247,8 @@ Copyright &copy; 2014 - Bill Torpey. &nbsp; All Rights Reserved.
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://btorpey.github.io/blog/2014/05/29/where-am-i/';
-        var disqus_url = 'http://btorpey.github.io/blog/2014/05/29/where-am-i/';
+        var disqus_identifier = 'http://btorpey.github.io/blog/2014/07/23/perl-stdin/';
+        var disqus_url = 'http://btorpey.github.io/blog/2014/07/23/perl-stdin/';
         var disqus_script = 'embed.js';
       
     (function () {

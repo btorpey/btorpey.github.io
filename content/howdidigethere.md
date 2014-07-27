@@ -1,3 +1,5 @@
+{% img right /images/talkingHeads1.jpg 244 176 %} 
+
 In addition to being a great line from David Byrne and Talking Heads (from "Life
 During Wartime"), this is also a question I often ask myself when
 looking at log files. Today's tip is worth the price of the whole blog (i.e.,

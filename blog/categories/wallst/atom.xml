@@ -4,7 +4,7 @@
   <title><![CDATA[Category: wallst | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/wallst/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-06-02T16:17:48-04:00</updated>
+  <updated>2014-07-27T12:00:57-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -18,7 +18,7 @@
     <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
     <updated>2014-05-16T08:42:58-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
-    <content type="html"><![CDATA[<p><img class="right" src="/images/ping.png" width="320" height="240"> 
+    <content type="html"><![CDATA[<p><img class="left" src="/images/ping.png" width="320" height="240"> 
 
 I'm a visual thinker (I think I may have [mentioned that before](http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/) ),
 so when I'm analyzing performance, latency, etc. I find it really helpful to be

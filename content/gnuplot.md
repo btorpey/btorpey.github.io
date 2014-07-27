@@ -1,4 +1,4 @@
-{% img right /images/ping.png 320 240 %} 
+{% img left /images/ping.png 320 240 %} 
 
 I'm a visual thinker (I think I may have [mentioned that before](http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/) ),
 so when I'm analyzing performance, latency, etc. I find it really helpful to be

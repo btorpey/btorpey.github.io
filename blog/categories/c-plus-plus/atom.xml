@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-06-02T16:17:48-04:00</updated>
+  <updated>2014-07-27T12:00:57-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -257,7 +257,8 @@ http://clang.llvm.org/docs/AddressSanitizer.html
     <link href="http://btorpey.github.io/blog/2014/02/12/shared-singletons/"/>
     <updated>2014-02-12T17:53:36-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/12/shared-singletons</id>
-    <content type="html"><![CDATA[<p>
+    <content type="html"><![CDATA[<p><img class="left" src="/images/caddyshack-11.jpg" width="320" height="240">
+
 Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
 yet, there are scenarios where a singleton is just the ticket – for instance,
 when a relatively expensive and/or long-lived resource needs to be shared among

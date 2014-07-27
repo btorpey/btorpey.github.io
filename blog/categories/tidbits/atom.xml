@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tidbits | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tidbits/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-06-02T16:17:48-04:00</updated>
+  <updated>2014-07-27T12:00:57-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,56 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Guess What Day It Is!]]></title>
+    <link href="http://btorpey.github.io/blog/2014/07/23/perl-stdin/"/>
+    <updated>2014-07-23T08:56:53-04:00</updated>
+    <id>http://btorpey.github.io/blog/2014/07/23/perl-stdin</id>
+    <content type="html"><![CDATA[<p><img class="left" src="/images/phl.pm.org-camel.png" width="320" height="240"> 
+
+No, not that -- it's Perl day.  (Well, actually it's just Wednesday, but you get the idea).
+
+Sometimes it seems that everybody likes to hate on Perl, but I think their
+animus is misdirected. It's not Perl that's the problem, it's those \^\\\$\(\.\#\!\)?$
+regular expressions.
+
+Or, as Jamie Zawinski once said ["Some people, when confronted with a problem, think "I know, I'll use regular expressions." 
+Now they have two problems."](http://en.wikiquote.org/wiki/Jamie_Zawinski).
+
+Well, I'm here to tell you that it's possible to write whole Perl programs that
+actually accomplish useful work,* without any regular expressions at all!* And, if you do
+that, you can actually *read the code!*
+
+It turns out that Perl is a dandy scripting language, and while some may take issue
+with its flexibility ("There's more than one way to do it"), others (including me) find that flexibility very useful.
+
+<!--more-->
+
+One example of that flexibility is how easy it is to create a Perl program that
+can read input either from stdin, or from a file specified on the command line.
+
+    local *INFILE;
+    if (defined($ARGV[0])) {
+        open(INFILE, "<:crlf", "$ARGV[0]") or die "Cant open $ARGV[0]\n";
+    }
+    else {
+        *INFILE = *STDIN;
+    }
+
+    while (<INFILE>) {
+    }
+
+    close(INFILE);
+
+The above snippet does just that, and also works well with command-line parsers
+(e.g., `GetOpt`) that eat their parameters by removing them from the ARGV
+array.
+
+
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Where Am I?]]></title>
@@ -93,7 +143,7 @@ check out the [these scripts](<https://github.com/btorpey/latency-utils.git>) fr
     <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
     <updated>2014-05-16T08:42:58-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
-    <content type="html"><![CDATA[<p><img class="right" src="/images/ping.png" width="320" height="240"> 
+    <content type="html"><![CDATA[<p><img class="left" src="/images/ping.png" width="320" height="240"> 
 
 I'm a visual thinker (I think I may have [mentioned that before](http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/) ),
 so when I'm analyzing performance, latency, etc. I find it really helpful to be
@@ -221,7 +271,9 @@ See the full discussion at <http://overbyte.com.au/index.php/overbyte-blog/entry
     <link href="http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/"/>
     <updated>2014-02-13T18:02:27-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here</id>
-    <content type="html"><![CDATA[<p>In addition to being a great line from David Byrne and Talking Heads (from "Life
+    <content type="html"><![CDATA[<p><img class="right" src="/images/talkingHeads1.jpg" width="244" height="176"> 
+
+In addition to being a great line from David Byrne and Talking Heads (from "Life
 During Wartime"), this is also a question I often ask myself when
 looking at log files. Today's tip is worth the price of the whole blog (i.e.,
 free), but I predict that you'll be glad you know it.
@@ -272,39 +324,6 @@ Now you'll never need to ask yourself "How did I get here"?
   
   
 
-</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T08:37:11-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here's a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.
-
-<!--more-->
-
-FIX may be the protocol that everybody loves to hate, but it doesn't look like it's
-going anywhere, so I guess we all just need to get over it and learn to live with it.
-
-One of the things that is hard to live with, though -- at least for me -- is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="/images/less-before.png"> 
-
-It turns out that it's possible to control how less displays the x'01'
-delimiters to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:
-
-`export LESSBINFMT="*u%x"`
-
-This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="/images/less-after.png"> 
-
-
-(Note that the man page for less mentions that it's possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I've tried it -- YMMV).
 </p>
 ]]></content>
   </entry>

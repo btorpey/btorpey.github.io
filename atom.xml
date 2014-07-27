@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-06-02T16:17:48-04:00</updated>
+  <updated>2014-07-27T12:00:57-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,55 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Guess What Day It Is!]]></title>
+    <link href="http://btorpey.github.io/blog/2014/07/23/perl-stdin/"/>
+    <updated>2014-07-23T08:56:53-04:00</updated>
+    <id>http://btorpey.github.io/blog/2014/07/23/perl-stdin</id>
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/phl.pm.org-camel.png" width="320" height="240"></p>
+
+<p>No, not that &mdash; it&rsquo;s Perl day.  (Well, actually it&rsquo;s just Wednesday, but you get the idea).</p>
+
+<p>Sometimes it seems that everybody likes to hate on Perl, but I think their
+animus is misdirected. It&rsquo;s not Perl that&rsquo;s the problem, it&rsquo;s those ^&#92;$(.#!)?$
+regular expressions.</p>
+
+<p>Or, as Jamie Zawinski once said <a href="http://en.wikiquote.org/wiki/Jamie_Zawinski">&ldquo;Some people, when confronted with a problem, think &#8220;I know, I&rsquo;ll use regular expressions.&rdquo;
+Now they have two problems.&#8221;</a>.</p>
+
+<p>Well, I&rsquo;m here to tell you that it&rsquo;s possible to write whole Perl programs that
+actually accomplish useful work,<em> without any regular expressions at all!</em> And, if you do
+that, you can actually <em>read the code!</em></p>
+
+<p>It turns out that Perl is a dandy scripting language, and while some may take issue
+with its flexibility (&ldquo;There&rsquo;s more than one way to do it&rdquo;), others (including me) find that flexibility very useful.</p>
+
+<!--more-->
+
+
+<p>One example of that flexibility is how easy it is to create a Perl program that
+can read input either from stdin, or from a file specified on the command line.</p>
+
+<pre><code>local *INFILE;
+if (defined($ARGV[0])) {
+    open(INFILE, "&lt;:crlf", "$ARGV[0]") or die "Cant open $ARGV[0]\n";
+}
+else {
+    *INFILE = *STDIN;
+}
+
+while (&lt;INFILE&gt;) {
+}
+
+close(INFILE);
+</code></pre>
+
+<p>The above snippet does just that, and also works well with command-line parsers
+(e.g., <code>GetOpt</code>) that eat their parameters by removing them from the ARGV
+array.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Where Am I?]]></title>
@@ -102,7 +151,7 @@ check out the <a href="https://github.com/btorpey/latency-utils.git">these scrip
     <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
     <updated>2014-05-16T08:42:58-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
-    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/ping.png" width="320" height="240"></p>
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/ping.png" width="320" height="240"></p>
 
 <p>I&rsquo;m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
 so when I&rsquo;m analyzing performance, latency, etc. I find it really helpful to be
@@ -976,7 +1025,9 @@ researched this article.</p>
     <link href="http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/"/>
     <updated>2014-02-13T18:02:27-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here</id>
-    <content type="html"><![CDATA[<p>In addition to being a great line from David Byrne and Talking Heads (from &ldquo;Life
+    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/talkingHeads1.jpg" width="244" height="176"></p>
+
+<p>In addition to being a great line from David Byrne and Talking Heads (from &ldquo;Life
 During Wartime&rdquo;), this is also a question I often ask myself when
 looking at log files. Today&rsquo;s tip is worth the price of the whole blog (i.e.,
 free), but I predict that you&rsquo;ll be glad you know it.</p>
@@ -1031,7 +1082,9 @@ a trick that gives a similar effect, that you can read about here (<a href="http
     <link href="http://btorpey.github.io/blog/2014/02/12/shared-singletons/"/>
     <updated>2014-02-12T17:53:36-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/12/shared-singletons</id>
-    <content type="html"><![CDATA[<p>Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/caddyshack-11.jpg" width="320" height="240"></p>
+
+<p>Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
 yet, there are scenarios where a singleton is just the ticket – for instance,
 when a relatively expensive and/or long-lived resource needs to be shared among
 a number of independent threads.</p>

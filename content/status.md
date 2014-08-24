@@ -1,0 +1,86 @@
+{% img right /images/the-office-boring-meeting1.jpg 262 211 %} 
+
+One of the banes of corporate life is the status meeting.  It would be nice to get rid of them, but then it would be nice to 
+get rid of all the lawyers too[^1], and I don't see that happening either.  
+
+So, how do we make them better?
+Well, for starters we could make them shorter.  Here's a way to do that.  
+
+<!--more-->
+
+I've had two really good managers in my career (although I have no idea whether
+that means I've been blessed or cursed ;-) I learned different things from each of my managers -- some of them pragmatic and
+some more in the "touchy-feely" category. This one is purely pragmatic (which
+is not say that is all I learned from him, but those stories are for another day).
+
+My manager (I'll call him Mike, because that's his name) set up this structure
+for a trading system project I was working on under his direction. We would have
+a status meeting on Monday mornings, which would set the agenda for the coming
+week, and with the following structure in place that meeting would typically take no more
+than 30 minutes. At the end, everybody knew what they needed to do, and we all
+got to work with a clear purpose.
+
+In preparation for this meeting, each person would create a status report, which consisted of the following categories, no more
+and no less:
+
+### Planned and Accomplished
+
+This is where you list the tasks that you planned to get done during the
+period, and that were actually completed. And, by completed we're not talking
+about 90% -- once a task gets into this category, you don't expect to see it
+again -- if you do, then it wasn't really complete in the first place.
+
+This sort of implies that tasks can be accomplished in one iteration, and so naturally
+forces you to think in terms of discrete quanta of accomplishment.  To paraphrase Woody Allen,
+"A project is like a shark.  It has to constantly move forward or it dies".  
+
+### Unplanned and Accomplished
+
+Of course, in the real world things never go as smoothly as they are supposed
+to. (Another way of saying this is: "In theory there is no difference between
+theory and practice. In practice there is.") So, this is where you list those
+items that came up "out of the blue", but which you had to deal with. An example
+might be production problems, customer engagements, or other things that are
+unpredictable.
+
+### Planned and Not Accomplished
+
+You would like this category to be empty much of the time, but that doesn't
+always happen. Certain tasks may have dependencies on external agents over which
+you have no control, for instance -- so even if you're the world's best planner,
+you're going to get tasks in here from time to time. Typically you would also
+include a brief explanation of why something didn't happen that was supposed to,
+which might feed into the "Issues for Management Attention" section later.
+
+### Planned for Next Period
+
+This is where you list the tasks that you intend to complete during the next
+iteration. Some may be new, and if there's anything in the "Planned and Not
+Accomplished" section, those would generally show up here as well until they are
+completed. Similarly, everything that appears here will end up in either
+"Planned and Accomplished" or "Planned and Not Accomplished" next time.
+
+### Issues for Management Attention
+
+Here's where you discuss any "blockers" that are preventing you from
+accomplishing your goals. In many cases, this will include dependencies on
+external entities, and these provide an opportunity for your manager to exercise his
+or her persuasive powers on other parts of the organization.
+
+And that's it -- just five categories, with a real focus on what's truly important.
+
+After learning this technique, I've used it with great success in all sorts of
+situations, and have also passed it along to others, who have all been quite happy with it. 
+It strikes just the right balance between too much and too little
+information, and also focuses the information in a way that is most useful.
+
+On Mike's project, we had these meetings on Monday mornings, but Friday also
+works -- that way you get it out of the way and come into the new week rarin' to
+go.
+
+If you're a manager, give this a try and see if it doesn't streamline one of
+your more onerous tasks. If you're not a manager, then you probably have one,
+and you can suggest using this for your status reports. Or, you can just use
+this template to help you focus yourself on what you need to be doing.
+
+[^1]:  Actually, some of my best friends are lawyers, so this doesn't apply to them ;-)

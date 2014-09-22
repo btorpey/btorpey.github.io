@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tidbits | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tidbits/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-09-21T20:13:30-04:00</updated>
+  <updated>2014-09-21T20:15:01-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -36,7 +36,8 @@ This does pretty much what you would guess from its name -- it
 spins through all the code you give it, and analyzes it for repeated sequences.
 [^1]
 
-Here's an example of running the GUI version against the code I used in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/) on smart pointers.
+Here's an example of running the GUI version against the code I used 
+in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/ on smart pointers.[^2]
 
 <img class="right" src="/images/cpd.png">
 

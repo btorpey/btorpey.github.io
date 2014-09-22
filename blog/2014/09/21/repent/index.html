@@ -114,7 +114,8 @@ This does pretty much what you would guess from its name &mdash; it
 spins through all the code you give it, and analyzes it for repeated sequences.
 <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
 
-<p>Here&rsquo;s an example of running the GUI version against the code I used in an <a href="http://btorpey.github.io/blog/2014/02/12/shared-singletons/">earlier post</a> on smart pointers.</p>
+<p>Here&rsquo;s an example of running the GUI version against the code I used
+in an [earlier post](<a href="http://btorpey.github.io/blog/2014/02/12/shared-singletons/">http://btorpey.github.io/blog/2014/02/12/shared-singletons/</a> on smart pointers.<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup></p>
 
 <p><img class="right" src="/images/cpd.png"></p>
 
@@ -162,6 +163,8 @@ you will just get a bunch of &ldquo;Skipping &hellip; since it appears to be a s
 <ol>
 <li id="fn:1">
 <p>CPD is part of the <a href="http://pmd.sourceforge.net/pmd-5.1.3/">PMD tool</a>, which can do a lot of useful things with Java code. But since I&rsquo;m primarily dealing with C++ code these days (and because duplicate code is such a hot-button issue for me), CPD is the part that I use.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p>Note that the &ldquo;Ignore literals&rdquo; and &ldquo;Ignore identifiers&rdquo; checkboxes are disabled if you select C++ as the language &ndash; these options are only implemented for Java currently (See <a href="http://sourceforge.net/p/pmd/discussion/188193/thread/91553283">this bug report</a>).<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
 </ol>
 </div>
 

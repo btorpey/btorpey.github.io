@@ -16,7 +16,8 @@ This does pretty much what you would guess from its name -- it
 spins through all the code you give it, and analyzes it for repeated sequences.
 [^1]
 
-Here's an example of running the GUI version against the code I used in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/) on smart pointers.
+Here's an example of running the GUI version against the code I used 
+in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/ on smart pointers.[^2]
 
 {% img right /images/cpd.png %}
 

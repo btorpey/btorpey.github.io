@@ -17,9 +17,12 @@ spins through all the code you give it, and analyzes it for repeated sequences.
 [^1]
 
 Here's an example of running the GUI version against the code I used 
-in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/ on smart pointers.[^2]
+in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/) on smart pointers.
 
 {% img right /images/cpd.png %}
+
+(Note that the "Ignore literals" and "Ignore identifiers" checkboxes are
+disabled if you select C++ as the language - these options [are only implemented for Java currently](http://sourceforge.net/p/pmd/discussion/188193/thread/91553283)).
 
 The site has several more examples, but [this one](http://pmd.sourceforge.net/pmd-5.1.3/cpdresults.txt) just blew my mind -- 
 hard to imagine how anyone could write this code in
@@ -62,4 +65,3 @@ you will just get a bunch of "Skipping ... since it appears to be a symlink" mes
 
 
 [^1]: CPD is part of the [PMD tool](http://pmd.sourceforge.net/pmd-5.1.3/), which can do a lot of useful things with Java code. But since I'm primarily dealing with C++ code these days (and because duplicate code is such a hot-button issue for me), CPD is the part that I use.
-[^2]: Note that the "Ignore literals" and "Ignore identifiers" checkboxes are disabled if you select C++ as the language - these options are only implemented for Java currently (See [this bug report](http://sourceforge.net/p/pmd/discussion/188193/thread/91553283)).

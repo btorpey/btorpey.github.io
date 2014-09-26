@@ -5,12 +5,13 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>What's Old Is New Again - Confessions of a Wall Street Programmer</title>
+  <title>Into the Void - Confessions of a Wall Street Programmer</title>
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this… Source: The Thomas Edison Papers, Rutgers &hellip;">
+  <meta name="description" content="I keep reading talk of the sort “I don’t know why anyone bothers
+with C++ — real programmers use C. C++ is for wussies”, or words to that
+effect. &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +20,7 @@ you see something like this… Source: The Thomas Edison Papers, Rutgers &hellip
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again">
+  <link rel="canonical" href="http://btorpey.github.io/blog/2014/09/23/into-the-void">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
@@ -71,7 +72,7 @@ you see something like this… Source: The Thomas Edison Papers, Rutgers &hellip
   
   <header>
     
-      <h1 class="entry-title">What's Old Is New Again</h1>
+      <h1 class="entry-title">Into the Void</h1>
     
     
       <p class="meta">
@@ -87,27 +88,90 @@ you see something like this… Source: The Thomas Edison Papers, Rutgers &hellip
   
 
 
-<time datetime="2014-02-11T20:07:41-05:00" pubdate data-updated="true">Feb 11<span>th</span>, 2014</time>
+<time datetime="2014-09-23T18:13:36-04:00" pubdate data-updated="true">Sep 23<span>rd</span>, 2014</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this…</p>
+<div class="entry-content"><p><img class="right" src="/images/m20.jpg" width="385" height="233"></p>
+
+<p>I keep reading talk of the sort “I don’t know why anyone bothers
+with C++ — real programmers use C.  C++ is for wussies”, or words to that
+effect.</p>
+
+<p>Well, a while ago I had to go back to C from working exclusively in C++ for a while, and
+I have to say that I think the C fanboys are just nuts.</p>
 
 <!--more-->
 
 
-<p><img class="center" src="http://edison.rutgers.edu/images/xx/xx1325.jpg"></p>
+<p>The project I’m referring to involved packaging up NYSE’s (now SR Labs&#8217;) “Mama” middleware so
+it could be released as <a href="http://www.openmama.org/">open source</a>, as well as implementing a new transport
+adapter for OpenMama using the open-source <a href="http://avis.sourceforge.net/why_avis.html">Avis</a> transport<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>.</p>
 
-<p>Source: The Thomas Edison Papers, Rutgers University <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+<p>Mama is a high-level API that provides access to a number of middleware
+transports, including Tibco Rendezvous, Informatica/29 West LBM and NYSE’s own
+Data Fabric middleware.  Mama and Data Fabric are almost exclusively C code,
+written back in the days when people avoided C++ because of issues with the
+various compilers.  (Does anyone remember the fun we used to have with gcc 2.95
+and templates?)</p>
+
+<p>So, at the time using C may have been the right choice, but it’s far from ideal.</p>
+
+<p>Like a lot of C code, what Mama does is encapsulate functionality by using
+pointers to opaque structs.  These ”handles” are created by calling API
+functions, and then later passed to other API functions to perform actions on
+the underlying objects represented by the handles.</p>
+
+<p>This is a very popular idiom, and with good reason — hiding the inner details of
+the implementation insulates applications from changes in the implementation.
+It’s called <a href="http://en.wikipedia.org/wiki/Bridge_pattern">“Bridge”</a> by the GOF, and the more
+colorful <a href="http://www.gotw.ca/gotw/024.htm">“pImpl”</a> by Herb
+Sutter.</p>
+
+<p>Of course, in C the typical way to accomplish this is with
+<a href="http://stackoverflow.com/questions/1043034/what-does-void-mean-in-c-c-and-c">void</a>
+ pointers, so the
+implementation spends a lot of time casting back and forth between <code>void*</code>’s and
+“real” pointers.  With, of course, absolutely no error checking by the compiler.</p>
+
+<p>For example, in the Avis protocol bridge that I implemented for the initial
+release of OpenMama, there are a bunch of macros that look like this:</p>
+
+<pre><code>#define avisPublisher(publisher) ((avisPublisherBridge*) publisher)
+</code></pre>
+
+<p>Elsewhere, the code that uses the macro:</p>
+
+<pre><code>    mamaMsg_updateString(msg, SUBJECT_FIELD_NAME, 0, avisPublisher(publisher)-&gt;mSubject);
+</code></pre>
+
+<p>Gee, wouldn’t it be nice to be able to define these handles in such a way that
+they would be opaque to the applications using the API, but the compiler could
+still enforce type-checking?  Not to mention not having to cast back and forth
+between <code>void*</code>’s and actual types?</p>
+
+<p>Never mind virtual functions, forget streams (please!) and the STL, ditto templates and
+operator overloading — if there’s one overriding reason to prefer C++ over C,
+it’s the compiler’s support for separating interface from implementation that is
+completely lacking in C.</p>
+
+<p>You see this same “handle” pattern everywhere in C, and it’s “good” C code just
+because it’s the best that can be done, but if a programmer wrote that code in
+C++ he’d be laughed out of the building (and rightly so).</p>
+
+<p>Has C++ become big and complicated?  Sure.  Is the syntax sometimes capricious
+and counter-intuitive?  Absolutely.</p>
+
+<p>But, at least for me, if I never see another <code>void*</code> as long as I live, that won’t
+be too long for me.</p>
 <div class="footnotes">
 <hr/>
 <ol>
 <li id="fn:1">
-<p><a href="http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;">http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;</a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<p>Don&rsquo;t ask.  Let&rsquo;s just say it wasn&rsquo;t my decision.  If you want to check out OpenMama, I would suggest using <a href="http://qpid.apache.org/proton/">Qpid/AMQP</a> instead.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
 </ol>
 </div>
 
@@ -133,12 +197,12 @@ you see something like this…</p>
   
 
 
-<time datetime="2014-02-11T20:07:41-05:00" pubdate data-updated="true">Feb 11<span>th</span>, 2014</time>
+<time datetime="2014-09-23T18:13:36-04:00" pubdate data-updated="true">Sep 23<span>rd</span>, 2014</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/wallst/'>wallst</a>
+    <a class='category' href='/blog/categories/c-plus-plus/'>c++</a>
   
 </span>
 
@@ -154,10 +218,8 @@ you see something like this…</p>
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2014/02/10/fixing-less/" title="Previous Post: FIXing less">&laquo; FIXing less</a>
+        <a class="basic-alignment left" href="/blog/2014/09/21/repent/" title="Previous Post: Repent, Sinner!">&laquo; Repent, Sinner!</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2014/02/12/shared-singletons/" title="Next Post: Shared Singleton's">Shared Singleton's &raquo;</a>
       
     </p>
   </footer>
@@ -226,8 +288,8 @@ Copyright &copy; 2014 - Bill Torpey. &nbsp; All Rights Reserved.
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/';
-        var disqus_url = 'http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/';
+        var disqus_identifier = 'http://btorpey.github.io/blog/2014/09/23/into-the-void/';
+        var disqus_url = 'http://btorpey.github.io/blog/2014/09/23/into-the-void/';
         var disqus_script = 'embed.js';
       
     (function () {

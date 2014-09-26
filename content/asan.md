@@ -153,7 +153,7 @@ has already caught a memory corruption problem that would have been extremely
 difficult to track down otherwise.  (Short version is that due to some
 unintended name collissions between shared libraries, we were trying to put 10
 pounds of bologna in a 5 pound sack.  Or, as one of my colleagues more accurately pointed out, 8 pounds
-of bologna in a 4 pund sack :-)
+of bologna in a 4 pound sack ;-)
 
 valgrind is still an extremely valuable tool, especially because of its
 convenience and versatility; but in certain edge cases Asan can bring things to

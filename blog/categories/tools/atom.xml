@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-09-22T08:37:16-04:00</updated>
+  <updated>2014-09-26T11:36:37-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -472,7 +472,7 @@ has already caught a memory corruption problem that would have been extremely
 difficult to track down otherwise.  (Short version is that due to some
 unintended name collissions between shared libraries, we were trying to put 10
 pounds of bologna in a 5 pound sack.  Or, as one of my colleagues more accurately pointed out, 8 pounds
-of bologna in a 4 pund sack :-)
+of bologna in a 4 pound sack ;-)
 
 valgrind is still an extremely valuable tool, especially because of its
 convenience and versatility; but in certain edge cases Asan can bring things to

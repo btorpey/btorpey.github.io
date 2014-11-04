@@ -6,8 +6,8 @@ Sometimes it seems that everybody likes to hate on Perl, but I think their
 animus is misdirected. It's not Perl that's the problem, it's those \^\\\$\(\.\#\!\)?$
 regular expressions.
 
-Or, as Jamie Zawinski once said ["Some people, when confronted with a problem, think "I know, I'll use regular expressions." 
-Now they have two problems."](http://en.wikiquote.org/wiki/Jamie_Zawinski).
+Or, as Jamie Zawinski once said 
+["Some people, when confronted with a problem, think "I know, I'll use regular expressions." Now they have two problems."](http://en.wikiquote.org/wiki/Jamie_Zawinski).
 
 Well, I'm here to tell you that it's possible to write whole Perl programs that
 actually accomplish useful work,* without any regular expressions at all!* And, if you do

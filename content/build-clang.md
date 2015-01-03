@@ -28,7 +28,10 @@ Here's a script that will download gcc 4.8.2 along with its prerequisites, build
 
 {% include_code clang/build-gcc.sh  %}
 
-To run the script, change to an empty directory and then simply invoke the script.  If you want to keep track of all the commands and output related to the build, you can invoke the script using the trick I wrote about in an earlier post.
+To run the script, change to an empty directory and then simply invoke the
+script.  If you want to keep track of all the commands and output related to the
+build, you can invoke the script using the trick I wrote about in an 
+[earlier post](<http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/>).
 
 Preparing to build
 ------------------

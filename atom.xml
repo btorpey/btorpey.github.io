@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-01-03T09:52:17-05:00</updated>
+  <updated>2015-01-03T09:57:23-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -155,7 +155,10 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>To run the script, change to an empty directory and then simply invoke the script.  If you want to keep track of all the commands and output related to the build, you can invoke the script using the trick I wrote about in an earlier post.</p>
+<p>To run the script, change to an empty directory and then simply invoke the
+script.  If you want to keep track of all the commands and output related to the
+build, you can invoke the script using the trick I wrote about in an
+<a href="http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/">earlier post</a>.</p>
 
 <h2>Preparing to build</h2>
 

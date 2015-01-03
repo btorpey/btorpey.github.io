@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-01-03T09:52:17-05:00</updated>
+  <updated>2015-01-03T09:57:23-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -149,7 +149,10 @@ Here's a script that will download gcc 4.8.2 along with its prerequisites, build
 </span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> make install
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-To run the script, change to an empty directory and then simply invoke the script.  If you want to keep track of all the commands and output related to the build, you can invoke the script using the trick I wrote about in an earlier post.
+To run the script, change to an empty directory and then simply invoke the
+script.  If you want to keep track of all the commands and output related to the
+build, you can invoke the script using the trick I wrote about in an 
+[earlier post](<http://btorpey.github.io/blog/2014/02/13/how-did-i-get-here/>).
 
 Preparing to build
 ------------------

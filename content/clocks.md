@@ -1,7 +1,5 @@
+{% img left /images/dali.png %}
 
-<table>
-    <tr>
-        <td>
 For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
@@ -10,14 +8,6 @@ nanoseconds.
 
 But, it's important to understand what you're measuring and what
 the different edge cases might be to ensure that your results are accurate.          
-        </td>
-        <td>
-<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.</blockquote>
-        
-        </td>
-    </tr>
-</table>    
-
 
 <!--more-->
 
@@ -65,7 +55,7 @@ timing measurements.
 The problem with inter-machine timing is that, by definition, you're dealing
 with (at least) two different clock sources. (Unless of course you are timing
 round-trip intervals -- if that's the case, you're lucky). And the problem with
-having two clock sources is described somewhat amusingly by the old chestnut that leads off this article: 
+having two clock sources is described somewhat amusingly by this old chestnut:
 
 <blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal's Law</cite></footer></blockquote>
 

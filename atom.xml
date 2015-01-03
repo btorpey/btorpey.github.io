@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2014-11-04T07:41:09-05:00</updated>
+  <updated>2015-01-03T09:52:17-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,408 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Building clang]]></title>
+    <link href="http://btorpey.github.io/blog/2015/01/02/building-clang/"/>
+    <updated>2015-01-02T12:41:45-05:00</updated>
+    <id>http://btorpey.github.io/blog/2015/01/02/building-clang</id>
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/timallen.jpg" width="230" height="240" title="" ></p>
+
+<p>clang is a great compiler, with a boatload of extremely helpful tools, including static analysis, run-time memory and data race analysis, and many others.  And it&rsquo;s apparently pretty easy to get those benefits on one of the supported platforms &mdash; basically Ubuntu and Mac (via XCode).</p>
+
+<p>That&rsquo;s fine, but if you get paid to write software, there&rsquo;s a good chance it&rsquo;s going to be deployed on RedHat, or one of its variants.  And, getting clang working on RedHat is a huge pain in the neck.  The good news is that I did the dirty work for you (ouch!), so you don&rsquo;t have to.</p>
+
+<!--more-->
+
+
+
+
+<br>
+
+
+<h2>Bootstrapping the compiler</h2>
+
+<p>Like almost all compilers, clang is written in a high-level language (in this case C++), so building clang requires a host compiler to do the actual compilation.  On Linux this is almost always gcc, since it is ubiquitous on Linux machines.  </p>
+
+<p>There&rsquo;s a hitch, though &mdash; as of version 3.3 some parts of clang are written in C++11, so the compiler used to compile clang needs to support the C++11 standard.</p>
+
+<p>This is a real problem with RedHat, since the system compiler supplied with RedHat 6 (the most recent version that is in wide use), is gcc 4.4.7.  That compiler does not support C++11, and so is not able to compile clang.  So, the first step is getting a C++11-compliant compiler so we can compile clang.  For this example, we&rsquo;re going to choose gcc 4.8.2, for a variety of reasons.  The good news is that gcc 4.8.2 is written in C++ 98, so we can build it using the system compiler (gcc 4.4.7).  </p>
+
+<p>The next thing we have to decide is where to install gcc 4.8.2, and we basically have these choices:</p>
+
+<ul>
+<li><p>We could install in /usr, where the new compiler would replace the system compiler.  Once we do that, though, we&rsquo;ve effectively created a custom OS that will be required on all our development/QA/production machines going forward.  If &ldquo;all our development/QA/production machines&rdquo; == 1, this may not be a problem, but as the number increases things can get out of hand quickly. This approach also does not lend itself to being able to have more than one version of a particular package on a single machine, which is often helpful.</p></li>
+<li><p>We could install in /usr/local (the default for gcc, and many other packages when built from source), so the new compiler would coexist with the system compiler.  The problem with this approach is that /usr/local can (and in practice often does) rapidly turn into a dumping-ground for miscellaneous executables and libraries.  Which wouldn&rsquo;t be so bad if we were diligent about keeping track of what they were and where they came from, but if we&rsquo;re going to do that we might as well &hellip;</p></li>
+<li><p>Install somewhere else &mdash; it doesn&rsquo;t really matter where, as long as there&rsquo;s a convention. In this case, we&rsquo;re going to use the convention that any software that is not bundled with the OS gets installed in /build/share/&lt;package>/&lt;version>.  This approach makes it easy to know exactly what versions of what software we&rsquo;re running, since we need to specify its install directory explicitly in PATH and/or LD_LIBRARY_PATH.  It also makes it much easier to keep track of what everything is and where it came from.</p></li>
+</ul>
+
+
+<p>Here&rsquo;s a script that will download gcc 4.8.2 along with its prerequisites, build it and install it as per the convention we just discussed:</p>
+
+<figure class='code'><figcaption><span> (build-gcc.sh)</span> <a href='http://btorpey.github.io/downloads/code/clang/build-gcc.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash </span>
+</span><span class='line'><span class="nb">set</span> -exv
+</span><span class='line'>
+</span><span class='line'><span class="c">## modify the following as needed for your environment</span>
+</span><span class='line'><span class="c"># location where gcc should be installed</span>
+</span><span class='line'><span class="nv">INSTALL_PREFIX</span><span class="o">=</span>/build/share/gcc/4.8.2
+</span><span class='line'><span class="c"># number of cores</span>
+</span><span class='line'><span class="nv">CPUS</span><span class="o">=</span><span class="k">$(</span>nproc<span class="k">)</span>
+</span><span class='line'><span class="c"># uncomment following to get verbose output from make</span>
+</span><span class='line'><span class="c">#VERBOSE=VERBOSE=1</span>
+</span><span class='line'><span class="c"># uncomment following if you need to sudo in order to do the install</span>
+</span><span class='line'><span class="c">#SUDO=sudo</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c">## get everything</span>
+</span><span class='line'>wget http://www.netgull.com/gcc/releases/gcc-4.8.2/gcc-4.8.2.tar.bz2
+</span><span class='line'>wget https://gmplib.org/download/gmp/gmp-4.3.2.tar.bz2
+</span><span class='line'>wget http://www.multiprecision.org/mpc/download/mpc-0.8.1.tar.gz
+</span><span class='line'>wget http://www.mpfr.org/mpfr-2.4.2/mpfr-2.4.2.tar.bz2
+</span><span class='line'>wget ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-0.18.1.tar.gz
+</span><span class='line'>wget ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.12.2.tar.bz2
+</span><span class='line'>
+</span><span class='line'><span class="c">## untar gcc</span>
+</span><span class='line'>tar xf gcc-4.8.2.tar.bz2
+</span><span class='line'><span class="c">## untar prereqs</span>
+</span><span class='line'><span class="c"># gmp</span>
+</span><span class='line'>tar xf gmp-4.3.2.tar.bz2
+</span><span class='line'>mv gmp-4.3.2 gcc-4.8.2/gmp
+</span><span class='line'><span class="c"># mpc</span>
+</span><span class='line'>tar xf mpc-0.8.1.tar.gz
+</span><span class='line'>mv mpc-0.8.1 gcc-4.8.2/mpc
+</span><span class='line'><span class="c"># mpfr</span>
+</span><span class='line'>tar xf mpfr-2.4.2.tar.bz2
+</span><span class='line'>mv mpfr-2.4.2 gcc-4.8.2/mpfr
+</span><span class='line'><span class="c"># cloog</span>
+</span><span class='line'>tar xf cloog-0.18.1.tar.gz
+</span><span class='line'>mv cloog-0.18.1 gcc-4.8.2/cloog
+</span><span class='line'><span class="c"># isl</span>
+</span><span class='line'>tar xf isl-0.12.2.tar.bz2
+</span><span class='line'>mv isl-0.12.2 gcc-4.8.2/isl
+</span><span class='line'>
+</span><span class='line'><span class="c"># build gcc</span>
+</span><span class='line'>rm -rf gcc
+</span><span class='line'>mkdir gcc
+</span><span class='line'><span class="nb">cd </span>gcc
+</span><span class='line'>../gcc-4.8.2/configure --prefix<span class="o">=</span><span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span> --enable-languages<span class="o">=</span>c,c++ --disable-multilib
+</span><span class='line'>make -j <span class="k">${</span><span class="nv">CPUS</span><span class="k">}</span> <span class="k">${</span><span class="nv">VERBOSE</span><span class="k">}</span>
+</span><span class='line'><span class="c"># install it</span>
+</span><span class='line'>rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> make install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To run the script, change to an empty directory and then simply invoke the script.  If you want to keep track of all the commands and output related to the build, you can invoke the script using the trick I wrote about in an earlier post.</p>
+
+<h2>Preparing to build</h2>
+
+<p>Now that we&rsquo;ve built gcc, we can get started building clang<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>.  By default, clang is built to use the C++ standard library (libstdc++) that is included with gcc. That&rsquo;s the good news, since that means code generated using clang can be intermixed freely with code generated with gcc &mdash; which is almost all the code on a typical Linux machine.<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup> The bad news is that by default, clang looks for libstdc++ in the default location (/usr). Since we chose to install gcc in a non-standard location, there are several settings that need to be modified to get a successful build of clang:</p>
+
+<table>
+<col width="36%" />
+<col width="59%" />
+<tbody>
+<tr class="odd">
+<td align="left"><p>CMAKE_C_COMPILER</p></td>
+<td align="left"><p>The location of the C compiler to use.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>CMAKE_CXX_COMPILER</p></td>
+<td align="left"><p>The location of the C++ compiler to use.</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>CMAKE_INSTALL_PREFIX</p></td>
+<td align="left"><p>The location where the compiler should be installed.</p></td>
+</tr>
+<tr class="even">
+<td align="left"><p>CMAKE_CXX_LINK_FLAGS</p></td>
+<td align="left"><p>Additional flags to be passed to the linker for C++ programs.  See below for more information.</p></td>
+</tr>
+<tr class="odd">
+<td align="left"><p>GCC_INSTALL_PREFIX</p></td>
+<td align="left"><p>Setting this parameter when building clang is equivalent to specifying the <code>--gcc-toolchain</code> parameter when invoking clang. See below for more information.</p></td>
+</tr>
+</tbody>
+</table>
+
+
+<p> </p>
+
+<p>While all these settings are documented in one place or another, as far as I know there is no single place that mentions them all.  (While clang is a terrific tool, the contirbutors apparently prefer writing code to writing documentation ;&ndash;)  So, these settings have been cobbled together from a number of sources (listed at the end of this article), and tested by much trial and error.</p>
+
+<p>The first four settings are plain-vanilla cmake settings, but one needs some additional discussion.</p>
+
+<h3>CMAKE_CXX_LINK_FLAGS</h3>
+
+<p>In the build script this is set to <code>"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"</code>. What this does is two-fold:</p>
+
+<ul>
+<li><p>The <code>-L</code> parameter adds the following directory to the search path for the linker.  This is needed  to locate the libraries installed with gcc.        </p></li>
+<li><p>The <code>-Wl,-rpath,</code> parameter installs a &ldquo;run path&rdquo; into any executables (including shared libraries) created during the build.  This allows the executable to find its dependent libraries at run-time, independent of any other settings. </p>
+
+<p>If we don&rsquo;t do this, the resulting executables will fail at run-time with an error similar to the following:</p>
+
+<pre><code>clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.14' not found (required by clang++)  
+clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.18' not found (required by clang++)  
+clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by clang++)
+</code></pre>
+
+<p>This error is caused because of the symbol versioning that we mentioned earlier &mdash; the compiler relies on the libraries with which it was built (the gcc 4.8.2 libraries), but because that is not installed in /usr, the run-time loader is only looking at the libstdc++ for the gcc 4.4.7 compiler, and that library doesn&rsquo;t contain the symbols that the executable is calling for.</p>
+
+<p>Note that you can display the run path for any executable (including shared libraries) with the following command:</p>
+
+<pre><code>&gt; objdump -x /build/share/clang/trunk/bin/clang++ | grep RPATH
+RPATH                /build/share/gcc/4.8.2/lib64:$ORIGIN/../lib
+</code></pre></li>
+</ul>
+
+
+<h3>GCC_INSTALL_PREFIX</h3>
+
+<p>The final setting that we need to specify is GCC_INSTALL_PREFIX. This tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time. If this is not set, clang will default to looking for include files in the system include directories, which can cause compile errors like the following:</p>
+
+<pre><code>clang++ -std=c++11 hello.cpp
+In file included from hello.cpp:1:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/iostream:40:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ostream:40:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ios:40:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/exception:148:
+/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/exception_ptr.h:143:13: error: unknown type name 'type_info'
+      const type_info*
+            ^
+1 error generated.
+</code></pre>
+
+<h2>Building clang</h2>
+
+<p>Now that we have that out of the way, we can build clang. The following script will download clang source from svn, build and install it.
+ </p>
+
+<figure class='code'><figcaption><span> (build-clang.sh)</span> <a href='http://btorpey.github.io/downloads/code/clang/build-clang.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="nb">set</span> -exv
+</span><span class='line'>
+</span><span class='line'><span class="c">## modify the following as needed for your environment</span>
+</span><span class='line'><span class="c"># location where clang should be installed</span>
+</span><span class='line'><span class="nv">INSTALL_PREFIX</span><span class="o">=</span>/build/share/clang/trunk
+</span><span class='line'><span class="c"># location of gcc used to build clang</span>
+</span><span class='line'><span class="nv">HOST_GCC</span><span class="o">=</span>/build/share/gcc/4.8.2
+</span><span class='line'><span class="c"># number of cores</span>
+</span><span class='line'><span class="nv">CPUS</span><span class="o">=</span><span class="k">$(</span>nproc<span class="k">)</span>
+</span><span class='line'><span class="c"># uncomment following to get verbose output from make</span>
+</span><span class='line'><span class="c">#VERBOSE=VERBOSE=1</span>
+</span><span class='line'><span class="c"># uncomment following if you need to sudo in order to do the install</span>
+</span><span class='line'><span class="c">#SUDO=sudo</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># gets clang tree from svn into ./llvm</span>
+</span><span class='line'><span class="c"># params (e.g., -r) can be specified on command line</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'>rm -rf llvm
+</span><span class='line'><span class="c">## get everything</span>
+</span><span class='line'><span class="c"># llvm</span>
+</span><span class='line'>svn co <span class="nv">$*</span> http://llvm.org/svn/llvm-project/llvm/trunk llvm
+</span><span class='line'><span class="c"># clang</span>
+</span><span class='line'><span class="nb">cd </span>llvm/tools
+</span><span class='line'>svn co <span class="nv">$*</span> http://llvm.org/svn/llvm-project/cfe/trunk clang
+</span><span class='line'><span class="nb">cd</span> -
+</span><span class='line'><span class="c"># extra</span>
+</span><span class='line'><span class="nb">cd </span>llvm/tools/clang/tools
+</span><span class='line'>svn co <span class="nv">$*</span> http://llvm.org/svn/llvm-project/clang-tools-extra/trunk extra
+</span><span class='line'><span class="nb">cd</span> -
+</span><span class='line'><span class="c"># compiler-rt</span>
+</span><span class='line'><span class="nb">cd </span>llvm/projects
+</span><span class='line'>svn co <span class="nv">$*</span> http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt
+</span><span class='line'><span class="nb">cd</span> -
+</span><span class='line'>
+</span><span class='line'><span class="c">## build clang w/gcc installed in non-standard location</span>
+</span><span class='line'>rm -rf clang
+</span><span class='line'>mkdir -p clang
+</span><span class='line'><span class="nb">cd </span>clang
+</span><span class='line'>cmake -DCMAKE_C_COMPILER<span class="o">=</span><span class="k">${</span><span class="nv">HOST_GCC</span><span class="k">}</span>/bin/gcc -DCMAKE_CXX_COMPILER<span class="o">=</span><span class="k">${</span><span class="nv">HOST_GCC</span><span class="k">}</span>/bin/g++ -DGCC_INSTALL_PREFIX<span class="o">=</span><span class="k">${</span><span class="nv">HOST_GCC</span><span class="k">}</span> -DCMAKE_CXX_LINK_FLAGS<span class="o">=</span><span class="s2">&quot;-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64&quot;</span> -DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span> -DLLVM_ENABLE_ASSERTIONS<span class="o">=</span>ON -DCMAKE_BUILD_TYPE<span class="o">=</span><span class="s2">&quot;Release&quot;</span> -DLLVM_TARGETS_TO_BUILD<span class="o">=</span><span class="s2">&quot;X86&quot;</span> ../llvm
+</span><span class='line'>make -j <span class="k">${</span><span class="nv">CPUS</span><span class="k">}</span> <span class="k">${</span><span class="nv">VERBOSE</span><span class="k">}</span>
+</span><span class='line'><span class="c"># install it</span>
+</span><span class='line'>rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> make install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that you can specify a parameter to the script (e.g., <code>-r 224019</code>) to get a specific version of clang from svn.</p>
+
+<h2>Building using clang</h2>
+
+<p>At this point, we should have a working clang compiler that we can use to build and run our own code. But once again, because the &ldquo;host&rdquo; gcc (and libstdc++) are installed in a non-standard location, we need to tweak a couple of build settings to get a successful build.</p>
+
+<h3>Specifying the compiler to use</h3>
+
+<p>There are a bunch of ways to specify the compiler, depending on what build system you&rsquo;re using &mdash; I&rsquo;ll mention a couple of them here.</p>
+
+<p>If you&rsquo;re using make, you can prefix the make command as follows:</p>
+
+<pre><code>CC=clang CXX=clang++ make ... 
+</code></pre>
+
+<p>If you&rsquo;re using cmake you can <a href="http://www.cmake.org/Wiki/CMake_FAQ#How_do_I_use_a_different_compiler.3F">specify the compiler to use</a> on the cmake command line, as follows:</p>
+
+<pre><code>cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ... 
+</code></pre>
+
+<p>Personally, I find that ridiculously inconvenient, so in my CMakeLists.txt file I specify the compiler directly:</p>
+
+<pre><code># cmake doc says this is naughty, but their suggestions are even worse...
+if("$ENV{COMPILER}" STREQUAL "gcc")
+  set(CMAKE_C_COMPILER      gcc)
+  set(CMAKE_CXX_COMPILER    g++)
+elseif("$ENV{COMPILER}" STREQUAL "clang")
+  set(CMAKE_C_COMPILER      clang)
+  set(CMAKE_CXX_COMPILER    clang++)
+endif()
+</code></pre>
+
+<p>In any of the above, you can either specify the full path to the compiler, or just specify the name of the compiler executable (as above), and make sure that the executable is on your PATH.</p>
+
+<p>Last but not least, if you&rsquo;re using GNU autotools &mdash; you&rsquo;re on your own, good luck! The only thing I want to say about autotools is that <a href="https://twitter.com/timmartin2/status/23365017839599616">I agree with this guy</a>.</p>
+
+<h3>Finding libstdc++ at build-time</h3>
+
+<p>By default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a <a href="http://llvm.org/bugs/show_bug.cgi?id=20510">bug report</a> for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;&ndash;)</p>
+
+<p>The suggested work-around for this is to specify the <code>--gcc-toolchain</code> parameter in both the compile and link step. In our case, we took a shortcut when we built clang by specifying the GCC_INSTALL_PREFIX setting &mdash; this effectively builds clang with the correct <code>--gcc-toolchain</code> setting already &ldquo;burned in&rdquo; to clang, so we can omit this setting for our builds.</p>
+
+<h3>Finding libstdc++ at run-time</h3>
+
+<p>Any code genrated using clang is also going to need to be able to find the libraries that clang was built with at run-time. There are a couple of ways of doing that:</p>
+
+<ul>
+<li><p>Similar to what we did above when building clang, you can specify the <code>-Wl,-rpath,</code> parameter to the linker to set a run path for your executables.
+ Note that if you&rsquo;re using cmake, it will <a href="http://www.cmake.org/Wiki/CMake_RPATH_handling">automatically strip the rpath</a> from all files when running <code>make install</code>, so you may need to disable that by setting <code>CMAKE_SKIP_INSTALL_RPATH</code> to false in your build.</p></li>
+<li><p>Alternatively, you will need to make sure that the proper library directory is on your <code>LD_LIBRARY_PATH</code> at run-time. This is the approach we use in my shop &mdash; we have a hard-and-fast rule that application code cannot contain a run path, and we deliberately strip any existing RPATH entries from code that is being deployed to QA and production.</p></li>
+</ul>
+
+
+<h2>Conclusion</h2>
+
+<p>There may be another way to build clang successfully on a RH-based system, but
+if there is I&rsquo;ve yet to discover it. As mentioned earlier, bits and pieces of
+this information have been found in other sources, including the following:</p>
+
+<p><a href="http://llvm.org/docs/GettingStarted.html#getting-a-modern-host-c-toolchain">http://llvm.org/docs/GettingStarted.html#getting-a-modern-host-c-toolchain</a></p>
+
+<p><a href="http://clang-developers.42468.n3.nabble.com/getting-clang-to-find-non-default-libstdc-td3945163.html">http://clang-developers.42468.n3.nabble.com/getting-clang-to-find-non-default-libstdc-td3945163.html</a></p>
+
+<p><a href="https://code.google.com/p/memory-sanitizer/wiki/BuildingClangOnOlderSystems">https://code.google.com/p/memory-sanitizer/wiki/BuildingClangOnOlderSystems</a></p>
+
+<p><a href="http://llvm.org/docs/CMake.html">http://llvm.org/docs/CMake.html</a>
+ </p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>You will need at least version 2.8 of cmake to do the build, which is not native on RH/CentOS 6.  That version can be installed using &ldquo;Add/Remove Software&rdquo; or yum.  (Or, of course, you can build it from source).<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p>It&rsquo;s also possible to build clang to use the C++ standard library (libc++) that is part of the llvm project, of which clang itself is also a part. That requires a discussion all its own, and we&rsquo;re not going to pursue that further in this post, although I may get around to writing about that at some point.<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Into the Void]]></title>
@@ -795,29 +1197,16 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
     <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
     <updated>2014-02-18T20:07:41-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>
-    <content type="html"><![CDATA[
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/dali.png"></p>
 
-<table>
-    <tr>
-        <td>
-For measuring latency in modern systems, we need to be able to measure intervals
+<p>For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
-nanoseconds. 
+nanoseconds.</p>
 
-But, it&#8217;s important to understand what you&#8217;re measuring and what
-the different edge cases might be to ensure that your results are accurate.          
-        </td>
-        <td>
-<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.</blockquote>
-        
-        </td>
-    </tr>
-</table>
-
-
-<p></p>
+<p>But, it&rsquo;s important to understand what you&rsquo;re measuring and what
+the different edge cases might be to ensure that your results are accurate.</p>
 
 <!--more-->
 
@@ -868,7 +1257,7 @@ timing measurements.</p>
 <p>The problem with inter-machine timing is that, by definition, you&rsquo;re dealing
 with (at least) two different clock sources. (Unless of course you are timing
 round-trip intervals &mdash; if that&rsquo;s the case, you&rsquo;re lucky). And the problem with
-having two clock sources is described somewhat amusingly by the old chestnut that leads off this article:</p>
+having two clock sources is described somewhat amusingly by this old chestnut:</p>
 
 <blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: wallst | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/wallst/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-01-03T09:57:23-05:00</updated>
+  <updated>2015-01-04T18:15:38-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Visualizing Latency]]></title>
     <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
-    <updated>2014-05-16T08:42:58-04:00</updated>
+    <updated>2014-05-16T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/ping.png" width="320" height="240"> 
 
@@ -114,7 +114,7 @@ Comments, suggestions, pull requests, etc. welcome.</p>
   <entry>
     <title type="html"><![CDATA[What's Old Is New Again]]></title>
     <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
-    <updated>2014-02-11T20:07:41-05:00</updated>
+    <updated>2014-02-11T00:00:00-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
     <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
 you see something like this…</p>
@@ -139,7 +139,7 @@ you see something like this…</p>
   <entry>
     <title type="html"><![CDATA[FIXing less]]></title>
     <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T08:37:11-05:00</updated>
+    <updated>2014-02-10T00:00:00-05:00</updated>
     <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
     <content type="html"><![CDATA[<p>Here's a handy tip for those who (like me) spend a fair amount of time staring
 at FIX logs.

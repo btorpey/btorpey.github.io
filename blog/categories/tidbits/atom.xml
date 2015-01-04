@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tidbits | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tidbits/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-01-03T09:57:23-05:00</updated>
+  <updated>2015-01-04T18:15:38-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Repent, Sinner!]]></title>
     <link href="http://btorpey.github.io/blog/2014/09/21/repent/"/>
-    <updated>2014-09-21T20:46:18-04:00</updated>
+    <updated>2014-09-21T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/09/21/repent</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/nun-with-ruler.jpg" width="240" height="160"> 
 
@@ -92,7 +92,7 @@ you will just get a bunch of "Skipping ... since it appears to be a symlink" mes
   <entry>
     <title type="html"><![CDATA[Guess What Day It Is!]]></title>
     <link href="http://btorpey.github.io/blog/2014/07/23/perl-stdin/"/>
-    <updated>2014-07-23T08:56:53-04:00</updated>
+    <updated>2014-07-23T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/07/23/perl-stdin</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/phl.pm.org-camel.png" width="320" height="240"> 
 
@@ -142,7 +142,7 @@ array.
   <entry>
     <title type="html"><![CDATA[Where Am I?]]></title>
     <link href="http://btorpey.github.io/blog/2014/05/29/where-am-i/"/>
-    <updated>2014-05-29T09:09:31-04:00</updated>
+    <updated>2014-05-29T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/29/where-am-i</id>
     <content type="html"><![CDATA[<p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"> 
 
@@ -217,7 +217,7 @@ check out the [these scripts](<https://github.com/btorpey/latency-utils.git>) fr
   <entry>
     <title type="html"><![CDATA[Visualizing Latency]]></title>
     <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
-    <updated>2014-05-16T08:42:58-04:00</updated>
+    <updated>2014-05-16T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/ping.png" width="320" height="240"> 
 
@@ -315,7 +315,7 @@ Comments, suggestions, pull requests, etc. welcome.</p>
   <entry>
     <title type="html"><![CDATA[A Picture is Worth 1K Words]]></title>
     <link href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/"/>
-    <updated>2014-04-29T19:23:07-04:00</updated>
+    <updated>2014-04-29T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words</id>
     <content type="html"><![CDATA[<p>You know those mutiple-choice tests that put you in one of four quadrants based
 on your answers to a bunch of seemingly irrelevant questions? We've all taken

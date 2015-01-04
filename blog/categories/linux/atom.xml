@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-01-03T09:57:23-05:00</updated>
+  <updated>2015-01-04T18:15:38-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Building clang]]></title>
     <link href="http://btorpey.github.io/blog/2015/01/02/building-clang/"/>
-    <updated>2015-01-02T12:41:45-05:00</updated>
+    <updated>2015-01-02T00:00:00-05:00</updated>
     <id>http://btorpey.github.io/blog/2015/01/02/building-clang</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/timallen.jpg" width="230" height="240" title="" >
 
@@ -157,11 +157,57 @@ build, you can invoke the script using the trick I wrote about in an
 Preparing to build
 ------------------
 
-Now that we've built gcc, we can get started building clang[^1].  By default, clang is built to use the C++ standard library (libstdc++) that is included with gcc. That's the good news, since that means code generated using clang can be intermixed freely with code generated with gcc -- which is almost all the code on a typical Linux machine.[^2] The bad news is that by default, clang looks for libstdc++ in the default location (/usr). Since we chose to install gcc in a non-standard location, there are several settings that need to be modified to get a successful build of clang:
+Now that we've built gcc, we can get started building clang[^1].  By default,
+clang is built to use the C++ standard library (libstdc++) that is included with
+gcc. That's the good news, since that means code generated using clang can be
+intermixed freely with code generated with gcc -- which is almost all the code
+on a typical Linux machine.[^2] 
+
+Finding the C++ standard library
+--------------------------------
+
+The libstdc++.so that is part of gcc is "versioned", which means that different library versions can have different symbols defined. Since we chose to install gcc 4.8.2 in a non-standard location, there are several settings that need to be tweaked to have code find and use that version of libstdc++[^4].
+
+Let's start with a recap of how that works.
+
+### Finding the C++ standard library at build-time
+
+With a default installation of gcc, everything is easy: gcc itself is in /usr/bin, include files are in /usr/include (sort of), and library files are in /usr/lib and/or /usr/lib64. In cases where files are not installed in these locations, gcc itself keeps track of where it should look for dependencies, and the following command will show these locations:
+
+    [$] g++ -E -x c++ - -v < /dev/null
+    ...
+    #include "..." search starts here:
+    #include <...> search starts here:
+     /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7
+     /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/x86_64-redhat-linux
+     /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/backward
+     /usr/lib/gcc/x86_64-redhat-linux/4.4.7/include
+     /usr/include
+    End of search list.
+    ...
+    LIBRARY_PATH=/usr/lib/gcc/x86_64-redhat-linux/4.4.7/:/usr/lib/gcc/x86_64-redhat-linux/4.4.7/:/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../:/lib/:/usr/lib/
+
+With our non-standard installation of gcc 4.8.2, the same command shows the values appropriate for that version of the compiler:
+
+    [$] /build/share/gcc/4.8.2/bin/g++ -E -x c++ - -v < /dev/null
+    ...
+    #include "..." search starts here:
+    #include <...> search starts here:
+     /shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../include/c++/4.8.2
+     /shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../include/c++/4.8.2/x86_64-unknown-linux-gnu
+     /shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../include/c++/4.8.2/backward
+     /shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/include
+     /shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/include-fixed
+     /shared/build/share/gcc/4.8.2/bin/../lib/gcc/../../include
+     /usr/include
+    ...
+    LIBRARY_PATH=/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/:/shared/build/share/gcc/4.8.2/bin/../lib/gcc/:/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../:/lib/:/usr/lib/
+
+The situation with clang is a bit (!) more complicated. Not only does clang need to be able to find its own include files and libraries, but it also needs to be able to find the files for the compiler that clang is being built with. In order to successfully build clang with a non-standard compiler, we are going to need to specify the following parameters to the clang build:
 
 <table>
-<col width="36%" />
-<col width="59%" />
+<col width="35%" />
+<col width="60%" />
 <tbody>
 <tr class="odd">
 <td align="left"><p>CMAKE_C_COMPILER</p></td>
@@ -186,27 +232,18 @@ Now that we've built gcc, we can get started building clang[^1].  By default, c
 </tbody>
 </table>
 
- 
-
+<br>
 While all these settings are documented in one place or another, as far as I know there is no single place that mentions them all.  (While clang is a terrific tool, the contirbutors apparently prefer writing code to writing documentation ;-)  So, these settings have been cobbled together from a number of sources (listed at the end of this article), and tested by much trial and error.
 
-The first four settings are plain-vanilla cmake settings, but one needs some additional discussion.
+The first three settings are plain-vanilla cmake settings, but the last two need some additional discussion.
 
 ### CMAKE\_CXX\_LINK\_FLAGS
 
-In the build script this is set to `"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"`. What this does is two-fold:
+In the build script this is set to `"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"`.  What this does is two-fold:
 
--   The `-L` parameter adds the following directory to the search path for the linker.  This is needed  to locate the libraries installed with gcc.        
+-   The `-L` parameter adds the following directory to the search path for the linker.  This is needed  to locate the libraries installed with gcc 4.8.2.        
 
 -   The `-Wl,-rpath,` parameter installs a "run path" into any executables (including shared libraries) created during the build.  This allows the executable to find its dependent libraries at run-time, independent of any other settings. 
-
-    If we don't do this, the resulting executables will fail at run-time with an error similar to the following:
-
-        clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.14' not found (required by clang++)  
-        clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.18' not found (required by clang++)  
-        clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by clang++)
-
-    This error is caused because of the symbol versioning that we mentioned earlier -- the compiler relies on the libraries with which it was built (the gcc 4.8.2 libraries), but because that is not installed in /usr, the run-time loader is only looking at the libstdc++ for the gcc 4.4.7 compiler, and that library doesn't contain the symbols that the executable is calling for.
 
     Note that you can display the run path for any executable (including shared libraries) with the following command:
 
@@ -215,18 +252,9 @@ In the build script this is set to `"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/
 
 ### GCC\_INSTALL\_PREFIX
 
-The final setting that we need to specify is GCC\_INSTALL\_PREFIX. This tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time. If this is not set, clang will default to looking for include files in the system include directories, which can cause compile errors like the following:
+Unfortunately, by default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a [bugreport](http://llvm.org/bugs/show_bug.cgi?id=20510) for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;-)
 
-    clang++ -std=c++11 hello.cpp
-    In file included from hello.cpp:1:
-    In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/iostream:40:
-    In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ostream:40:
-    In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ios:40:
-    In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/exception:148:
-    /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/exception_ptr.h:143:13: error: unknown type name 'type_info'
-          const type_info*
-                ^
-    1 error generated.
+The work-around for this is to specify GCC\_INSTALL\_PREFIX -- this tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time.
 
 Building clang
 --------------
@@ -360,20 +388,14 @@ In any of the above, you can either specify the full path to the compiler, or ju
 
 Last but not least, if you're using GNU autotools -- you're on your own, good luck! The only thing I want to say about autotools is that [I agree with this guy](https://twitter.com/timmartin2/status/23365017839599616).
 
-### Finding libstdc++ at build-time
-
-By default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a [bug report](http://llvm.org/bugs/show_bug.cgi?id=20510) for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;-)
-
-The suggested work-around for this is to specify the `--gcc-toolchain` parameter in both the compile and link step. In our case, we took a shortcut when we built clang by specifying the GCC\_INSTALL\_PREFIX setting -- this effectively builds clang with the correct `--gcc-toolchain` setting already "burned in" to clang, so we can omit this setting for our builds.
-
-### Finding libstdc++ at run-time
+### Finding the C++ standard library at run-time
 
 Any code genrated using clang is also going to need to be able to find the libraries that clang was built with at run-time. There are a couple of ways of doing that:
 
 -   Similar to what we did above when building clang, you can specify the `-Wl,-rpath,` parameter to the linker to set a run path for your executables.
      Note that if you're using cmake, it will [automatically strip the rpath](<http://www.cmake.org/Wiki/CMake_RPATH_handling>) from all files when running `make install`, so you may need to disable that by setting `CMAKE_SKIP_INSTALL_RPATH` to false in your build.
 
--   Alternatively, you will need to make sure that the proper library directory is on your `LD_LIBRARY_PATH` at run-time. This is the approach we use in my shop -- we have a hard-and-fast rule that application code cannot contain a run path, and we deliberately strip any existing RPATH entries from code that is being deployed to QA and production.
+-   Alternatively, you will need to make sure that the proper library directory is on your `LD_LIBRARY_PATH` at run-time[^3].
 
 Conclusion
 ----------
@@ -394,6 +416,11 @@ this information have been found in other sources, including the following:
 [^1]: You will need at least version 2.8 of cmake to do the build, which is not native on RH/CentOS 6.  That version can be installed using "Add/Remove Software" or yum.  (Or, of course, you can build it from source).
 
 [^2]: It's also possible to build clang to use the C++ standard library (libc++) that is part of the llvm project, of which clang itself is also a part. That requires a discussion all its own, and we're not going to pursue that further in this post, although I may get around to writing about that at some point.
+
+[^3]: This is the approach we use in my shop -- we have a hard-and-fast rule that application code cannot contain a run path, and we deliberately strip any existing RPATH entries from code that is being deployed to QA and production as a security measure.
+
+[^4]: I may go into more detail on this in a later post, but in the meantime if you're interested you should consult Ulrich Drepper's "How to Write Shared Libraries" at http://www.akkadia.org/drepper/dsohowto.pdf.
+
 </p>
 ]]></content>
   </entry>
@@ -401,7 +428,7 @@ this information have been found in other sources, including the following:
   <entry>
     <title type="html"><![CDATA[Guess What Day It Is!]]></title>
     <link href="http://btorpey.github.io/blog/2014/07/23/perl-stdin/"/>
-    <updated>2014-07-23T08:56:53-04:00</updated>
+    <updated>2014-07-23T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/07/23/perl-stdin</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/phl.pm.org-camel.png" width="320" height="240"> 
 
@@ -451,7 +478,7 @@ array.
   <entry>
     <title type="html"><![CDATA[Where Am I?]]></title>
     <link href="http://btorpey.github.io/blog/2014/05/29/where-am-i/"/>
-    <updated>2014-05-29T09:09:31-04:00</updated>
+    <updated>2014-05-29T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/29/where-am-i</id>
     <content type="html"><![CDATA[<p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"> 
 
@@ -526,7 +553,7 @@ check out the [these scripts](<https://github.com/btorpey/latency-utils.git>) fr
   <entry>
     <title type="html"><![CDATA[Visualizing Latency]]></title>
     <link href="http://btorpey.github.io/blog/2014/05/16/visualizing-latency/"/>
-    <updated>2014-05-16T08:42:58-04:00</updated>
+    <updated>2014-05-16T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/05/16/visualizing-latency</id>
     <content type="html"><![CDATA[<p><img class="left" src="/images/ping.png" width="320" height="240"> 
 
@@ -624,7 +651,7 @@ Comments, suggestions, pull requests, etc. welcome.</p>
   <entry>
     <title type="html"><![CDATA[A Picture is Worth 1K Words]]></title>
     <link href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/"/>
-    <updated>2014-04-29T19:23:07-04:00</updated>
+    <updated>2014-04-29T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words</id>
     <content type="html"><![CDATA[<p>You know those mutiple-choice tests that put you in one of four quadrants based
 on your answers to a bunch of seemingly irrelevant questions? We've all taken

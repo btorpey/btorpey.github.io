@@ -501,6 +501,80 @@ endif()
 </ul>
 
 
+<h2>So, What Could Possibly Go Wrong?</h2>
+
+<p>If you&rsquo;ve followed the directions above, you should be good to go, but be warned that, just like in &ldquo;Harry Potter&rdquo;, messing up any part of the spell can cause things to go spectacularly wrong. Here are a few examples:</p>
+
+<ul>
+<li>If you try to use the system compiler (gcc 4.4.7) to build clang, you&rsquo;ll get an error like the following:</li>
+</ul>
+
+
+<!-- -->
+
+
+<pre><code>CMake Error at cmake/modules/HandleLLVMOptions.cmake:17 (message):
+  Host GCC version must be at least 4.7!
+Call Stack (most recent call first):
+  CMakeLists.txt:343 (include)
+</code></pre>
+
+<ul>
+<li>The clang build executes code, that was built with clang, as part of the build step. If clang can&rsquo;t find the correct (i.e., gcc 4.8.2) version of libstdc++ at build time, you will see an error similar to the following:</li>
+</ul>
+
+
+<!-- -->
+
+
+<pre><code>Linking CXX static library ../../../../lib/libclangAnalysis.a
+[ 51%] Built target clangAnalysis
+[ 51%] Building CXX object tools/clang/lib/Sema/CMakeFiles/clangSema.dir/SemaConsumer.cpp.o
+[ 51%] Building CXX object tools/clang/lib/ARCMigrate/CMakeFiles/clangARCMigrate.dir/TransAutoreleasePool.cpp.o
+[ 51%] Building CXX object tools/clang/lib/AST/CMakeFiles/clangAST.dir/ExprConstant.cpp.o
+Scanning dependencies of target ClangDriverOptions
+[ 51%] Building Options.inc...
+../../../../../bin/llvm-tblgen: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by ../../../../../bin/llvm-tblgen)
+make[2]: *** [tools/clang/include/clang/Driver/Options.inc.tmp] Error 1
+make[1]: *** [tools/clang/include/clang/Driver/CMakeFiles/ClangDriverOptions.dir/all] Error 2
+</code></pre>
+
+<ul>
+<li>If you build clang without specifying the <code>-Wl,-rpath</code> parameter, clang won&rsquo;t be able to find the libraries it needs at compile-time:</li>
+</ul>
+
+
+<!-- -->
+
+
+<pre><code>[$] clang++ $* hello.cpp &amp;&amp; ./a.out
+clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.14' not found (required by clang++)
+clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.18' not found (required by clang++)
+clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by clang++)
+</code></pre>
+
+<ul>
+<li>If the GCC_INSTALL_PREFIX setting isn&rsquo;t specified when you build with clang, it will look for system files in /usr, rather than the proper directory, and you will see something like this:</li>
+</ul>
+
+
+<!-- -->
+
+
+<pre><code>clang++ $* hello.cpp &amp;&amp; ./a.out
+In file included from hello.cpp:1:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/iostream:40:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ostream:40:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ios:40:
+In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/exception:148:
+/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/exception_ptr.h:143:13: error: unknown type name 'type_info'
+      const type_info*
+            ^
+1 error generated.
+</code></pre>
+
+<p>I&rsquo;ve probably missed a couple, but you get the idea.</p>
+
 <h2>Conclusion</h2>
 
 <p>There may be another way to build clang successfully on a RH-based system, but

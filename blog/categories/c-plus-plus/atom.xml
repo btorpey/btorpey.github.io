@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-01-04T21:12:57-05:00</updated>
+  <updated>2015-01-04T21:20:26-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -180,7 +180,7 @@ Let's start with a recap of how that works.
 
 With a default installation of gcc, everything is easy: gcc itself is in /usr/bin, include files are in /usr/include (sort of), and library files are in /usr/lib and/or /usr/lib64. In cases where files are not installed in these locations, gcc itself keeps track of where it should look for dependencies, and the following command will show these locations:
 
-    [$] g++ -E -x c++ - -v < /dev/null
+    > g++ -E -x c++ - -v < /dev/null
     ...
     #include "..." search starts here:
     #include <...> search starts here:
@@ -195,7 +195,7 @@ With a default installation of gcc, everything is easy: gcc itself is in /usr/bi
 
 With our non-standard installation of gcc 4.8.2, the same command shows the values appropriate for that version of the compiler:
 
-    [$] /build/share/gcc/4.8.2/bin/g++ -E -x c++ - -v < /dev/null
+    > /build/share/gcc/4.8.2/bin/g++ -E -x c++ - -v < /dev/null
     ...
     #include "..." search starts here:
     #include <...> search starts here:
@@ -209,7 +209,11 @@ With our non-standard installation of gcc 4.8.2, the same command shows the valu
     ...
     LIBRARY_PATH=/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/:/shared/build/share/gcc/4.8.2/bin/../lib/gcc/:/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.2/../../../:/lib/:/usr/lib/
 
-The situation with clang is a bit (!) more complicated. Not only does clang need to be able to find its own include files and libraries, but it also needs to be able to find the files for the compiler that clang is being built with. In order to successfully build clang with a non-standard compiler, we are going to need to specify the following parameters to the clang build:
+The situation with clang is a bit (!) more complicated. Not only does clang need
+to be able to find its own include files and libraries, but it also needs to be
+able to find the files for the compiler that clang is built with. In order
+to successfully build clang with a non-standard compiler, we are going to need
+to specify the following parameters to the clang build:
 
 <table>
 <col width="35%" />
@@ -417,8 +421,6 @@ If you've followed the directions above, you should be good to go, but be warned
 
     CMake Error at cmake/modules/HandleLLVMOptions.cmake:17 (message):
       Host GCC version must be at least 4.7!
-    Call Stack (most recent call first):
-      CMakeLists.txt:343 (include)
 
 -   The clang build executes code, that was built with clang, as part of the build step. If clang can't find the correct (i.e., gcc 4.8.2) version of libstdc++ at build time, you will see an error similar to the following:
 
@@ -432,14 +434,12 @@ If you've followed the directions above, you should be good to go, but be warned
     Scanning dependencies of target ClangDriverOptions
     [ 51%] Building Options.inc...
     ../../../../../bin/llvm-tblgen: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by ../../../../../bin/llvm-tblgen)
-    make[2]: *** [tools/clang/include/clang/Driver/Options.inc.tmp] Error 1
-    make[1]: *** [tools/clang/include/clang/Driver/CMakeFiles/ClangDriverOptions.dir/all] Error 2
 
 -   If you build clang without specifying the `-Wl,-rpath` parameter, clang won't be able to find the libraries it needs at compile-time:
 
 <!-- -->
 
-    [$] clang++ $* hello.cpp && ./a.out
+    > clang++ $* hello.cpp && ./a.out
     clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.14' not found (required by clang++)
     clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.18' not found (required by clang++)
     clang++: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by clang++)
@@ -448,7 +448,7 @@ If you've followed the directions above, you should be good to go, but be warned
 
 <!-- -->
 
-    clang++ $* hello.cpp && ./a.out
+    > clang++ $* hello.cpp && ./a.out
     In file included from hello.cpp:1:
     In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/iostream:40:
     In file included from /usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../include/c++/4.4.7/ostream:40:

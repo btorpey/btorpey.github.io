@@ -134,9 +134,9 @@ The first three settings are plain-vanilla cmake settings, but the last two need
 
 In the clang build script this is set to `"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"`.  What this does is two-fold:
 
--   The `-L` parameter adds the following directory to the search path for the linker.  This is needed  to locate the libraries installed with gcc 4.8.2.        
+-   The `-L` parameter adds the following directory to the search path for the linker.  This is needed so the linker can locate the libraries installed with gcc 4.8.2.        
 
--   The `-Wl,-rpath,` parameter installs a "run path" into any executables (including shared libraries) created during the build.  This allows the executable to find its dependent libraries at run-time, independent of any other settings. 
+-   The `-Wl,-rpath,` parameter installs a ["run path"](<http://en.wikipedia.org/wiki/Rpath>) into any executables (including shared libraries) created during the build.  This is needed so any executables created can find their dependent libraries at run-time. 
 
     Note that you can display the run path for any executable (including shared libraries) with the following command:
 
@@ -145,9 +145,9 @@ In the clang build script this is set to `"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST
 
 ### GCC\_INSTALL\_PREFIX
 
-Unfortunately, by default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a [bugreport](http://llvm.org/bugs/show_bug.cgi?id=20510) for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;-)
+Unfortunately, by default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a [bug report](http://llvm.org/bugs/show_bug.cgi?id=20510) for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;-)
 
-The work-around for this is to specify GCC\_INSTALL\_PREFIX -- this tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time.
+The work-around for this is to specify GCC\_INSTALL\_PREFIX when building clang -- this tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time.
 
 Building clang
 --------------

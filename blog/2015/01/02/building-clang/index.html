@@ -113,7 +113,13 @@
 
 <p>There&rsquo;s a hitch, though &mdash; as of version 3.3 some parts of clang are written in C++11, so the compiler used to compile clang needs to support the C++11 standard.</p>
 
-<p>This is a real problem with RedHat, since the system compiler supplied with RedHat 6 (the most recent version that is in wide use), is gcc 4.4.7.  That compiler does not support C++11, and so is not able to compile clang.  So, the first step is getting a C++11-compliant compiler so we can compile clang.  For this example, we&rsquo;re going to choose gcc 4.8.2, for a variety of reasons.  The good news is that gcc 4.8.2 is written in C++ 98, so we can build it using the system compiler (gcc 4.4.7).  </p>
+<p>This is a real problem with RedHat, since the system compiler supplied with
+RedHat 6 (the most recent version that is in wide use), is gcc 4.4.7.  That
+compiler does not support C++11, and so is not able to compile clang.  So, the
+first step is getting a C++11-compliant compiler so we can compile clang.  For
+this example, we&rsquo;re going to choose gcc 4.8.2, for a variety of reasons<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>.  The
+good news is that gcc 4.8.2 is written in C++ 98, so we can build it using the
+system compiler (gcc 4.4.7).  </p>
 
 <p>The next thing we have to decide is where to install gcc 4.8.2, and we basically have these choices:</p>
 
@@ -237,11 +243,11 @@ build, you can invoke the script using the trick I wrote about in an
 
 <h2>Preparing to build</h2>
 
-<p>Now that we&rsquo;ve built gcc, we can get started building clang<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>.  By default,
+<p>Now that we&rsquo;ve built gcc, we can get started building clang<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>.  By default,
 clang is built to use the C++ standard library (libstdc++) that is included with
 gcc. That&rsquo;s the good news, since that means code generated using clang can be
 intermixed freely with code generated with gcc &mdash; which is almost all the code
-on a typical Linux machine.<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup></p>
+on a typical Linux machine.</p>
 
 <h2>Finding the C++ standard library</h2>
 
@@ -316,16 +322,20 @@ LIBRARY_PATH=/shared/build/share/gcc/4.8.2/bin/../lib/gcc/x86_64-unknown-linux-g
 
 
 
-<br>
+<br> 
 
 
-<p>While all these settings are documented in one place or another, as far as I know there is no single place that mentions them all.  (While clang is a terrific tool, the contirbutors apparently prefer writing code to writing documentation ;&ndash;)  So, these settings have been cobbled together from a number of sources (listed at the end of this article), and tested by much trial and error.</p>
+<p>While all these settings are documented in one place or another, as far as
+I know there is no single place that mentions them all.  (The clang developers apparently prefer writing code to writing
+documentation ;&ndash;)  So, these settings have been cobbled together from a number
+of sources (listed at the end of this article), and tested by much trial and
+error.</p>
 
-<p>The first three settings are plain-vanilla cmake settings, but the last two need some additional discussion.</p>
+<p>The first three settings are plain-vanilla cmake settings, but the last two need some additional discussion:</p>
 
 <h3>CMAKE_CXX_LINK_FLAGS</h3>
 
-<p>In the build script this is set to <code>"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"</code>.  What this does is two-fold:</p>
+<p>In the clang build script this is set to <code>"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"</code>.  What this does is two-fold:</p>
 
 <ul>
 <li><p>The <code>-L</code> parameter adds the following directory to the search path for the linker.  This is needed  to locate the libraries installed with gcc 4.8.2.        </p></li>
@@ -509,9 +519,9 @@ this information have been found in other sources, including the following:</p>
 <hr/>
 <ol>
 <li id="fn:1">
-<p>You will need at least version 2.8 of cmake to do the build, which is not native on RH/CentOS 6.  That version can be installed using &ldquo;Add/Remove Software&rdquo; or yum.  (Or, of course, you can build it from source).<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<p>One reason is that gcc 4.9.0 can&rsquo;t compile libc++, the llvm version of the C++ standard library &mdash; see <a href="http://lists.cs.uiuc.edu/pipermail/cfe-dev/2014-April/036669.html">http://lists.cs.uiuc.edu/pipermail/cfe-dev/2014-April/036669.html</a> for more detail.  While we&rsquo;re not going to discuss using libc++ in this post, we may get into that later on.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
 <li id="fn:2">
-<p>It&rsquo;s also possible to build clang to use the C++ standard library (libc++) that is part of the llvm project, of which clang itself is also a part. That requires a discussion all its own, and we&rsquo;re not going to pursue that further in this post, although I may get around to writing about that at some point.<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+<p>You will need at least version 2.8 of cmake to do the build, which is not native on RH/CentOS 6.  That version can be installed using &ldquo;Add/Remove Software&rdquo; or yum.  (Or, of course, you can build it from source).<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
 <li id="fn:3">
 <p>I may go into more detail on this in a later post, but in the meantime if you&rsquo;re interested you should consult Ulrich Drepper&rsquo;s &ldquo;How to Write Shared Libraries&rdquo; at http://www.akkadia.org/drepper/dsohowto.pdf.<a href="#fnref:3" rev="footnote">&#8617;</a></p></li>
 <li id="fn:4">

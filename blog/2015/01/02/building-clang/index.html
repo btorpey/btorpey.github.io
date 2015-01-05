@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Building clang - Confessions of a Wall Street Programmer</title>
+  <title>Building clang on RedHat - Confessions of a Wall Street Programmer</title>
   <meta name="author" content="Bill Torpey">
 
   
@@ -70,7 +70,7 @@
   
   <header>
     
-      <h1 class="entry-title">Building clang</h1>
+      <h1 class="entry-title">Building clang on RedHat</h1>
     
     
       <p class="meta">
@@ -342,8 +342,8 @@ error.</p>
 <p>In the clang build script this is set to <code>"-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64"</code>.  What this does is two-fold:</p>
 
 <ul>
-<li><p>The <code>-L</code> parameter adds the following directory to the search path for the linker.  This is needed  to locate the libraries installed with gcc 4.8.2.        </p></li>
-<li><p>The <code>-Wl,-rpath,</code> parameter installs a &ldquo;run path&rdquo; into any executables (including shared libraries) created during the build.  This allows the executable to find its dependent libraries at run-time, independent of any other settings. </p>
+<li><p>The <code>-L</code> parameter adds the following directory to the search path for the linker.  This is needed so the linker can locate the libraries installed with gcc 4.8.2.        </p></li>
+<li><p>The <code>-Wl,-rpath,</code> parameter installs a <a href="http://en.wikipedia.org/wiki/Rpath">&ldquo;run path&rdquo;</a> into any executables (including shared libraries) created during the build.  This is needed so any executables created can find their dependent libraries at run-time. </p>
 
 <p>Note that you can display the run path for any executable (including shared libraries) with the following command:</p>
 
@@ -355,9 +355,9 @@ RPATH                /build/share/gcc/4.8.2/lib64:$ORIGIN/../lib
 
 <h3>GCC_INSTALL_PREFIX</h3>
 
-<p>Unfortunately, by default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a <a href="http://llvm.org/bugs/show_bug.cgi?id=20510">bugreport</a> for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;&ndash;)</p>
+<p>Unfortunately, by default, clang looks for include and library files in the standard system locations (e.g., /usr), regardless of what compiler was used to build clang. (I filed a <a href="http://llvm.org/bugs/show_bug.cgi?id=20510">bug report</a> for this behavior, but the clang developers apparently feel this is reasonable behavior. Reasonable people may disagree ;&ndash;)</p>
 
-<p>The work-around for this is to specify GCC_INSTALL_PREFIX &mdash; this tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time.</p>
+<p>The work-around for this is to specify GCC_INSTALL_PREFIX when building clang &mdash; this tells the clang build where the gcc that is being used to build clang is located. Among other things, this determines where the clang compiler will look for system include and library files at compile and link time.</p>
 
 <h2>Building clang</h2>
 
@@ -668,7 +668,7 @@ this information have been found in other sources, including the following:</p>
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2015/01/02/building-clang/">Building clang</a>
+        <a href="/blog/2015/01/02/building-clang/">Building clang on RedHat</a>
       </li>
     
       <li class="post">

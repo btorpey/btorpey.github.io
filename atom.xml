@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-03-24T09:36:36-04:00</updated>
+  <updated>2015-03-24T09:40:30-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -47,7 +47,85 @@ hadn’t known (or had forgotten).</p>
 prompted this post. I’ve distilled it down to just a few lines of code — take a
 look and see if you can spot the bug:</p>
 
-<p>File /Users/btorpey/miscinfo/blog/octopress/source/downloads/code/shadow/shadow.cpp could not be found</p>
+<figure class='code'><figcaption><span> (shadow.cpp)</span> <a href='http://btorpey.github.io/downloads/code/shadow/shadow.cpp'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;memory&gt;</span>
+</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">D</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>   <span class="kt">void</span> <span class="n">Init</span><span class="p">()</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">C</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="k">public</span><span class="o">:</span>
+</span><span class='line'>   <span class="n">C</span><span class="p">()</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>      <span class="n">D</span><span class="o">*</span> <span class="n">_pD</span> <span class="o">=</span> <span class="k">new</span> <span class="n">D</span><span class="p">;</span>
+</span><span class='line'>      <span class="n">_pD</span><span class="o">-&gt;</span><span class="n">Init</span><span class="p">();</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="o">~</span><span class="n">C</span><span class="p">()</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>      <span class="k">delete</span> <span class="n">_pD</span><span class="p">;</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">private</span><span class="o">:</span>
+</span><span class='line'>   <span class="n">D</span><span class="o">*</span> <span class="n">_pD</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="n">C</span> <span class="n">c</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>The bug is in C&rsquo;s constructor, where instead of initializing the member variable (_pD), the
 code instead creates a local variable with the same name. The local variable goes

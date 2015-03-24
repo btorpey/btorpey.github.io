@@ -1,0 +1,481 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Who Knows What Evil Lurks ... - Confessions of a Wall Street Programmer</title>
+  <meta name="author" content="Bill Torpey">
+
+  
+  <meta name="description" content="Pity the poor Shadow! Even with the recent glut of super-heroes in movies, games and TV, the Shadow is nowhere to be seen. But I guess that&rsquo;s &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://btorpey.github.io/blog/2015/03/17/shadow">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+  
+  <link href="/stylesheets/print.css" media="print" rel="stylesheet" type="text/css">  
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Confessions of a Wall Street Programmer</a></h1>
+  
+    <h2>practical ideas (and perhaps some uncommon knowledge) on software architecture, design, construction and testing</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:btorpey.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Who Knows What Evil Lurks ...</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-17T00:00:00-04:00" pubdate data-updated="true"></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><img class="right" src="/images/TheShadowComic01.jpg" width="222" height="333"></p>
+
+<p>Pity the poor Shadow!  Even with the recent glut of super-heroes in movies, games and TV, the Shadow is nowhere to be seen.</p>
+
+<p>But I guess that&rsquo;s the whole point of being the Shadow.</p>
+
+<p>According to <a href="http://en.wikipedia.org/wiki/The_Shadow">this</a>, the Shadow had &ldquo;the mysterious power to cloud men&rsquo;s minds, so they could not see him&rdquo;.  Hmmm, that sounds like more than a few bugs I&rsquo;ve known.</p>
+
+<p>Read on to learn how to get your compiler to help you find and eliminate these &ldquo;shadow bugs&rdquo; from your code.</p>
+
+<!-- more -->
+
+
+<p>Recently I was cleaning up the code for one of our test programs, and I
+suddenly started getting a crash at shutdown that I hadn’t seen before. The
+stack trace looked more or less like I expected (except for the SEGV, of
+course), and I spent several minutes staring at the code before the light bulb
+came on.</p>
+
+<p>As is often the case, once the light bulb did come on, my first reaction was
+“Duh!”. It was a dumb mistake, but then I started to think: if it’s such a dumb
+mistake, why didn’t the compiler warn me about it? Answering that question got
+me looking into the state of compiler diagnostics, and taught me a few things I
+hadn’t known (or had forgotten).</p>
+
+<p>First, let’s take a look at the bug that was a bit of a head-scratcher, and that
+prompted this post. I’ve distilled it down to just a few lines of code — take a
+look and see if you can spot the bug:</p>
+
+<p>File /Users/btorpey/miscinfo/blog/octopress/source/downloads/code/shadow/shadow.cpp could not be found</p>
+
+<p>The bug is in C&rsquo;s constructor, where instead of initializing the member variable (_pD), the
+code instead creates a local variable with the same name. The local variable goes
+out of scope on return and gets deleted (although the allocation
+persists), but the member variable of the same name remains uninitialized. The
+problem comes when we delete c, since C’s dtor deletes a pointer that is just a
+bunch of random bits<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. The fix, of course, is to omit the type declaration on the
+assignment, which causes the compiler to assign to the member variable, rather
+than creating and then assinging to a local (stack) variable.</p>
+
+<p>(I can already hear the howls of outrage at this code &mdash; see <sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>, <sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup> and <sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup> for a discussion if you&rsquo;re so inclined).</p>
+
+<p>Granted that there are ways to avoid this problem by writing the code &ldquo;correctly&rdquo; (perfectly?) in the
+first place. But still, if it’s such a dumb mistake, why didn’t the
+compiler warn about it?</p>
+
+<p>That was what puzzled me, especially since I thought our “diagnostic hygiene”
+was pretty good. All our code is built with “-Wall -Wextra”, which is not quite
+“everything but the kitchen sink”, but close.</p>
+
+<p>But when we build with those flags, the compiler is perfectly happy:</p>
+
+<pre>
+$ clang++ -g -Wall -Wextra shadow.cpp
+$
+</pre>
+
+
+<p>But running &mdash; that&rsquo;s another story:</p>
+
+<pre>
+$ ./a.out
+*** glibc detected *** ./a.out: free(): invalid pointer: 0x0000000000400600 ***
+...
+Aborted (core dumped)
+$ 
+</pre>
+
+
+<p>When we load the core file into the debugger, we see that the offending instruction is the delete of _pD in C&rsquo;s destructor:</p>
+
+<pre>
+$ gdb a.out core.897
+(gdb) bt
+#0  0x0000003a86032925 in raise () from /lib64/libc.so.6
+#1  0x0000003a86034105 in abort () from /lib64/libc.so.6
+#2  0x0000003a86070837 in __libc_message () from /lib64/libc.so.6
+#3  0x0000003a86076166 in malloc_printerr () from /lib64/libc.so.6
+#4  0x0000000000400720 in C::~C (this=0x7fffe6dbdec8) at shadow.cpp:23
+#5  0x00000000004006a9 in main () at shadow.cpp:37
+(gdb) 
+</pre>
+
+
+<p>The result above is just one of three possible results. Let&rsquo;s take a look at each of these in turn:</p>
+
+<ol>
+<li><p>You may get no message at all &ndash; the code (appears to) work fine.</p>
+
+<p>This is the result we get if we use gcc to compile the code.  With gcc, the allocation is (presumably) being satisfied by the operating system (e.g., by calling <a href="http://pubs.opengroup.org/onlinepubs/007908775/xsh/brk.html">sbrk</a>).  Typically, the OS will zero-fill any memory that it allocates as a security precaution (see <a href="http://stackoverflow.com/questions/8029584/why-does-malloc-initialize-the-values-to-0-in-gcc">here</a>  and <a href="http://stackoverflow.com/questions/2688466/why-mallocmemset-is-slower-than-calloc">here</a> for details).</p>
+
+<p>So, in this case, we&rsquo;re deleting a nullptr, and that is perfectly kosher <a href="http://en.cppreference.com/w/c/memory/free">according to the standard</a>. (Why that is may be a cause for debate, but it is).<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup></p></li>
+<li><p>You may get a message similar to  <code>*** glibc detected *** ./a.out: free(): invalid pointer</code> followed by a stack trace.</p>
+
+<p> This happens when glibc can detect that the pointer being freed was not previously allocated.</p>
+
+<p> The memory management functions in glibc contain runtime checks to catch error conditions.  Some of these checks are enabled in all cases (because they are relatively inexpensive), while others must be specifically enabled.<sup id="fnref:6"><a href="#fn:6" rel="footnote">6</a></sup>  In this particular case, the code in <code>free</code> is checking to see if the address being passed in has previously been allocated using e.g. <code>malloc</code>.  If not, the code signals an error.</p>
+
+<p> This is the result we get when using clang &mdash; with clang, the  allocation request is being satisfied from memory that was previously allocated and freed, so the bits that make up the member variable _pD have already been scribbled on (i.e., they are non-zero), but glibc can tell the address is not one that was previously allocated.</p></li>
+<li><p>You may get a message similar to <code>Segmentation fault (core dumped)</code>.</p>
+
+<p> In our case, C&rsquo;s destructor is pretty minimal &mdash; it just deletes the _pD member variable.  In other cases, though, C&rsquo;s destructor may attempt to do more complicated processing before returning, and in those cases it&rsquo;s quite possible that that processing will trigger a crash on its own.  (For instance, if _pD is defined as a shared_ptr as opposed to a raw pointer, you would likely see a segmentation violation in the code that manipulates the shared_ptr).</p></li>
+</ol>
+
+
+<h1>&hellip; the Shadow Knows</h1>
+
+<p>This all could have been avoided if the compiler recongized that the declaration of _pD in C&rsquo;s constructor
+hid the member variable, and with &ldquo;-Wshadow&rdquo; enabled in the compile, that is exactly what happens:</p>
+
+<pre>
+﻿$ clang++ -Wall -Wextra -Wshadow shadow.cpp
+shadow.cpp:17:10: warning: declaration shadows a field of 'C' [-Wshadow]
+      D* _pD = new D;
+         ^
+shadow.cpp:27:7: note: previous declaration is here
+   D* _pD;   
+      ^
+1 warning generated.
+$
+</pre>
+
+
+<p>gcc supports the flag also, although the message is slightly different</p>
+
+<pre>
+$ g++ -Wall -Wextra -Wshadow shadow.cpp
+shadow.cpp: In constructor ‘C::C()’:
+shadow.cpp:17: warning: declaration of ‘_pD’ shadows a member of 'this'
+$
+</pre>
+
+
+<p>While both gcc and clang support the &ldquo;-Wshadow&rdquo; flag, the implementations are very different.<br/>
+gcc appears to strive for completeness, and in the process produces so many warnings as to render the use
+of &ldquo;-Wshadow&rdquo; pretty much useless.  That was certainly Linus’ opinion when
+he wrote <a href="https://lkml.org/lkml/2006/11/28/239">this</a>, and it’s hard to
+disagree.</p>
+
+<p>The good news is that the clang developers have come up with a much
+more useful implementation of &ldquo;-Wshadow&rdquo;, which avoids a lot of the problems
+Linus talks about.  For example, on one legacy-ish code base, gcc reports over 1100 shadow
+warnings vs. just three for clang.  There&rsquo;s a terrific explanation  <a href="http://programmers.stackexchange.com/questions/122608/clang-warning-flags-for-objective-c-development/124574#124574">here</a>
+about how the clang team decides what category a particular diagnostic should belong to.</p>
+
+<h2>Third-party Libraries</h2>
+
+<p>But, what if we use third-party libraries in our programs?  While clang does a very good job
+of filtering out &ldquo;false positive&rdquo; shadow warnings, they can still crop up in some libraries, including Boost.  One
+possible solution is to have wrapper includes that use #pragma&rsquo;s to suppress (or enable) certain warnings, prior to including
+the real library headers.  That is in fact the approach suggested by the Boost maintainer when someone posted
+<a href="https://svn.boost.org/trac/boost/ticket/9378#comment:15">a bug report</a> about
+the shadow warnings in Boost.</p>
+
+<p>But, that&rsquo;s tedious, error-prone, inconvenient and expensive.  Is there a better way?</p>
+
+<p>It turns out that there is &mdash; both gcc and clang provide the <code>-isystem</code> compiler flag to include header files, subject to
+<a href="https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html">special rules</a> that effectively eliminate warnings,
+even in macros that are expanded at compile-time.</p>
+
+<p>Note that if you&rsquo;re using cmake, the way to enable <code>-isystem</code> is to use the SYSTEM flag to include_directories, like so:
+<code>include_directories(SYSTEM ${Boost_INCLUDE_DIRS})</code></p>
+
+<h2>Fixing the code</h2>
+
+<p>There are three types of shadow warnings, each with a different cause and potential to cause trouble.  The different types are distinguished by what follows after the &ldquo;warning: declaration shadows a&rdquo; message:</p>
+
+<table>
+<thead>
+<tr>
+<th>Type  </th>
+<th> Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>local variable</td>
+<td>These are typically the least likely to be real problems, since local variables have limited lifetimes by defintion.  Even if these warnings don&rsquo;t indicate a genuine problem, it is best to eliminate them  by changing one or the other variable name, if only to prevent future confusion.</td>
+</tr>
+<tr>
+<td>field of &ldquo;X&rdquo;</td>
+<td>As in the example above, these shadow warnings often point to a potential problem, given how easy it is to inadvertently include a type prefix in the statement meant to initialize the member variable, thereby declaring (and initializing) a new local variable instead. </td>
+</tr>
+<tr>
+<td>variable in the global namespace</td>
+<td>This is perhaps the most dangerous of the three types, since accidentally introducing a new variable into scope can easily go unnoticed.  Everything appears to be working correctly, until at some point the newly introduced variable goes out of scope, exposing the un-initialized global variable.  </td>
+</tr>
+</tbody>
+</table>
+
+
+<br>
+
+
+<h1>Conclusion</h1>
+
+<p>I originally thought this would be a quick post about a somewhat obscure compiler warning &mdash; maybe a
+&ldquo;tidbit&rdquo;, but certainly nothing more than that.  But, as Tolkien said about &ldquo;Lord of the Rings&rdquo;, &ldquo;the tale grew in the telling&rdquo;.</p>
+
+<p>Let&rsquo;s see what we&rsquo;ve covered:</p>
+
+<ul>
+<li>What &ldquo;-Wshadow&rdquo; means, and why you might want to use it.</li>
+<li>How to selectively disable warnings, including &ldquo;-Wshadow&rdquo;, for third-party libraries when
+it creates more noise than value.</li>
+<li>How even seemingly trivial code can behave very differently when compiled with different compilers (e.g., gcc vs. clang).</li>
+<li>How to use value initialization to initialize even POD types to known (zero) values.</li>
+</ul>
+
+
+<p>And that doesn&rsquo;t even include one of my original goals, which was to talk about compiler warnings
+in general, and which ones you want to make sure you use in all your builds.  That will have to wait
+for next time.</p>
+
+<h2>TL;DR</h2>
+
+<ul>
+<li>Enable &ldquo;-Wshadow&rdquo; in addition to whatever other compiler warnings you&rsquo;re using.
+
+<ul>
+<li>Fix the warnings, even if they don&rsquo;t (appear to) matter.</li>
+</ul>
+</li>
+<li>But only if you&rsquo;re using <a href="http://clang.llvm.org/">clang</a>!
+
+<ul>
+<li>And if you&rsquo;re not using clang yet, it&rsquo;s time to start.</li>
+<li>If you need help getting clang up and running on your system, be sure to check out <a href="http://btorpey.github.io/blog/2015/01/02/building-clang/">my earlier post</a>.</li>
+</ul>
+</li>
+</ul>
+
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>At least <a href="http://en.cppreference.com/w/cpp/language/default_initialization">according to the standard</a>.  Different implementations can, and do, behave differently. Or, as the old saying goes: &ldquo;In theory, there is no difference between theory and practice.  In practice, there is&rdquo;.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p>The first point is that we should be initializing the member variable in the ctor, rather than assigning it, which would make this mistake impossible. That’s a valid point, mostly, but there are times when you can make a case for assignment being a simpler approach — for example, when you have multiple member variables, and when the order of assignment matters. Remember that member variables are initialized in the order of their declaration, not the order in which the initializers appear. Given that the order of declaration is often not obvious, it’s easy to see why one might prefer to use assignment to enforce the order of assignment in the body of the constructor.<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+<li id="fn:3">
+<p>Another mostly valid point is that, if we are going to assign in the body of the ctor, we should at least initialize the members to some value before entering the constructor. The only defense to that is a misguided attempt to optimize out the initialization code, since we know we’re assigning to the member variable anyway. That’s arguably wrong, but not terribly so, and in any event is pretty common, at least in my experience. (OK, smarty-pants, do YOU always initialize ALL your member variables in EVERY constructor you write? Even if you&rsquo;re going to assign to them in the body of the constructor?  Really? Do you want your merit badge now, or at the jamboree?)<a href="#fnref:3" rev="footnote">&#8617;</a></p></li>
+<li id="fn:4">
+<p>Last but not least, we could use <a href="http://stackoverflow.com/a/2418195/203044">value initialization</a> to ensure that even POD types in the class are <a href="http://en.cppreference.com/w/cpp/language/zero_initialization">zero-initialized</a>.<a href="#fnref:4" rev="footnote">&#8617;</a></p></li>
+<li id="fn:5">
+<p>Another possibility is that the bits are non-NULL, but the call to free doesn&rsquo;t immediately crash.  Instead, it may leave the data structures used to manage the heap in an inconsistent state, in such a way that it will cause a crash later.  This is the worst possible scenario, since this problem is almost impossible to debug.  In an upcoming column we&rsquo;re going to look at this situation in more detail, and talk about ways to avoid it.<a href="#fnref:5" rev="footnote">&#8617;</a></p></li>
+<li id="fn:6">
+<p>We&rsquo;ll be discusing how to use glibc&rsquo;s error-checking in a future column.<a href="#fnref:6" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-17T00:00:00-04:00" pubdate data-updated="true"></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/c-plus-plus/'>c++</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/01/02/building-clang/" title="Previous Post: Building clang on RedHat">&laquo; Building clang on RedHat</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/03/17/shadow/">Who Knows What Evil Lurks ...</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/01/02/building-clang/">Building clang on RedHat</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/09/23/into-the-void/">Into the Void</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/09/21/repent/">Repent, Sinner!</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/21/status-reports/">Status Meetings</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  
+  <a href="/about/index.html"><h1>About...</h1></a>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+Copyright &copy; 2015 - Bill Torpey. &nbsp; All Rights Reserved.
+<br>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png" /></a> This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/deed.en_US">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+<br>
+<span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'wallstprog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://btorpey.github.io/blog/2015/03/17/shadow/';
+        var disqus_url = 'http://btorpey.github.io/blog/2015/03/17/shadow/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

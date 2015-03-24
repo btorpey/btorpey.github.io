@@ -3,10 +3,9 @@
 clang is a great compiler, with a boatload of extremely helpful tools, including static analysis, run-time memory and data race analysis, and many others.  And it's apparently pretty easy to get those benefits on one of the supported platforms -- basically Ubuntu and Mac (via XCode).
 
 That's fine, but if you get paid to write software, there's a good chance it's going to be deployed on RedHat, or one of its variants.  And, getting clang working on RedHat is a huge pain in the neck.  The good news is that I did the dirty work for you (ouch!), so you don't have to.
-
 <!--more-->
-
 <br>
+
 Bootstrapping the compiler
 --------------------------
 
@@ -153,7 +152,7 @@ Building clang
 --------------
 
 Now that we have that out of the way, we can build clang. The following script will download clang source from svn, build and install it.
- 
+
 {% include_code clang/build-clang.sh  %}
 
 Note that you can specify a parameter to the script (e.g., `-r 224019`) to get a specific version of clang from svn.

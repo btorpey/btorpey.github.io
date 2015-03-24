@@ -11,7 +11,7 @@ Well, for starters we could make them shorter.  Here's a way to do that.
 I've had two really good managers in my career (although I have no idea whether
 that means I've been blessed or cursed ;-) I learned different things from each of my managers -- some of them pragmatic and
 some more in the "touchy-feely" category. This one is purely pragmatic (which
-is not say that is all I learned from him, but those stories are for another day).
+is not to say that is all I learned from him, but those stories are for another day).
 
 My manager (I'll call him Mike, because that's his name) set up this structure
 for a trading system project I was working on under his direction. We would have

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-03-31T20:27:56-04:00</updated>
+  <updated>2015-03-31T21:01:42-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -295,18 +295,6 @@ for next time.
 [^malloc-check]: We'll be discusing how to use glibc's error-checking in a future column.
 
 [^4]: At least [according to the standard](http://en.cppreference.com/w/cpp/language/default_initialization).  Different implementations can, and do, behave differently. Or, as the old saying goes: "In theory, there is no difference between theory and practice.  In practice, there is".</p>
-
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-61420123-1', 'auto');
-  ga('send', 'pageview');
-
-</script>
-
 ]]></content>
   </entry>
   

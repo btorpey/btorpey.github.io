@@ -35,7 +35,7 @@ persists), but the member variable of the same name remains uninitialized. The
 problem comes when we delete c, since C’s dtor deletes a pointer that is just a
 bunch of random bits[^4]. The fix, of course, is to omit the type declaration on the
 assignment, which causes the compiler to assign to the member variable, rather
-than creating and then assinging to a local (stack) variable.
+than creating and then assigning to a local (stack) variable.
 
 (I can already hear the howls of outrage at this code -- see [^1], [^2] and [^3] for a discussion if you're so inclined).
 

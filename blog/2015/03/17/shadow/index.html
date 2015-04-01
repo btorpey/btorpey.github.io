@@ -209,7 +209,7 @@ persists), but the member variable of the same name remains uninitialized. The
 problem comes when we delete c, since C’s dtor deletes a pointer that is just a
 bunch of random bits<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. The fix, of course, is to omit the type declaration on the
 assignment, which causes the compiler to assign to the member variable, rather
-than creating and then assinging to a local (stack) variable.</p>
+than creating and then assigning to a local (stack) variable.</p>
 
 <p>(I can already hear the howls of outrage at this code &mdash; see <sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>, <sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup> and <sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup> for a discussion if you&rsquo;re so inclined).</p>
 
@@ -402,6 +402,18 @@ for next time.</p>
 </ul>
 </li>
 </ul>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-61420123-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
 
 <div class="footnotes">
 <hr/>

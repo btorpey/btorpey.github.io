@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: wallst | Confessions of a Wall Street Programmer]]></title>
-  <link href="http://btorpey.github.io/blog/categories/wallst/atom.xml" rel="self"/>
+  <title><![CDATA[Category: mac | Confessions of a Wall Street Programmer]]></title>
+  <link href="http://btorpey.github.io/blog/categories/mac/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
   <updated>2015-04-15T22:29:48-04:00</updated>
   <id>http://btorpey.github.io/</id>
@@ -112,60 +112,22 @@ Comments, suggestions, pull requests, etc. welcome.</p>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[What's Old Is New Again]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
-    <updated>2014-02-11T00:00:00-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
-    <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this…</p>
+    <title type="html"><![CDATA[Beyond Compare]]></title>
+    <link href="http://btorpey.github.io/blog/2013/01/29/beyond-compare/"/>
+    <updated>2013-01-29T00:00:00-05:00</updated>
+    <id>http://btorpey.github.io/blog/2013/01/29/beyond-compare</id>
+    <content type="html"><![CDATA[<p>I&rsquo;ve been a happy user of <a href="http://scootersoftware.com">Beyond Compare</a> on Windows for many years, so one of my big concerns when switching to Mac a while ago was, what was I going to use in its place?</p>
 
 <!--more-->
 
 
-<p><img class="center <a" src="href="http://edison.rutgers.edu/images/xx/xx1325.jpg">http://edison.rutgers.edu/images/xx/xx1325.jpg</a>"></p>
+<p>Well, for once I got the timing right &mdash; Scooter Software released an alpha version of Beyond Compare for Mac right around the time I made the switch.  (And a good thing, too!  I tried everything else out there, and nothing else even comes close).</p>
 
-<p>Source: The Thomas Edison Papers, Rutgers University <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
-<div class="footnotes">
-<hr/>
-<ol>
-<li id="fn:1">
-<p><a href="http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;">http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;</a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
-</ol>
-</div>
+<p>So, what is Beyond Compare?  It&rsquo;s a comparison program that does visual &ldquo;diffs&rdquo; of directories and files.  I use it to backup and sync my machines, for reviewing changes prior to commit, and in general just to keep track of what I&rsquo;ve changed as I work.  If you&rsquo;ve never used a visual diff like BC, trust me, your life could get a whole lot easier.</p>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T00:00:00-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here's a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.
+<p><img class="<a" src="href="http://www.scootersoftware.com/images/FolderCompare.png">http://www.scootersoftware.com/images/FolderCompare.png</a>"></p>
 
-<!--more-->
-
-FIX may be the protocol that everybody loves to hate, but it doesn't look like it's
-going anywhere, so I guess we all just need to get over it and learn to live with it.
-
-One of the things that is hard to live with, though -- at least for me -- is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="/images/less-before.png"> 
-
-It turns out that it's possible to control how less displays the x'01'
-delimiters to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:
-
-`export LESSBINFMT="*u%x"`
-
-This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="/images/less-after.png"> 
-
-
-(Note that the man page for less mentions that it's possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I've tried it -- YMMV).
-</p>
+<p>It&rsquo;s now out in public beta, and comes highly recommended (<a href="http://www.scootersoftware.com/beta.php">http://www.scootersoftware.com/beta.php</a>) &mdash; it&rsquo;s saved my <em>tuchis</em> more times than I can count.</p>
 ]]></content>
   </entry>
   

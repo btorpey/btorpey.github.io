@@ -9,7 +9,7 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="Pity the poor Shadow! Even with the recent glut of super-heroes in movies, games and TV, the Shadow is nowhere to be seen. But I guess that&rsquo;s &hellip;">
+  <meta name="description" content="I keep singing the praises of clang, and with good reason &mdash; the clang project has been advancing the state of C/C++ compiler technology on &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,53 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/27/static-analysis-with-clang/">Static Analysis with clang</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-04-27T00:00:00-04:00" pubdate data-updated="true"></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><img class="left" src="/images/coil3.jpg" width="195" height="281"></p>
+
+<p>I keep singing the praises of clang, and with good reason &mdash; the <a href="http://clang.llvm.org/">clang project</a> has been advancing the state of C/C++ compiler technology on Linux and OS X for quite a while now.</p>
+
+<p>The modular design of the compiler has also enabled the creation of a set of ancillary tools, including run-time &ldquo;sanitizers&rdquo; (which I <a href="http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer/">wrote about earlier</a>), as well as pretty-printers, and a tool to automatically upgrade code to C++11.</p>
+
+<p>Today I want to talk about clang&rsquo;s static analysis engine, which can do a deep-dive on your code and find problems that are hard for a human to detect, but that are amenable to a brute-force approach that models the run-time behavior of a piece of code, but at compile-time.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2015/04/27/static-analysis-with-clang/">&#8230;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -537,55 +584,6 @@ I really didn&rsquo;t.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/03/27/using-clangs-address-sanitizer/">Using clang&#8217;s Address Sanitizer (without clang)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-27T00:00:00-04:00" pubdate data-updated="true"></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><img class="right" src="http://planet.clang.org/images/DragonSmall.png"></p>
-
-<p>Valgrind has been an indispensable tool for C/C++ programmers for a long
-time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous tool for doing dynamic
-analysis of program behavior at run time. valgrind<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> can detect reads of
-uninitialized memory, heap buffer overruns, memory leaks, and other errors that
-can be difficult or impossible to find by eyeballing the code, or by static
-analysis tools.  But that comes with a price, which in some cases can be quite steep, and some new
-tools promise to provide some or all of the functionality valgrind provides without the drawbacks.</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/03/27/using-clangs-address-sanitizer/">&#8230;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -601,6 +599,10 @@ tools promise to provide some or all of the functionality valgrind provides with
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/27/static-analysis-with-clang/">Static Analysis with clang</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/17/shadow/">Who Knows What Evil Lurks &#8230;</a>
       </li>
     
@@ -614,10 +616,6 @@ tools promise to provide some or all of the functionality valgrind provides with
     
       <li class="post">
         <a href="/blog/2014/09/21/repent/">Repent, Sinner!</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/21/status-reports/">Status Meetings</a>
       </li>
     
   </ul>

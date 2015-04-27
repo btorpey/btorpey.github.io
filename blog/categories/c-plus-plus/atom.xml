@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-04-15T22:29:48-04:00</updated>
+  <updated>2015-04-27T18:19:20-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,220 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Static Analysis with clang]]></title>
+    <link href="http://btorpey.github.io/blog/2015/04/27/static-analysis-with-clang/"/>
+    <updated>2015-04-27T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2015/04/27/static-analysis-with-clang</id>
+    <content type="html"><![CDATA[<p><img class="left" src="/images/coil3.jpg" width="195" height="281">
+
+I keep singing the praises of clang, and with good reason -- the [clang project](<http://clang.llvm.org/>) has been advancing the state of C/C++ compiler technology on Linux and OS X for quite a while now.  
+
+The modular design of the compiler has also enabled the creation of a set of ancillary tools, including run-time "sanitizers" (which I [wrote about earlier](http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer/)), as well as pretty-printers, and a tool to automatically upgrade code to C++11. 
+
+Today I want to talk about clang's static analysis engine, which can do a deep-dive on your code and find problems that are hard for a human to detect, but that are amenable to a brute-force approach that models the run-time behavior of a piece of code, but at compile-time.
+
+<!-- more -->
+
+This is very different from dynamic analysis tools, like valgrind and clang's own sanitizers, which instrument the code at run-time to detect actual errors (e.g., reading uninitialized memory) that happen while the code is running.  With dynamic analysis, the only errors that can be detected are in code that is actually executed, so a latent bug that only manifests under unusual conditions[^heisenbug], can go un-detected.  By contrast, static analysis can potentially find bugs in code that is never (or almost never) actually executed.  
+
+[^heisenbug]:  These are often called "Heisenbugs", in a nerd-humor pun on the [Heisenberg Uncertainty Principle](<http://en.wikipedia.org/wiki/Uncertainty_principle>).
+
+Sounds good, no?  Who wouldn't want to find bugs "automagically", without even needing to do any testing.  (Cause we all know how much programmers love testing ;-)
+
+For example, running clang's static analyzer on some sample code turns up warnings similar to the following:
+
+- Value stored to 'x' is never read
+- The right operand of '!=' is a garbage value
+- Potential leak of memory pointed to by 'x'
+- Function call argument is an uninitialized value
+- Use of memory after it is freed
+- Called C++ object pointer is null
+
+Some of the above warnings (e.g., value stored is never read) are most likely harmless, and just sloppy coding (perhaps because of copy-paste syndrome, about which I have more to say [here](http://btorpey.github.io/blog/2014/09/21/repent/)).  Others (e.g., called pointer is null), might be false positives, given the algorithms the analyzer uses[^falsepos].  Or, they could be real bugs that you just haven't hit yet, because the code is (almost) never executed.
+
+[^falsepos]:  For instance, clang's analayzer attempts to figure out if a pointer can possibly be NULL by seeing if there is any code that checks for that condition.  If there is, then clang complains about any code that dereferences the pointer outside an `if (x != NULL)` block.  This algorithm isn't perfect, but it's about the best that can be done, especially since the analyzer only looks at a single file at a time.
+
+Those are the really scary bugs, along with the ones where you can "get lucky" most of the time ... except when you don't.  The "garbage value" and "unitialized value" warnings fall into that category, and can be very hard to eyeball.  Again, dynamic analysis tools like valgrind can help find these bugs, but only if you hit that code in testing.
+
+So, static analysis *is* good, but it's not magic.  Static analyzers can only find bugs that they are programmed to find, and they certainly don't find all bugs.  For instance, here's a bug that clang's static analysis doesn't find:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kt">void</span> <span class="n">func</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">arg</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="kt">char</span> <span class="n">buf1</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span><span class='line'>  <span class="kt">char</span> <span class="n">buf2</span><span class="p">[</span><span class="mi">20</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">strncpy</span><span class="p">(</span><span class="n">buf1</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf2</span><span class="p">));</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+But the fact is that static analysis *will* find bugs, and it will find bugs that you most likely wouldn't find on your own, so it's a a good tool to have in your toolbox.  So, let's take a look at how to do that using clang.
+
+The first step is to install clang.  If you're on OS X or Ubuntu, you should already have it, but if you're on RedHat this can be a bit tricky, so see [my previous post](http://btorpey.github.io/blog/2015/01/02/building-clang/) on how to get clang working.  (I've updated that post to add instructions for installing some of the static analysis tools that don't normally get installed with clang).
+
+It turns out that there are three (3) different ways to run clang's static analyzer on your code, each with its own benefits and drawbacks.  We'll consider each of these in turn:
+
+## Integrated with a typical build
+
+If you use reasonably normal-looking makefiles to build your code, you can get static analysis going with a minimum of fuss.  If you're using cmake to create your makefiles, the same approach will work fine, so long as you're not overriding the values of CMAKE_C_COMPILER etc.  (And, as usual, if you're using autotools, [you're on your own;-)](https://twitter.com/timmartin2/status/23365017839599616).  
+
+In this approach, you `export` some environment variables to invoke the analyzer instead of the compiler, like the following:
+
+Variable|Value       |Meaning
+--------|------------|-------
+CC|ccc-analyzer|C compiler is redirected to clang analyzer (which in turn invokes the compiler, using the value of CCC_CC, below).
+CXX|c++-analyzer|Similar to above, but for C++.
+CCC_CC|clang|This environment variable is used by ccc-analyzer to invoke the actual C compiler.
+CCC_CXX|clang++|ditto
+LD|clang++|Specifies that the actual compiler should be used for linking.
+CCC\_ANALYZER_VERBOSE|1|(Optional) Set this flag to get verbose output from the analyzer, including the list of errors checked.
+
+<br>
+With those variables set, you should just be able to invoke `make` to build your project, and Bob's your uncle.
+
+One nice thing about this approach is that you get both compiler warnings and analyzer warnings together -- first, the analyzer invokes the compiler on the source file, and then performs the static analysis.
+
+## Using the GUI tool
+
+In a similar fashion as ccc-analyzer (above) front-ends make, you can use clang's [scan-build](http://clang-analyzer.llvm.org/scan-build.html) tool to front-end ccc-analyzer. In addition to invoking the compiler and analyzer, scan-build also collects the analyzer reports, including the control flow that the analyzer used to infer any errors, and presents that using a set of html pages that are written by default to the /tmp directory, and that look like this:
+
+![](http://clang-analyzer.llvm.org/images/analyzer_html.png)
+
+Personally, I find this fascinating.  Not only does the analyzer tell about what it thinks is a problem, but also *why* it thinks so.  
+
+In the example above, you can see the steps that the analyzer follows to figure out that there is a problem with the code.  If you are wondering whether a particular warning is a false positive or not, this presentation can help you figure that out.  [^false2] It can also sometimes provide unexpected insights into the code that you might not come up with on your own.
+
+To use this approach, you set your environment variables the same as described above, but instead of running make, you run `scan-build -V make`.  This will run your build and then launch a browser to view the results of the build.
+
+### A small hitch...
+
+Unfortunately, scan-build (and its scan-view companion) are not installed by default with clang.  I've updated the build script from my [earlier post](http://btorpey.github.io/blog/2015/01/02/building-clang/) on building clang on RedHat to install these files, but if you want to do it manually, run the following from the source tree you used to build and install clang:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># we need some addl bits that are not normally installed</span>
+</span><span class='line'>cp -p  llvm/tools/clang/tools/scan-build/scan-build     <span class="k">$(</span>which clang<span class="k">)</span>/..
+</span><span class='line'>cp -p  llvm/tools/clang/tools/scan-build/ccc-analyzer   <span class="k">$(</span>which clang<span class="k">)</span>/..
+</span><span class='line'>cp -p  llvm/tools/clang/tools/scan-build/c++-analyzer   <span class="k">$(</span>which clang<span class="k">)</span>/..
+</span><span class='line'>cp -p  llvm/tools/clang/tools/scan-build/sorttable.js   <span class="k">$(</span>which clang<span class="k">)</span>/..
+</span><span class='line'>cp -p  llvm/tools/clang/tools/scan-build/scanview.css   <span class="k">$(</span>which clang<span class="k">)</span>/..
+</span><span class='line'>cp -rp llvm/tools/clang/tools/scan-view/*               <span class="k">$(</span>which clang<span class="k">)</span>/..
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+ 
+### Another small hitch...
+In an [earlier post](http://btorpey.github.io/blog/2015/03/17/shadow/), I talked about how to use the `-isystem` flag to prevent selected headers from generating warnings.  Unfortunately, the [clang analyzer chokes on that flag](https://llvm.org/bugs/show_bug.cgi?id=13237#c9) -- so if you're using it, you will need to apply the patch below to successfully run the analyzer.  
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>svn diff ccc-analyzer
+</span><span class='line'>Index: ccc-analyzer
+</span><span class='line'><span class="o">===================================================================</span>
+</span><span class='line'>--- ccc-analyzer	<span class="o">(</span>revision 234604<span class="o">)</span>
+</span><span class='line'>+++ ccc-analyzer	<span class="o">(</span>working copy<span class="o">)</span>
+</span><span class='line'>@@ -354,7 +354,8 @@
+</span><span class='line'>   <span class="s1">&#39;-iprefix&#39;</span> <span class="o">=</span>&gt; 1,
+</span><span class='line'>   <span class="s1">&#39;-iquote&#39;</span> <span class="o">=</span>&gt; 1,
+</span><span class='line'>   <span class="s1">&#39;-iwithprefix&#39;</span> <span class="o">=</span>&gt; 1,
+</span><span class='line'>-  <span class="s1">&#39;-iwithprefixbefore&#39;</span> <span class="o">=</span>&gt; 1
+</span><span class='line'>+  <span class="s1">&#39;-iwithprefixbefore&#39;</span> <span class="o">=</span>&gt; 1,
+</span><span class='line'>+  <span class="s1">&#39;-isystem&#39;</span> <span class="o">=</span>&gt; 1,
+</span><span class='line'> <span class="o">)</span>;
+</span><span class='line'>
+</span><span class='line'> my %LinkerOptionMap <span class="o">=</span> <span class="o">(</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+[^false2]: At least in my experience, many of the warnings that appear at first to be false positives turn out to be real bugs, especially if you follow through the control flow the analyzer uses.
+
+## Using a compilation database
+
+Last but not least, you can also use a "compilation database" to invoke the static analyzer directly.  So, what is a compilation database, you ask?  This is a [simple format](http://clang.llvm.org/docs/JSONCompilationDatabase.html) introduced by clang that records the actual commands used to generate intermediate build products from source files, along with their parameters.
+
+The analyzer needs this information to reproduce the environment used by the compiler, including pre-processor definitions and include file search paths.  
+
+If you are using [cmake](http://cmake.org/) to drive your builds, creating a compilation database couldn't be easier -- simply add the `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` parameter to the cmake build command, or add the following to your main CMakeLists.txt file:
+
+`set(CMAKE_EXPORT_COMPILE_COMMANDS ON)`
+
+If you're not using cmake, you can still create a compilation database using plain old make by front-ending make with [Bear](<https://github.com/rizsotto/Bear>)[^bear], like so:
+
+`bear make`
+
+This will use Bear to drive the make process, leaving a `compile_commands.json` file in the current directory.
+
+[^bear]: Building and installing Bear from source is relatively straightforward -- just keep in mind that you need python >= 2.7.
+
+Once you've got the compilation database, invoking the analyzer can be done with a command like the following:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">export </span><span class="nv">COMPILE_DB</span><span class="o">=</span><span class="k">$(</span>/bin/pwd<span class="k">)</span>;
+</span><span class='line'>grep file compile_commands.json |
+</span><span class='line'>awk <span class="s1">&#39;{ print $2; }&#39;</span> |
+</span><span class='line'>sed <span class="s1">&#39;s/\&quot;//g&#39;</span> |
+</span><span class='line'><span class="k">while </span><span class="nb">read </span>FILE; <span class="k">do</span>
+</span><span class='line'>  <span class="o">(</span><span class="nb">cd</span> <span class="k">$(</span>dirname <span class="k">${</span><span class="nv">FILE</span><span class="k">})</span>;
+</span><span class='line'>   clang-check -analyze -p <span class="k">${</span><span class="nv">COMPILE_DB</span><span class="k">}</span> <span class="k">$(</span>basename <span class="k">${</span><span class="nv">FILE</span><span class="k">})</span>
+</span><span class='line'>  <span class="o">)</span>;
+</span><span class='line'><span class="k">done</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+(There are simpler ways to invoke the analyzer, but the approach shown here will visit each source file in the same order that it was originally built, which can be handy).
+
+
+## Conclusion
+As we said earlier, static analysis is not magic, and it certainly won't find all your bugs.  But it will probably find some, and the ones it finds are likely to be nasty, so it's worth a certain amount of trouble.
+
+Last but not least, this is by no means a complete explanation of clang's analyzer.  Like much of clang, the documentation lags the code, sometimes by a lot, so much of this information was obtained by trial-and-error, and/or by reading the code.  So, if you find something interesting, please [drop me a line](<mailto:wallstprog@gmail.com>), or leave a note in the comments section. 
+
+
+## References
+
+<http://clang.llvm.org/>
+
+<http://clang-analyzer.llvm.org/index.html>
+
+<http://clang.llvm.org/docs/ClangCheck.html>
+
+
+
+
+
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Who Knows What Evil Lurks ...]]></title>
@@ -1086,806 +1300,6 @@ http://clang.llvm.org/docs/AddressSanitizer.html
 [^2]: As is another tool, the Thread Sanitizer, which detects data races between threads at run-time.  More on that in an upcoming post.
 
 [^5]: Omitting the frame pointer makes another register (ebp) available to the compiler, but since there are already at least a dozen other registers for the compiler to use, this extra register is unlikely to be critical.  The compiler can also omit the code that saves and restores the register, but that's a couple of instructions moving data between registers and L1 cache. 
-</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Shared Singleton's]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/12/shared-singletons/"/>
-    <updated>2014-02-12T00:00:00-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/12/shared-singletons</id>
-    <content type="html"><![CDATA[<p><img class="left" src="/images/caddyshack-11.jpg" width="320" height="240">
-
-Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
-yet, there are scenarios where a singleton is just the ticket – for instance,
-when a relatively expensive and/or long-lived resource needs to be shared among
-a number of independent threads.
-
-shared_ptr's can help make this easier and less error-prone, but even so there are some 
-edge cases that need to be considered.
-
-<!--more-->
-
-In our case, we had a need for a singleton object to refer to a middleware
-connection which was being shared across a large number of child objects, which
-were in turn being manipulated on a number of different threads.
-
-In our case, we also wanted lazy initialization (construct on first use), and to
-clean up the singleton properly when the code was done using it. Since the
-creation and destruction order of the using objects is not deterministic, the
-obvious solution is to use reference counting to manage the singleton’s lifetime,
-and the simplest way to do that is to use [shared_ptr’s](<http://www.cplusplus.com/reference/memory/shared_ptr/>).
-
-shared_ptr’s were introduced in Boost, and were subsequently adopted by the C++
-standards committee as part of the base language with the tr1 and C++0x
-standards. As such, they have been widely supported (think gcc and MS compilers)
-for a while now.
-
-One of the “magic” qualities of shared_ptr’s is that all shared_ptr’s that point
-to the same thing (what I’m going to refer to as a “target” from here on) share
-a single reference count (hence the “shared” part of the name), so as individual
-shared_ptr’s go out of scope, the reference counter on the target itself is
-automatically decremented, and the target is deleted when its reference count
-goes to zero.
-
-However, as we’ll see, there are some fine points that need to be considered
-even in this relatively simple case.
-
-Our first attempt looked something like this:
-
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (smart1.cpp)</span> <a href='/downloads/code/smart/smart1.cpp'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
-</span><span class='line'><span class="cp">#include &lt;tr1/memory&gt;</span>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">tr1</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">SharedClass</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">SharedClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="o">~</span><span class="n">SharedClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SharedClass</span><span class="o">::</span><span class="n">SharedClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;SharedClass ctor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SharedClass</span><span class="o">::~</span><span class="n">SharedClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;SharedClass dtor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">ContainerClass</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="o">~</span><span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">getShared</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">memberPtr</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="k">static</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span>  <span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span>   <span class="n">ContainerClass</span><span class="o">::</span><span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">ContainerClass</span><span class="o">::</span><span class="n">getShared</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">masterPtr</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">masterPtr</span> <span class="o">=</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">SharedClass</span><span class="p">());</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">return</span> <span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="n">ContainerClass</span><span class="o">::</span><span class="n">ContainerClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;ContainerClass ctor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">before</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">memberPtr</span> <span class="o">=</span> <span class="n">getShared</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">after</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">ContainerClass</span><span class="o">::~</span><span class="n">ContainerClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;ContainerClass dtor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">before</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Entering main&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass1</span><span class="p">;</span>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass2</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass3</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Exiting main&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-
-The implementation constructs the singleton into a class-static shared_ptr on
-the first call to getShared(), and then hands out copies of the shared_ptr to
-each caller. When run, the following output is produced:
-
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (smart1.out)</span> <a href='/downloads/code/smart/smart1.out'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">Entering main</span>
-</span><span class='line'><span class="go">ContainerClass ctor:0x154b9010</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 0</span>
-</span><span class='line'><span class="go">SharedClass ctor:0x154b9030</span>
-</span><span class='line'><span class="go">	after	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass ctor:0x154b90a0</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 2</span>
-</span><span class='line'><span class="go">	after	copy: 3	master: 3</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x154b9010</span>
-</span><span class='line'><span class="go">	before	copy: 3	master: 3</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x154b90a0</span>
-</span><span class='line'><span class="go">	before	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass ctor:0x154b90a0</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 1</span>
-</span><span class='line'><span class="go">	after	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x154b90a0</span>
-</span><span class='line'><span class="go">	before	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">Exiting main</span>
-</span><span class='line'><span class="go">SharedClass dtor:0x154b9030</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-This implementation works, but with one major caveat: as you can see from the
-output, the shared_ptr’s get an initial reference count of two – one for the
-creation of the singleton itself, and one for the copy of the shared_ptr that is
-returned from getShared.
-
-This means that the singleton will not actually be deleted until after returning
-from main(), which is when static objects get deleted. (For more information on
-why this is so, see section 3.6.3 of the C++ standard).[^2] In many cases, that
-would not be a problem, but in our case the middleware connection to which the
-shared_ptr’s refer gets cleaned up in the main thread prior to returning, and so
-the final destructor referred to an object that was no longer valid.
-
-Another issue has to do with RAII [^1] – if you're relying on the destruction
-of the target to release resources, the fact that the target is effectively
-never deleted is a potential problem.
-
-Last but not least is the issue of overall tidiness – given that the shared
-object is allocated within the scope of main(), it just seems wrong to let it go
-out of scope after main() exits. Ideally, we’d like to destroy the shared object
-prior to returning from main(), but how to do that?
-
-Our next attempt looks like this:
-
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (smart2.cpp)</span> <a href='/downloads/code/smart/smart2.cpp'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
-</span><span class='line'><span class="cp">#include &lt;tr1/memory&gt;</span>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">tr1</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">SharedClass</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">SharedClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="o">~</span><span class="n">SharedClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SharedClass</span><span class="o">::</span><span class="n">SharedClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;SharedClass ctor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SharedClass</span><span class="o">::~</span><span class="n">SharedClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;SharedClass dtor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">ContainerClass</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="o">~</span><span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">getShared</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">memberPtr</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="k">static</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span>  <span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span>   <span class="n">ContainerClass</span><span class="o">::</span><span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">ContainerClass</span><span class="o">::</span><span class="n">getShared</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">masterPtr</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">masterPtr</span> <span class="o">=</span> <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">SharedClass</span><span class="p">());</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">return</span> <span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="n">ContainerClass</span><span class="o">::</span><span class="n">ContainerClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;ContainerClass ctor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">before</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">memberPtr</span> <span class="o">=</span> <span class="n">getShared</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">after</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">ContainerClass</span><span class="o">::~</span><span class="n">ContainerClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;ContainerClass dtor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">before</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">memberPtr</span><span class="p">.</span><span class="n">reset</span><span class="p">();</span>
-</span><span class='line'>   <span class="k">if</span> <span class="p">(</span><span class="n">masterPtr</span><span class="p">.</span><span class="n">unique</span><span class="p">())</span>
-</span><span class='line'>      <span class="n">masterPtr</span><span class="p">.</span><span class="n">reset</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">after</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Entering main&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass1</span><span class="p">;</span>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass2</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass3</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Exiting main&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-In the destructor for the container class, we first reset() the container’s copy
-of the shared_ptr. This reduces its reference count to zero, and also decrements
-the reference counter on the static shared_ptr that was initialized when the
-singleton was created. (The destructor of the container’s copy of the shared_ptr
-will still be executed on return from the container’s destructor, but since the
-reference count is already zero, it will do nothing).
-
-Then we test the static shared_ptr to see if it’s reference count is equal to
-one (by calling unique()), and if it is we call reset on it to decrement its
-reference count once again, which ends up deleting the singleton (since the
-reference count is now zero).
-
-When we run this version of the code, we see the following output:
-
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (smart2.out)</span> <a href='/downloads/code/smart/smart2.out'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">Entering main</span>
-</span><span class='line'><span class="go">ContainerClass ctor:0x642f010</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 0</span>
-</span><span class='line'><span class="go">SharedClass ctor:0x642f030</span>
-</span><span class='line'><span class="go">	after	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass ctor:0x642f0a0</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 2</span>
-</span><span class='line'><span class="go">	after	copy: 3	master: 3</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x642f010</span>
-</span><span class='line'><span class="go">	before	copy: 3	master: 3</span>
-</span><span class='line'><span class="go">	after	copy: 0	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x642f0a0</span>
-</span><span class='line'><span class="go">	before	copy: 2	master: 2</span>
-</span><span class='line'><span class="go">SharedClass dtor:0x642f030</span>
-</span><span class='line'><span class="go">	after	copy: 0	master: 0</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass ctor:0x642f0a0</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 0</span>
-</span><span class='line'><span class="go">SharedClass ctor:0x642f030</span>
-</span><span class='line'><span class="go">	after	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x642f0a0</span>
-</span><span class='line'><span class="go">	before	copy: 2	master: 2</span>
-</span><span class='line'><span class="go">SharedClass dtor:0x642f030</span>
-</span><span class='line'><span class="go">	after	copy: 0	master: 0</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">Exiting main</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-We can see that the singleton does in fact get destroyed prior to returning from
-main(), which is what we want. We also see that the singleton gets destroyed
-when nobody is using it, and automatically gets recreated if needed, which is
-all well and good.
-
-But, the code to make this happen does seem a bit messy, and potentially
-unclear. Surely, there’s a better way to get the behavior we want without having
-to directly manipulate reference counts.
-
-Which brings us to shared_ptr’s cousin, the weak_ptr. A weak_ptr is similar to a
-shared_ptr, except that assigning to a weak_ptr does not increment the shared
-reference count:
-
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (smart3.cpp)</span> <a href='/downloads/code/smart/smart3.cpp'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;iostream&gt;</span>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
-</span><span class='line'><span class="cp">#include &lt;tr1/memory&gt;</span>
-</span><span class='line'><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="o">::</span><span class="n">tr1</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">SharedClass</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">SharedClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="o">~</span><span class="n">SharedClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SharedClass</span><span class="o">::</span><span class="n">SharedClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;SharedClass ctor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SharedClass</span><span class="o">::~</span><span class="n">SharedClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;SharedClass dtor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">struct</span> <span class="n">ContainerClass</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="o">~</span><span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">getShared</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">memberPtr</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>	<span class="k">static</span> <span class="n">weak_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span>  <span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'><span class="p">};</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">weak_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span>   <span class="n">ContainerClass</span><span class="o">::</span><span class="n">masterPtr</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">ContainerClass</span><span class="o">::</span><span class="n">getShared</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SharedClass</span><span class="o">&gt;</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-</span><span class='line'>   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">temp</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">temp</span><span class="p">.</span><span class="n">reset</span><span class="p">(</span><span class="k">new</span> <span class="n">SharedClass</span><span class="p">());</span>
-</span><span class='line'>      <span class="n">masterPtr</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">return</span> <span class="n">temp</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="n">ContainerClass</span><span class="o">::</span><span class="n">ContainerClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;ContainerClass ctor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">before</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">memberPtr</span> <span class="o">=</span> <span class="n">getShared</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">after</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">ContainerClass</span><span class="o">::~</span><span class="n">ContainerClass</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;ContainerClass dtor:&quot;</span> <span class="o">&lt;&lt;</span> <span class="k">this</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">before</span><span class="se">\t</span><span class="s">copy: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">memberPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;master: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">masterPtr</span><span class="p">.</span><span class="n">use_count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Entering main&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass1</span><span class="p">;</span>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass2</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">ContainerClass</span><span class="o">*</span> <span class="n">pClass3</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ContainerClass</span><span class="p">();</span>
-</span><span class='line'>   <span class="k">delete</span> <span class="n">pClass3</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Exiting main&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-In this version, we change the code to use a weak_ptr instead of a shared_ptr
-for the static class member that is initialized on creation of the singleton
-object, and we remove the fiddling with reference counts that we had to do make
-things come out right in the previous example.
-
-<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (smart3.out)</span> <a href='/downloads/code/smart/smart3.out'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='console'><span class='line'><span class="go">Entering main</span>
-</span><span class='line'><span class="go">ContainerClass ctor:0x18bf8010</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 0</span>
-</span><span class='line'><span class="go">SharedClass ctor:0x18bf8030</span>
-</span><span class='line'><span class="go">	after	copy: 1	master: 1</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass ctor:0x18bf80a0</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 1</span>
-</span><span class='line'><span class="go">	after	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x18bf8010</span>
-</span><span class='line'><span class="go">	before	copy: 2	master: 2</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x18bf80a0</span>
-</span><span class='line'><span class="go">	before	copy: 1	master: 1</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">SharedClass dtor:0x18bf8030</span>
-</span><span class='line'><span class="go">ContainerClass ctor:0x18bf80a0</span>
-</span><span class='line'><span class="go">	before	copy: 0	master: 0</span>
-</span><span class='line'><span class="go">SharedClass ctor:0x18bf8030</span>
-</span><span class='line'><span class="go">	after	copy: 1	master: 1</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">ContainerClass dtor:0x18bf80a0</span>
-</span><span class='line'><span class="go">	before	copy: 1	master: 1</span>
-</span><span class='line'>
-</span><span class='line'><span class="go">SharedClass dtor:0x18bf8030</span>
-</span><span class='line'><span class="go">Exiting main</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-Et voila – we can see that the behavior is exactly what we wanted, but without
-the need to manipulate reference counts directly. Not to mention, the behavior
-is a bit more like what one would expect (e.g., member variables get destroyed
-on exit from the destructor, not in the body of the destructor).
-
-### Acknowledgements
-
-Thanks to the folks at cplusplus.com, especially “simeonz” for
-[this post](<http://www.cplusplus.com/forum/general/37113/>), which discusses the
-general problem and provides a nice code example that I used as the basis for
-this discussion.
-
-
-[^1]: <http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization>
-
-[^2]: A free copy of the most recent working draft can be downloaded [here](<http://isocpp.org/files/papers/N3690.pdf>).
 </p>
 ]]></content>
   </entry>

@@ -9,8 +9,8 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="For measuring latency in modern systems, we need to be able to measure intervals
-in microseconds at least, and preferably in nanoseconds or better. &hellip;">
+  <meta name="description" content="Valgrind has been an indispensable tool for C/C++ programmers for a long
+time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,55 @@ in microseconds at least, and preferably in nanoseconds or better. &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/27/using-clangs-address-sanitizer/">Using clang&#8217;s Address Sanitizer (without clang)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-27T00:00:00-04:00" pubdate data-updated="true"></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><img class="right" src="http://planet.clang.org/images/DragonSmall.png"></p>
+
+<p>Valgrind has been an indispensable tool for C/C++ programmers for a long
+time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous tool for doing dynamic
+analysis of program behavior at run time. valgrind<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> can detect reads of
+uninitialized memory, heap buffer overruns, memory leaks, and other errors that
+can be difficult or impossible to find by eyeballing the code, or by static
+analysis tools.  But that comes with a price, which in some cases can be quite steep, and some new
+tools promise to provide some or all of the functionality valgrind provides without the drawbacks.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/03/27/using-clangs-address-sanitizer/">&#8230;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -366,6 +415,10 @@ at FIX logs.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/04/27/static-analysis-with-clang/">Static Analysis with clang</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/17/shadow/">Who Knows What Evil Lurks &#8230;</a>
       </li>
     
@@ -379,10 +432,6 @@ at FIX logs.</p>
     
       <li class="post">
         <a href="/blog/2014/09/21/repent/">Repent, Sinner!</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/21/status-reports/">Status Meetings</a>
       </li>
     
   </ul>

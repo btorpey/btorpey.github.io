@@ -45,6 +45,7 @@ mkdir gcc
 cd gcc
 ../gcc-4.8.2/configure --prefix=${INSTALL_PREFIX} --enable-languages=c,c++ --disable-multilib
 make -j ${CPUS} ${VERBOSE}
+
 # install it
-rm -rf ${INSTALL_PREFIX}
+${SUDO} rm -rf ${INSTALL_PREFIX}
 ${SUDO} make install

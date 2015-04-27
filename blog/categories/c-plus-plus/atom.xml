@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-04-27T18:19:20-04:00</updated>
+  <updated>2015-04-27T18:25:27-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -601,6 +601,7 @@ Here's a script that will download gcc 4.8.2 along with its prerequisites, build
 <span class='line-number'>48</span>
 <span class='line-number'>49</span>
 <span class='line-number'>50</span>
+<span class='line-number'>51</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash </span>
 </span><span class='line'><span class="nb">set</span> -exv
 </span><span class='line'>
@@ -648,8 +649,9 @@ Here's a script that will download gcc 4.8.2 along with its prerequisites, build
 </span><span class='line'><span class="nb">cd </span>gcc
 </span><span class='line'>../gcc-4.8.2/configure --prefix<span class="o">=</span><span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span> --enable-languages<span class="o">=</span>c,c++ --disable-multilib
 </span><span class='line'>make -j <span class="k">${</span><span class="nv">CPUS</span><span class="k">}</span> <span class="k">${</span><span class="nv">VERBOSE</span><span class="k">}</span>
+</span><span class='line'>
 </span><span class='line'><span class="c"># install it</span>
-</span><span class='line'>rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
 </span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> make install
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
@@ -819,6 +821,15 @@ Now that we have that out of the way, we can build clang. The following script w
 <span class='line-number'>43</span>
 <span class='line-number'>44</span>
 <span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
 </span><span class='line'><span class="nb">set</span> -exv
 </span><span class='line'>
@@ -861,9 +872,18 @@ Now that we have that out of the way, we can build clang. The following script w
 </span><span class='line'><span class="nb">cd </span>clang
 </span><span class='line'>cmake -DCMAKE_C_COMPILER<span class="o">=</span><span class="k">${</span><span class="nv">HOST_GCC</span><span class="k">}</span>/bin/gcc -DCMAKE_CXX_COMPILER<span class="o">=</span><span class="k">${</span><span class="nv">HOST_GCC</span><span class="k">}</span>/bin/g++ -DGCC_INSTALL_PREFIX<span class="o">=</span><span class="k">${</span><span class="nv">HOST_GCC</span><span class="k">}</span> -DCMAKE_CXX_LINK_FLAGS<span class="o">=</span><span class="s2">&quot;-L${HOST_GCC}/lib64 -Wl,-rpath,${HOST_GCC}/lib64&quot;</span> -DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span> -DLLVM_ENABLE_ASSERTIONS<span class="o">=</span>ON -DCMAKE_BUILD_TYPE<span class="o">=</span><span class="s2">&quot;Release&quot;</span> -DLLVM_TARGETS_TO_BUILD<span class="o">=</span><span class="s2">&quot;X86&quot;</span> ../llvm
 </span><span class='line'>make -j <span class="k">${</span><span class="nv">CPUS</span><span class="k">}</span> <span class="k">${</span><span class="nv">VERBOSE</span><span class="k">}</span>
+</span><span class='line'>
 </span><span class='line'><span class="c"># install it</span>
-</span><span class='line'>rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
 </span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> make install
+</span><span class='line'>
+</span><span class='line'><span class="c"># we need some addl bits that are not normally installed</span>
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> cp -p ../llvm/tools/clang/tools/scan-build/scan-build  <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>/bin
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> cp -p ../llvm/tools/clang/tools/scan-build/ccc-analyzer  <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>/bin
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> cp -p ../llvm/tools/clang/tools/scan-build/c++-analyzer  <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>/bin
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> cp -p ../llvm/tools/clang/tools/scan-build/sorttable.js  <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>/bin
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> cp -p ../llvm/tools/clang/tools/scan-build/scanview.css <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>/bin
+</span><span class='line'><span class="k">${</span><span class="nv">SUDO</span><span class="k">}</span> cp -rp ../llvm/tools/clang/tools/scan-view/*  <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>/bin
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 Note that you can specify a parameter to the script (e.g., `-r 224019`) to get a specific version of clang from svn.

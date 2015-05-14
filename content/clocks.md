@@ -359,24 +359,23 @@ versions to help ensure that code and data is in the processor's cache memory.
 The results of running the test on my test machine are (all timings are in nanoseconds):
 
 <pre>
-
 ClockBench.cpp
                    Method       samples     min     max     avg  median   stdev
-           CLOCK_REALTIME       255       51.00   57.00   53.60   54.00    1.22
+           CLOCK_REALTIME       255       54.00   58.00   55.65   56.00    1.55
     CLOCK_REALTIME_COARSE       255        0.00    0.00    0.00    0.00    0.00
-          CLOCK_MONOTONIC       255       51.00   57.00   53.80   54.00    1.10
-      CLOCK_MONOTONIC_RAW       255      653.00 1011.00  691.04  832.00   48.31
+          CLOCK_MONOTONIC       255       54.00   58.00   56.20   56.00    1.46
+      CLOCK_MONOTONIC_RAW       255      650.00 1029.00  690.35  839.50   47.34
    CLOCK_MONOTONIC_COARSE       255        0.00    0.00    0.00    0.00    0.00
               cpuid+rdtsc       255       93.00   94.00   93.23   93.50    0.42
-                    rdtsc       255       24.00   28.00   25.18   26.00    1.49
+                    rdtsc       255       24.00   28.00   25.19   26.00    1.50
 Using CPU frequency = 2.660000
 
 ClockBench.java
                    Method       samples     min     max     avg  median   stdev
-          System.nanoTime       255       54.00   58.00   55.31   56.00    1.51
-           CLOCK_REALTIME       255        0.00 1000.00   66.67  500.00  249.44
-              cpuid+rdtsc       255      108.00  109.00  108.27  108.50    0.44
-                    rdtsc       255       39.00   43.00   39.48   41.00    1.04
+          System.nanoTime       255       54.00   60.00   55.31   57.00    1.55
+           CLOCK_REALTIME       255       60.00   84.00   62.50   72.00    1.92
+              cpuid+rdtsc       255      108.00  112.00  109.03  110.00    1.39
+                    rdtsc       255       39.00   43.00   39.85   41.00    1.37
 Using CPU frequency = 2.660000
 </pre>
 
@@ -413,6 +412,12 @@ is that Java methods get JIT-ed after approx. 10,000 invocations.  I also though
 for the Java benchmark, and that made a big difference -- especially in the timings for System.nanotime, which now
 agree much more closely with other published benchmarks, specifically the results published in 
 ["Nanotrusting the Nanotime"](<http://shipilev.net/blog/2014/nanotrusting-nanotime/>).  Thanks, Aleksey!
+
+### Update #2
+Slyain Archenault pointed out that the omission of unistd.h in SysTime.c caused it to (silently) fall back
+to using gettimeofday.  I've updated the code to include the proper header, and also to issue a warning 
+if _POSIX_TIMERS remains undefined.   Thanks, Sylvain!
+
 
 Conclusion
 ----------

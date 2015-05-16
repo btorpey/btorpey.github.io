@@ -41,7 +41,7 @@ The short version is that for best results you should be using:
     <a href="#rdtscp">later...</a>
     
 The following sections will talk about how clocks work on Linux, how to access
-the various clocks from software, and how to measure the overhead of acessing
+the various clocks from software, and how to measure the overhead of accessing
 them.
 
 ### Intra-machine vs. Inter-machine Timings

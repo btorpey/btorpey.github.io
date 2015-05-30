@@ -159,7 +159,7 @@ Note that you can specify a parameter to the script (e.g., `-r 224019`) to get a
 
 
 > Since this article was originally published, there have been some changes to the prerequisites for building clang:
-> you will need cmake 2.8.12.2 or later, and python 2.7 or later.  
+> you will need cmake 2.8.12.2 or later, and python 2.7 or later. 
 
 
 Building using clang
@@ -269,7 +269,7 @@ this information have been found in other sources, including the following:
 <http://llvm.org/docs/CMake.html>
  
 
-[^1]: You will need at least version 2.8 of cmake to do the build, which is not native on RH/CentOS 6.  That version can be installed using "Add/Remove Software" or yum.  (Or, of course, you can build it from source).
+[^1]: You will need at least version 2.8.12.2 of cmake to do the build, which is not native on RH/CentOS 6.  That version can be installed using "Add/Remove Software" or yum.  (Or, of course, you can build it from source). You will also need python 2.7 or later, which is probably better built from source, since the RH repos use the non-standard name "python27" for the executable.
 
 [^3]: This is the approach we use in my shop -- we have a hard-and-fast rule that application code cannot contain a run path, and we deliberately strip any existing RPATH entries from code that is being deployed to QA and production as a security measure.
 

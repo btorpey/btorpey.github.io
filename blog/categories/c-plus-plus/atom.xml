@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-05-16T11:40:30-04:00</updated>
+  <updated>2015-05-30T11:42:20-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -887,6 +887,11 @@ Now that we have that out of the way, we can build clang. The following script w
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 Note that you can specify a parameter to the script (e.g., `-r 224019`) to get a specific version of clang from svn.
+
+
+> Since this article was originally published, there have been some changes to the prerequisites for building clang:
+> you will need cmake 2.8.12.2 or later, and python 2.7 or later.  
+
 
 Building using clang
 --------------------

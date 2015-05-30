@@ -489,6 +489,9 @@ RPATH                /build/share/gcc/4.8.2/lib64:$ORIGIN/../lib
 
 <p>Note that you can specify a parameter to the script (e.g., <code>-r 224019</code>) to get a specific version of clang from svn.</p>
 
+<blockquote><p>Since this article was originally published, there have been some changes to the prerequisites for building clang:
+you will need cmake 2.8.12.2 or later, and python 2.7 or later.</p></blockquote>
+
 <h2>Building using clang</h2>
 
 <p>At this point, we should have a working clang compiler that we can use to build and run our own code. But once again, because the &ldquo;host&rdquo; gcc (and libstdc++) are installed in a non-standard location, we need to tweak a couple of build settings to get a successful build.</p>

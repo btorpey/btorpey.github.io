@@ -157,6 +157,11 @@ Now that we have that out of the way, we can build clang. The following script w
 
 Note that you can specify a parameter to the script (e.g., `-r 224019`) to get a specific version of clang from svn.
 
+
+> Since this article was originally published, there have been some changes to the prerequisites for building clang:
+> you will need cmake 2.8.12.2 or later, and python 2.7 or later.  
+
+
 Building using clang
 --------------------
 

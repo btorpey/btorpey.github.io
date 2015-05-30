@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-05-16T11:40:30-04:00</updated>
+  <updated>2015-05-30T11:42:20-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -995,6 +995,9 @@ RPATH                /build/share/gcc/4.8.2/lib64:$ORIGIN/../lib
 
 
 <p>Note that you can specify a parameter to the script (e.g., <code>-r 224019</code>) to get a specific version of clang from svn.</p>
+
+<blockquote><p>Since this article was originally published, there have been some changes to the prerequisites for building clang:
+you will need cmake 2.8.12.2 or later, and python 2.7 or later.</p></blockquote>
 
 <h2>Building using clang</h2>
 

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: devops | Confessions of a Wall Street Programmer]]></title>
+  <link href="http://btorpey.github.io/blog/categories/devops/atom.xml" rel="self"/>
+  <link href="http://btorpey.github.io/"/>
+  <updated>2015-10-19T18:45:14-04:00</updated>
+  <id>http://btorpey.github.io/</id>
+  <author>
+    <name><![CDATA[Bill Torpey]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Remote Scripting with bash and ssh]]></title>
+    <link href="http://btorpey.github.io/blog/2015/10/13/remote-scripting-with-bash-and-ssh/"/>
+    <updated>2015-10-13T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2015/10/13/remote-scripting-with-bash-and-ssh</id>
+    <content type="html"><![CDATA[<p><img class="right" src="/images/multimonitors.jpg" width="370" height="245">
+
+Nowadays it's pretty common for applications to be distributed across multiple
+machines, which can be good for scalability and resilience.
+
+But it does mean that we have more machines to monitor -- sometimes a LOT more!
+
+Read on for a handy tip that will let you do a lot of those tasks from any old
+session (and maybe lose some of those screens)!
+
+<!-- more -->
+
+For really simple tasks, remote shell access using ssh is fine.  But oftentimes
+the tasks we need to perform on these systems are complicated enough that they
+really should be scripted.
+
+And especially when under pressure, (e.g.,  troubleshooting a problem in a
+production system) it's good for these tasks to be automated. For one thing,
+that means they can be tested ahead of time, so you don't end up doing the
+dreaded `rm -rf *` by mistake.  (Don't laugh -- I've actually seen that happen).
+
+Now, I've seen people do this by copying scripts to a known location on the
+remote machines so they can be executed.  That works, but has some
+disadvantages: it clutters up the remote system(s), and it creates one more
+artifact that needs to be distributed and managed (e.g., updated when it
+changes).
+
+If you've got a bunch of related scripts, then you're going to have to bite the
+bullet and manage them (perhaps with something like Puppet).
+
+But for simple tasks, the following trick can come in very handy:
+
+`
+ssh HOST ‘bash –s ‘ < local_script.sh
+`
+
+What we're doing here is running bash remotely and telling bash to get its input
+from stdin.  We're also redirecting local_script.sh to the stdin of ssh, which
+is what the remote bash will end up reading.
+
+As long as local_script.sh is completely self-contained, this works like a
+charm.
+
+For instance, to login to a remote machine and see if hyper-threading is enabled
+on that machine:
+
+`
+ssh HOST 'bash -s' < ht.sh
+`
+
+Where ht.sh looks like this:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (ht.sh)</span> <a href='/downloads/code/bash/ht.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/sh</span>
+</span><span class='line'><span class="nv">CPUFILE</span><span class="o">=</span>/proc/cpuinfo
+</span><span class='line'><span class="nb">test</span> -f <span class="nv">$CPUFILE</span> <span class="o">||</span> <span class="nb">exit </span>1
+</span><span class='line'><span class="nv">NUMPHY</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;physical id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
+</span><span class='line'><span class="nv">NUMLOG</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;processor&quot;</span> <span class="nv">$CPUFILE</span> | wc -l<span class="sb">`</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMPHY</span> -eq 1 <span class="o">]</span>
+</span><span class='line'>  <span class="k">then</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>This system has one physical CPU,
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>This system has <span class="nv">$NUMPHY</span> physical CPUs,
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMLOG</span> -gt 1 <span class="o">]</span>
+</span><span class='line'>  <span class="k">then</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>and <span class="nv">$NUMLOG</span> logical CPUs.
+</span><span class='line'>    <span class="nv">NUMCORE</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;core id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMCORE</span> -gt 1 <span class="o">]</span>
+</span><span class='line'>      <span class="k">then</span>
+</span><span class='line'><span class="k">        </span><span class="nb">echo </span>For every physical CPU there are <span class="nv">$NUMCORE</span> cores.
+</span><span class='line'>    <span class="k">fi</span>
+</span><span class='line'><span class="k">  else</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>and one logical CPU.
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'><span class="nb">echo</span> -n The CPU is a <span class="sb">`</span>grep <span class="s2">&quot;model name&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | cut -d : -f 2-<span class="sb">`</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s2">&quot; with`grep &quot;</span>cache size<span class="s2">&quot; $CPUFILE | sort -u | cut -d : -f 2-` cache&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+
+(The script above was cribbed from http://unix.stackexchange.com/a/33509 --
+thanks, Nils!)
+
+
+Of course, all the normal redirection rules apply -- you just have to keep in
+mind that you're redirecting to ssh, which is then redirecting to bash on the
+input side.  On the output side, it's reversed.
+
+Give this a try the next time you need to do some quick tasks over ssh and
+you'll be able to get rid of a few of those monitors!
+</p>
+]]></content>
+  </entry>
+  
+</feed>

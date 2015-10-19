@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-05-30T18:53:24-04:00</updated>
+  <updated>2015-10-19T18:36:57-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,129 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Remote Scripting with bash and ssh]]></title>
+    <link href="http://btorpey.github.io/blog/2015/10/13/remote-scripting-with-bash-and-ssh/"/>
+    <updated>2015-10-13T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2015/10/13/remote-scripting-with-bash-and-ssh</id>
+    <content type="html"><![CDATA[<p><img class="right" src="/images/multimonitors.jpg" width="370" height="245">
+
+Nowadays it's pretty common for applications to be distributed across multiple
+machines, which can be good for scalability and resilience.
+
+But it does mean that we have more machines to monitor -- sometimes a LOT more!
+
+Read on for a handy tip that will let you do a lot of those tasks from any old
+session (and maybe lose some of those screens)!
+
+<!-- more -->
+
+For really simple tasks, remote shell access using ssh is fine.  But oftentimes
+the tasks we need to perform on these systems are complicated enough that they
+really should be scripted.
+
+And especially when under pressure, (e.g.,  troubleshooting a problem in a
+production system) it's good for these tasks to be automated. For one thing,
+that means they can be tested ahead of time, so you don't end up doing the
+dreaded `rm -rf *` by mistake.  (Don't laugh -- I've actually seen that happen).
+
+Now, I've seen people do this by copying scripts to a known location on the
+remote machines so they can be executed.  That works, but has some
+disadvantages: it clutters up the remote system(s), and it creates one more
+artifact that needs to be distributed and managed (e.g., updated when it
+changes).
+
+If you've got a bunch of related scripts, then you're going to have to bite the
+bullet and manage them (perhaps with something like Puppet).
+
+But for simple tasks, the following trick can come in very handy:
+
+`
+ssh HOST ‘bash –s ‘ < local_script.sh
+`
+
+What we're doing here is running bash remotely and telling bash to get its input
+from stdin.  We're also redirecting local_script.sh to the stdin of ssh, which
+is what the remote bash will end up reading.
+
+As long as local_script.sh is completely self-contained, this works like a
+charm.
+
+For instance, to login to a remote machine and see if hyper-threading is enabled
+on that machine:
+
+`
+ssh HOST 'bash -s' < ht.sh
+`
+
+Where ht.sh looks like this:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (ht.sh)</span> <a href='/downloads/code/bash/ht.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/sh</span>
+</span><span class='line'><span class="nv">CPUFILE</span><span class="o">=</span>/proc/cpuinfo
+</span><span class='line'><span class="nb">test</span> -f <span class="nv">$CPUFILE</span> <span class="o">||</span> <span class="nb">exit </span>1
+</span><span class='line'><span class="nv">NUMPHY</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;physical id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
+</span><span class='line'><span class="nv">NUMLOG</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;processor&quot;</span> <span class="nv">$CPUFILE</span> | wc -l<span class="sb">`</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMPHY</span> -eq 1 <span class="o">]</span>
+</span><span class='line'>  <span class="k">then</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>This system has one physical CPU,
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>This system has <span class="nv">$NUMPHY</span> physical CPUs,
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMLOG</span> -gt 1 <span class="o">]</span>
+</span><span class='line'>  <span class="k">then</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>and <span class="nv">$NUMLOG</span> logical CPUs.
+</span><span class='line'>    <span class="nv">NUMCORE</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;core id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMCORE</span> -gt 1 <span class="o">]</span>
+</span><span class='line'>      <span class="k">then</span>
+</span><span class='line'><span class="k">        </span><span class="nb">echo </span>For every physical CPU there are <span class="nv">$NUMCORE</span> cores.
+</span><span class='line'>    <span class="k">fi</span>
+</span><span class='line'><span class="k">  else</span>
+</span><span class='line'><span class="k">    </span><span class="nb">echo </span>and one logical CPU.
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'><span class="nb">echo</span> -n The CPU is a <span class="sb">`</span>grep <span class="s2">&quot;model name&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | cut -d : -f 2-<span class="sb">`</span>
+</span><span class='line'><span class="nb">echo</span> <span class="s2">&quot; with`grep &quot;</span>cache size<span class="s2">&quot; $CPUFILE | sort -u | cut -d : -f 2-` cache&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+
+(The script above was cribbed from http://unix.stackexchange.com/a/33509 --
+thanks, Nils!)
+
+
+Of course, all the normal redirection rules apply -- you just have to keep in
+mind that you're redirecting to ssh, which is then redirecting to bash on the
+input side.  On the output side, it's reversed.
+
+Give this a try the next time you need to do some quick tasks over ssh and
+you'll be able to get rid of a few of those monitors!
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Static Analysis with clang]]></title>
@@ -1054,81 +1177,6 @@ can read input either from stdin, or from a file specified on the command line.
 The above snippet does just that, and also works well with command-line parsers
 (e.g., `GetOpt`) that eat their parameters by removing them from the ARGV
 array.
-
-
-</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Where Am I?]]></title>
-    <link href="http://btorpey.github.io/blog/2014/05/29/where-am-i/"/>
-    <updated>2014-05-29T00:00:00-04:00</updated>
-    <id>http://btorpey.github.io/blog/2014/05/29/where-am-i</id>
-    <content type="html"><![CDATA[<p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"> 
-
-From *Robinson Crusoe* to *Gilligan's Island* to *Lost*, tales of being
-stranded on a desert island seem to resonate with people in a special way. Some
-of that likely has to do with the exotic locales, and the practical challenges
-of getting water, food and shelter.
-
-But an even more basic part is the unanswered question: "Where am I?" that makes
-things so -- well, *mysterious*.
-
-Shell scripting can be pretty mysterious too at times, but in this installment
-we'll learn how to answer that basic question of "Where am I?" to make shell
-scripting a little less mysterious.
-
-<!--more-->
-
-One of the tenets of the Unix way is brevity, and one consequence of that is
-that well-behaved programs should be able to find whatever other resources they
-need without having to be told where they are. Windows attempts to
-solve this problem with the (gack!) registry, but Unix tends to use a simpler
-approach: needed resources are placed either in well-known locations (e.g., /etc
-for system programs), or where they can be found relative to the location of the
-program itself.
-
-Another attribute of a well-behaved Unix program is that it
-should be able to run from any location, whether it's invoked with a full path,
-or found via the PATH variable.
-
-So, how do we reconcile those two requirements? And specifically, how do we do
-that in shell scripts? Since -- regardless of what your "main" language is, if
-you're programming in Unix/Linux, you're probably also writing a boatload of
-shell scripts too.
-
-It turns out that, at least in bash, there is a
-simple but non-obvious way to do get the location of the script file itself,
-which goes something like this:
-
-    SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) && /bin/pwd) 
-
-Let's follow this through and see how it works:
-
--   The `$( ... )` construct invokes a sub-shell. This is handy since it
-allows us to change the environment of the sub-shell (e.g., current directory)
-without affecting the current environment.
-
--   `$BASH_SOURCE` is a builtin variable that gives us the path to the shell
-script itself. For instance, if we invoke a script with `./scriptname.sh`,
-then that's what will end up in `${BASH_SOURCE}`.
-
--   To get the full path then we extract just the path part with `dirname`, again
-in a sub-shell.
-
--   We then `cd` into that directory, and if successful get the full pathname
-with `/bin/pwd`.
-    -   Note that we use `/bin/pwd` to get the path. This version resolves any
-    symbolic links to return the actual physical path. There is also a `pwd`
-    built-in to bash, but that one does not expand symbolic links by default.
-<br>
--   Finally, the result is assigned to SCRIPT_DIR.
-
-We now have the full path of the script file itself, and can use that to locate
-any other resources needed by the script. For a real-world example, you can
-check out the [these scripts](<https://github.com/btorpey/latency-utils.git>) from
- [my earlier post on visualizing latency](</blog/2014/05/16/visualizing-latency/>).
 
 
 </p>

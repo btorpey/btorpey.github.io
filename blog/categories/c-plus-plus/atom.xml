@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-01-16T15:07:23-05:00</updated>
+  <updated>2016-01-16T15:17:22-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -995,7 +995,7 @@ this information have been found in other sources, including the following:
 
 <http://clang-developers.42468.n3.nabble.com/getting-clang-to-find-non-default-libstdc-td3945163.html>
 
-<https://code.google.com/p/memory-sanitizer/wiki/BuildingClangOnOlderSystems>
+<https://github.com/google/sanitizers/wiki/MemorySanitizerBuildingClangOnOlderSystems>
 
 <http://llvm.org/docs/CMake.html>
  

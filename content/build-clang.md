@@ -264,7 +264,7 @@ this information have been found in other sources, including the following:
 
 <http://clang-developers.42468.n3.nabble.com/getting-clang-to-find-non-default-libstdc-td3945163.html>
 
-<https://code.google.com/p/memory-sanitizer/wiki/BuildingClangOnOlderSystems>
+<https://github.com/google/sanitizers/wiki/MemorySanitizerBuildingClangOnOlderSystems>
 
 <http://llvm.org/docs/CMake.html>
  

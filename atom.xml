@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-10-19T18:45:14-04:00</updated>
+  <updated>2016-01-16T15:01:42-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -2020,7 +2020,7 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
 </ul>
 
 
-<p>A detailed comparison of Asan, valgrind and other tools can be found <a href="http://code.google.com/p/address-sanitizer/wiki/ComparisonOfMemoryTools">here</a>.</p>
+<p>A detailed comparison of Asan, valgrind and other tools can be found <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerComparisonOfMemoryTools">here</a>.</p>
 
 <h2>Resources</h2>
 

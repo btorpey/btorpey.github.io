@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2015-10-19T18:45:14-04:00</updated>
+  <updated>2016-01-16T15:01:42-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -1306,7 +1306,7 @@ comparison to valgrind:
             position-independent code, which may make it difficult to use in
             certain cases, e.g. for debugging code hosted in a JVM.
 
-A detailed comparison of Asan, valgrind and other tools can be found [here](<http://code.google.com/p/address-sanitizer/wiki/ComparisonOfMemoryTools>).
+A detailed comparison of Asan, valgrind and other tools can be found [here](<https://github.com/google/sanitizers/wiki/AddressSanitizerComparisonOfMemoryTools>).
 
 
 Resources

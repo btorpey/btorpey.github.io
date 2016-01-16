@@ -209,7 +209,7 @@ comparison to valgrind:
             position-independent code, which may make it difficult to use in
             certain cases, e.g. for debugging code hosted in a JVM.
 
-A detailed comparison of Asan, valgrind and other tools can be found [here](<http://code.google.com/p/address-sanitizer/wiki/ComparisonOfMemoryTools>).
+A detailed comparison of Asan, valgrind and other tools can be found [here](<https://github.com/google/sanitizers/wiki/AddressSanitizerComparisonOfMemoryTools>).
 
 
 Resources

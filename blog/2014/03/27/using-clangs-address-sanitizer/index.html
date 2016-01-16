@@ -158,7 +158,7 @@ is a bump in that road: clang&rsquo;s version of Asan is supplied only as a
 static library that is linked into the main executable.  And while it should be
 possible to re-jigger things to make it work as a shared library, that would
 turn into a bit of science project.  That, and the fact that the wiki page discussing it
-(<a href="http://code.google.com/p/address-sanitizer/wiki/AsanAsDso">http://code.google.com/p/address-sanitizer/wiki/AsanAsDso</a>) didn&rsquo;t sound
+(<a href="https://github.com/google/sanitizers/wiki/AddressSanitizerAsDso">https://github.com/google/sanitizers/wiki/AddressSanitizerAsDso</a>) didn&rsquo;t sound
 particularly encouraging (&ldquo;however the devil is in the detail&rdquo; &mdash; uhh, thanks, no).</p>
 
 <p>Rats!  However, the wiki page
@@ -206,7 +206,7 @@ into the executable at runtime using <code>LD_PRELOAD</code>, like so:</p>
 
 <p>There are a bunch of options available to tailor the way Asan works: at compile-time you can supply a &ldquo;blacklist&rdquo; of functions that
 Asan should NOT instrument, and at run-time you can further customize Asan using the <code>ASAN_OPTIONS</code> environment variable, which
-is discussed <a href="http://code.google.com/p/address-sanitizer/wiki/Flags">here</a>.</p>
+is discussed <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerFlags">here</a>.</p>
 
 <p>By default, Asan is silent, so you may not be certain that it&rsquo;s actually working unless it aborts with an error, which would look like
 <a href="http://en.wikipedia.org/wiki/AddressSanitizer#Examples" title="">one of these</a>.</p>
@@ -300,12 +300,12 @@ least for initial debugging.</p></li>
 allocations.</p></li>
 <li><p>Both valgrind and Asan can detect memory leaks (although Asan&rsquo;s leak
 checking support is &ldquo;still experimental&rdquo; &ndash; see
-<a href="http://code.google.com/p/address-sanitizer/wiki/LeakSanitizer">http://code.google.com/p/address-sanitizer/wiki/LeakSanitizer</a>).</p></li>
+<a href="https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer">https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer</a>).</p></li>
 <li><p>valgrind also detects reads of un-initialized memory, which Asan does
 not.</p>
 
 <ul>
-<li>The related <a href="https://code.google.com/p/memory-sanitizer/wiki/MemorySanitizer">Memory Sanitizer</a>
+<li>The related <a href="https://github.com/google/sanitizers/wiki/MemorySanitizer">Memory Sanitizer</a>
 tool apparently can do that.  It has an additional restriction that
 the main program must be built with -fpie to enable
 position-independent code, which may make it difficult to use in
@@ -323,7 +323,7 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
 
 <p><a href="http://en.wikipedia.org/wiki/AddressSanitizer">http://en.wikipedia.org/wiki/AddressSanitizer</a></p>
 
-<p><a href="http://code.google.com/p/address-sanitizer/">http://code.google.com/p/address-sanitizer/</a></p>
+<p><a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">https://github.com/google/sanitizers/wiki/AddressSanitizer</a></p>
 
 <p><a href="http://clang.llvm.org/docs/AddressSanitizer.html">http://clang.llvm.org/docs/AddressSanitizer.html</a></p>
 <div class="footnotes">

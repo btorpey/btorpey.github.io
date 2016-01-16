@@ -51,7 +51,7 @@ is a bump in that road: clang's version of Asan is supplied only as a
 static library that is linked into the main executable.  And while it should be
 possible to re-jigger things to make it work as a shared library, that would
 turn into a bit of science project.  That, and the fact that the wiki page discussing it
-(http://code.google.com/p/address-sanitizer/wiki/AsanAsDso) didn't sound
+(https://github.com/google/sanitizers/wiki/AddressSanitizerAsDso) didn't sound
 particularly encouraging ("however the devil is in the detail" -- uhh, thanks, no).
 
 Rats!  However, the wiki page
@@ -101,7 +101,7 @@ Tailoring Asan
 
 There are a bunch of options available to tailor the way Asan works: at compile-time you can supply a "blacklist" of functions that
 Asan should NOT instrument, and at run-time you can further customize Asan using the `ASAN_OPTIONS` environment variable, which
-is discussed [here](<http://code.google.com/p/address-sanitizer/wiki/Flags>).
+is discussed [here](<https://github.com/google/sanitizers/wiki/AddressSanitizerFlags>).
  
 By default, Asan is silent, so you may not be certain that it's actually working unless it aborts with an error, which would look like
 [one of these](http://en.wikipedia.org/wiki/AddressSanitizer#Examples").
@@ -198,12 +198,12 @@ comparison to valgrind:
 
     -   Both valgrind and Asan can detect memory leaks (although Asan's leak
         checking support is "still experimental" - see
-        <http://code.google.com/p/address-sanitizer/wiki/LeakSanitizer>).
+        <https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer>).
 
     -   valgrind also detects reads of un-initialized memory, which Asan does
         not.
 
-        -   The related [Memory Sanitizer](https://code.google.com/p/memory-sanitizer/wiki/MemorySanitizer)
+        -   The related [Memory Sanitizer](https://github.com/google/sanitizers/wiki/MemorySanitizer)
             tool apparently can do that.  It has an additional restriction that
             the main program must be built with -fpie to enable
             position-independent code, which may make it difficult to use in
@@ -217,7 +217,7 @@ Resources
 
 <http://en.wikipedia.org/wiki/AddressSanitizer>
 
-http://code.google.com/p/address-sanitizer/
+https://github.com/google/sanitizers/wiki/AddressSanitizer
 
 http://clang.llvm.org/docs/AddressSanitizer.html
 

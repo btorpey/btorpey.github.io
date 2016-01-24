@@ -275,4 +275,4 @@ this information have been found in other sources, including the following:
 
 [^4]: I may go into more detail on this in a later post, but in the meantime if you're interested you should consult Ulrich Drepper's "How to Write Shared Libraries" at <http://www.akkadia.org/drepper/dsohowto.pdf>.
 
-[^5]: One reason is that gcc 4.9.0 can't compile libc++, the llvm version of the C++ standard library -- see <http://lists.cs.uiuc.edu/pipermail/cfe-dev/2014-April/036669.html> for more detail.  While we're not going to discuss using libc++ in this post, we may get into that later on.
+[^5]: One reason is that gcc 4.9.0 can't compile libc++, the llvm version of the C++ standard library -- see <http://lists.llvm.org/pipermail/cfe-dev/2014-April/036650.html> for more detail.  While we're not going to discuss using libc++ in this post, we may get into that later on.

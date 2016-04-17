@@ -111,6 +111,5 @@ Conclusion
 
 It seems that quite a few people have had the same problem that I did -- hope this helps.  And many thanks to all the people who took the trouble to share their own problems and solutions getting python pretty-printing to work with gdb.
 
----
-
-### Footnotes
+Footnotes
+---------

@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-04-17T10:58:10-04:00</updated>
+  <updated>2016-04-17T11:00:44-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -344,9 +344,7 @@ $3 = {
 
 <p>It seems that quite a few people have had the same problem that I did &mdash; hope this helps.  And many thanks to all the people who took the trouble to share their own problems and solutions getting python pretty-printing to work with gdb.</p>
 
-<hr />
-
-<h3>Footnotes</h3>
+<h2>Footnotes</h2>
 <div class="footnotes">
 <hr/>
 <ol>

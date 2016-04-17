@@ -34,7 +34,7 @@ I had a relatively new-ish version of python (2.7.11) installed as my default, s
     ...
     configure:8889: error: python is missing or unusable
 
-Now I knew I had python's library directory on my LD\_LIBRARY\_PATH ([more on that later]()), so what could the problem be?
+Now I knew I had python's library directory on my LD\_LIBRARY\_PATH ([more on that later](#building-python)), so what could the problem be?
 
 Next step was to look in gdb's `confiugre.ac` script, where exist 326 (!) lines of code devoted solely to figuring out how to link in the python libraries.  In my case, they end up deciding to call `python-config --ldflags` and use the output of that command to set the linker flags -- on my machine(s), the output is:
 
@@ -92,6 +92,8 @@ One last thing -- don't confuse the gdb `set print pretty on` command with pytho
         _M_p = 0x601028 "Hello, world!"
       }
     }
+
+<a id="building-python"></a>
 
 ## A note on building python
 The default python on RH6 is version 2.6, and a lot of packages don't support anything older than 2.7.  So, I built a recent 2.7 version from source, but when I tried to run it I would get:

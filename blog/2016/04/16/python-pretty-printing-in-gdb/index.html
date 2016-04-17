@@ -141,7 +141,7 @@ collect2: ld returned 1 exit status
 configure:8889: error: python is missing or unusable
 </code></pre>
 
-<p>Now I knew I had python&rsquo;s library directory on my LD_LIBRARY_PATH (<a href="">more on that later</a>), so what could the problem be?</p>
+<p>Now I knew I had python&rsquo;s library directory on my LD_LIBRARY_PATH (<a href="#building-python">more on that later</a>), so what could the problem be?</p>
 
 <p>Next step was to look in gdb&rsquo;s <code>confiugre.ac</code> script, where exist 326 (!) lines of code devoted solely to figuring out how to link in the python libraries.  In my case, they end up deciding to call <code>python-config --ldflags</code> and use the output of that command to set the linker flags &mdash; on my machine(s), the output is:</p>
 
@@ -339,6 +339,8 @@ $3 = {
   }
 }
 </code></pre>
+
+<p><a id="building-python"></a></p>
 
 <h2>A note on building python</h2>
 

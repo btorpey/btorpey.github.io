@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-01-24T10:46:04-05:00</updated>
+  <updated>2016-04-17T10:52:44-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,333 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Python pretty-printing in gdb]]></title>
+    <link href="http://btorpey.github.io/blog/2016/04/16/python-pretty-printing-in-gdb/"/>
+    <updated>2016-04-16T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2016/04/16/python-pretty-printing-in-gdb</id>
+    <content type="html"><![CDATA[<p><img class="left" src="/images/Holloway-Kaa-The-Jungle-Book.jpg" width="235" height="192">
+
+I remember seeing Disney's original "Jungle Book" when I was a kid, and being blown away.  Not so much with the movie itself, but that music -- wow!  It was probably my first exposure to any kind of jazz, and it was quite an experience.
+
+One of the bad guys in the movie is Kaa the python[^1], who was really sneaky, and hypnotized his victims.
+
+[^1]: Voiced by Sterling Holloway, who was also the voice of Winnie the Pooh.  Go figure.
+
+Recently I was installing a new version of gdb, but no matter what I did I couldn't get pretty-printing to work.
+
+As it happens, Python was the sneaky bad guy here too.  Read on to see how to thwart him and get pretty-printing in your version of gdb.
+
+<!-- more -->
+
+First off, this whole ordeal was caused by the fact that I do almost all of my work on RedHat Linux (or its cousin, CentOS).  For better or worse, RedHat is the Linux of choice for many companies because of the stability of the OS, and the extended support from RedHat.
+
+That stability comes at a price, though.  One way that RedHat tries to provide stability is by freezing so-called "upstream" packages when they create a new major version.  So, the version of gdb installed with RH6 is gdb 7.2 (which was originally released back in 2010).  The latest gdb version at the time of this writing is 7.11, so there's obviously been a fair amount of water over the dam by now.  Plus, gdb 7.2 can't debug code compiled with gcc 5, and that's a show-stopper.
+
+So, it was time to update gdb.  How hard could that be?
+
+## Building gdb `--with-python`
+
+I had a relatively new-ish version of python (2.7.11) installed as my default, so I figured I could just crank up a build and gdb would find it and do the right thing.  When that didn't work ("Scripting in the "Python" language is not supported in this copy of GDB"), I went back to the build and explicitly specified `--with-python` in the `configure` command -- still no luck.  I tried several variations, and when none of them worked, I dug into the configure log, and found the following:
+
+    configure:8458: checking whether to use python
+    configure:8460: result: yes
+    configure:8509: checking for python
+    configure:8527: found /build/share/python/2.7.10/bin/python
+    configure:8540: result: /build/share/python/2.7.10/bin/python
+    configure:8678: checking for python2.7
+    configure:8696: gcc -o conftest -g -O2   -I/build/share/python/2.7.10/include/python2.7 -I/build/share/python/2.7.10/include/python2.7   conftest.c -ldl -lncurses -lm -ldl    -lpthread -ldl -lutil -lm -lpython2.7 -Xlinker -export-dynamic >&5
+    /usr/bin/ld: cannot find -lpython2.7
+    collect2: ld returned 1 exit status
+    ...
+    configure:8889: error: python is missing or unusable
+
+Now I knew I had python's library directory on my LD\_LIBRARY\_PATH ([more on that later]()), so what could the problem be?
+
+Next step was to look in gdb's `confiugre.ac` script, where exist 326 (!) lines of code devoted solely to figuring out how to link in the python libraries.  In my case, they end up deciding to call `python-config --ldflags` and use the output of that command to set the linker flags -- on my machine(s), the output is:
+
+    $ python-config --ldflags
+    -lpython2.7 -lpthread -ldl -lutil -lm -Xlinker -export-dynamic
+
+So that explains why the test program won't link -- there's no `-L` parameter to specify the location of libpython.  (Since the configure script, apparently, properly disables linking against LD\_LIBRARY\_PATH).
+
+So, the root cause of the problem is python-config's failure to report the location of the python library.  This apparently happens only when python is built with the `--enable-shared` flag -- for what possible reason I can't imagine, but there is discussion of the problem and a patch for it [here](https://sourceware.org/ml/gdb-patches/2010-07/msg00168.html).  I'm guessing that patch may have made it into the 3.x branch, but it sure ain't in 2.7.
+
+I try *really* hard to avoid having to patch software as part of the build process -- it's error-prone, hard to automate, and can cause problems that are extremely difficult to track down.
+
+## Hacking python-config
+
+While searching for a solution, I found a post about [cross-compiling gdb](https://sourceware.org/gdb/wiki/CrossCompilingWithPythonSupport) with python support.  (Thank you, Doug Evans!)
+
+Well, the same approach works even when *not* cross-compiling, so I put together a little wrapper script for python-config that delegates to the real thing, but supplies the missing `-L` parameter.
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (python-hack.sh)</span> <a href='/downloads/code/gdb-python/python-hack.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># Copyright 2016 by Bill Torpey. All Rights Reserved.</span>
+</span><span class='line'><span class="c"># This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 United States License.</span>
+</span><span class='line'><span class="c"># http://creativecommons.org/licenses/by-nc-nd/3.0/us/deed.en</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># fugly hack for python support</span>
+</span><span class='line'><span class="c"># (see https://sourceware.org/gdb/wiki/CrossCompilingWithPythonSupport)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">PYTHON_DIR</span><span class="o">=</span><span class="k">$(</span><span class="nb">cd</span> <span class="k">$(</span>dirname <span class="k">$(</span>which python<span class="k">))</span>/.. <span class="o">&amp;&amp;</span> /bin/pwd<span class="k">)</span>
+</span><span class='line'><span class="c">#echo $PYTHON_DIR</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># The first argument is the path to python-config.py, ignore it.</span>
+</span><span class='line'><span class="k">case</span> <span class="s2">&quot;$2&quot;</span> in
+</span><span class='line'>   --includes<span class="o">)</span>       <span class="nb">echo</span> <span class="s2">&quot;$($PYTHON_DIR/bin/python-config --includes)&quot;</span> ;;
+</span><span class='line'>   --ldflags<span class="o">)</span>        <span class="nb">echo</span> -n <span class="s2">&quot;-L$PYTHON_DIR/lib &quot;</span>; <span class="nb">echo</span> <span class="s2">&quot;$($PYTHON_DIR/bin/python-config --ldflags)&quot;</span> ;;
+</span><span class='line'>   --exec-prefix<span class="o">)</span>    <span class="nb">echo</span> <span class="s2">&quot;$($PYTHON_DIR/bin/python-config --exec-prefix)&quot;</span> ;;
+</span><span class='line'>   *<span class="o">)</span> <span class="nb">echo</span> <span class="s2">&quot;Bad arg $2.  Blech!&quot;</span> &gt;&amp;2 ; <span class="nb">exit </span>1 ;;
+</span><span class='line'><span class="k">esac</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">exit </span>0
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+The we build gdb using the hack script instead of the installed python-config:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (build-gdb.sh)</span> <a href='/downloads/code/gdb-python/build-gdb.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># Copyright 2016 by Bill Torpey. All Rights Reserved.</span>
+</span><span class='line'><span class="c"># This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 United States License.</span>
+</span><span class='line'><span class="c"># http://creativecommons.org/licenses/by-nc-nd/3.0/us/deed.en</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="nb">set</span> -exv
+</span><span class='line'>
+</span><span class='line'><span class="nv">VERSION</span><span class="o">=</span>7.11
+</span><span class='line'>
+</span><span class='line'><span class="c"># fugly hack for python support</span>
+</span><span class='line'><span class="c"># (see https://sourceware.org/gdb/wiki/CrossCompilingWithPythonSupport)</span>
+</span><span class='line'><span class="nv">WITH_PYTHON</span><span class="o">=</span><span class="k">$(</span>/bin/pwd<span class="k">)</span>/python-hack.sh
+</span><span class='line'>
+</span><span class='line'><span class="c"># location where gcc should be installed</span>
+</span><span class='line'><span class="nv">INSTALL_PREFIX</span><span class="o">=</span>/build/share/gdb/<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>
+</span><span class='line'><span class="c"># number of cores</span>
+</span><span class='line'><span class="nv">CPUS</span><span class="o">=</span><span class="k">$(</span>nproc<span class="k">)</span>
+</span><span class='line'><span class="c"># uncomment following to get verbose output from make</span>
+</span><span class='line'><span class="c">#VERBOSE=VERBOSE=1</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[[</span> -e gdb-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>.tar.gz <span class="o">]]</span> <span class="o">||</span> wget -nv http://ftp.gnu.org/gnu/gdb/gdb-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>.tar.gz
+</span><span class='line'>
+</span><span class='line'>rm -rf gdb-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>
+</span><span class='line'>tar xvfz gdb-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>.tar.gz
+</span><span class='line'>
+</span><span class='line'>rm -rf build
+</span><span class='line'>mkdir build
+</span><span class='line'><span class="nb">cd </span>build
+</span><span class='line'>../gdb-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>/configure --prefix<span class="o">=</span><span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span> --with-python<span class="o">=</span><span class="k">${</span><span class="nv">WITH_PYTHON</span><span class="k">}</span>
+</span><span class='line'>make -j <span class="k">${</span><span class="nv">CPUS</span><span class="k">}</span> <span class="k">${</span><span class="nv">VERBOSE</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># install it</span>
+</span><span class='line'>rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
+</span><span class='line'>make install
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+## Running gdb
+
+Let's create a little test program and see how we did:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (test.cpp)</span> <a href='/downloads/code/gdb-python/test.cpp'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;string&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>   <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">hello</span> <span class="o">=</span> <span class="s">&quot;Hello, world!&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+When we debug the test program, we see that printing an stl object gives much more readable output:
+
+    $ g++ -g test.cpp
+    $ gdb a.out
+    ...
+    (gdb) p hello
+    $1 = "Hello, world!"
+
+But, you can still get to the underlying data structure if you need to:
+
+    (gdb) p /r hello
+    $2 = {static npos = 18446744073709551615,
+      _M_dataplus = {<std::allocator<char>> = {<__gnu_cxx::new_allocator<char>> = {<No data fields>}, <No data fields>}, _M_p = 0x601028 "Hello, world!"}}
+
+One last thing -- don't confuse the gdb `set print pretty on` command with python pretty-printing.  All that `set print pretty` does is indent structure members, rather than printing the whole thing on a single line, like so:
+
+    (gdb) set print pretty on
+    (gdb) p /r hello
+    $3 = {
+      static npos = 18446744073709551615,
+      _M_dataplus = {
+        <std::allocator<char>> = {
+          <__gnu_cxx::new_allocator<char>> = {<No data fields>}, <No data fields>},
+        members of std::basic_string<char, std::char_traits<char>, std::allocator<char> >::_Alloc_hider:
+        _M_p = 0x601028 "Hello, world!"
+      }
+    }
+
+## A note on building python
+The default python on RH6 is version 2.6, and a lot of packages don't support anything older than 2.7.  So, I built a recent 2.7 version from source, but when I tried to run it I would get:
+
+    python: error while loading shared libraries: libpython2.7.so.1.0: cannot open shared object file: No such file or directory
+
+So, I added the python lib directory to LD\_LIBRARY\_PATH, but I didn't feel right about it -- most commands don't require that.
+
+Thanks to [this post](http://stackoverflow.com/a/32558660/203044), I modified the build script to include an [RPATH](https://gcc.gnu.org/ml/gcc-help/2005-12/msg00017.html) in the python executable that eliminated the need to put the python lib directory on LD\_LIBRARY\_PATH.  Here's the python build script:
+
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (build-python.sh)</span> <a href='/downloads/code/gdb-python/build-python.sh'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># Copyright 2016 by Bill Torpey. All Rights Reserved.</span>
+</span><span class='line'><span class="c"># This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 United States License.</span>
+</span><span class='line'><span class="c"># http://creativecommons.org/licenses/by-nc-nd/3.0/us/deed.en</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="nb">set</span> -exv
+</span><span class='line'>
+</span><span class='line'><span class="nv">VERSION</span><span class="o">=</span>2.7.11
+</span><span class='line'>
+</span><span class='line'><span class="c">## modify the following as needed for your environment</span>
+</span><span class='line'><span class="c"># location where gcc should be installed</span>
+</span><span class='line'><span class="nv">INSTALL_PREFIX</span><span class="o">=</span>/build/share/python/<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>
+</span><span class='line'><span class="c"># number of cores</span>
+</span><span class='line'><span class="nv">CPUS</span><span class="o">=</span>1
+</span><span class='line'><span class="c"># uncomment following to get verbose output from make</span>
+</span><span class='line'><span class="c">#VERBOSE=VERBOSE=1</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">## download</span>
+</span><span class='line'><span class="o">[[</span> -e Python-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>.tgz <span class="o">]]</span>   <span class="o">||</span> wget -nv https://www.python.org/ftp/python/<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>/Python-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>.tgz
+</span><span class='line'>
+</span><span class='line'><span class="c">## untar</span>
+</span><span class='line'>rm -rf Python-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>
+</span><span class='line'>tar xf Python-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>.tgz
+</span><span class='line'>
+</span><span class='line'><span class="c"># build</span>
+</span><span class='line'><span class="nb">cd </span>Python-<span class="k">${</span><span class="nv">VERSION</span><span class="k">}</span>
+</span><span class='line'>./configure --prefix<span class="o">=</span><span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span> --enable-shared <span class="se">\</span>
+</span><span class='line'><span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">&quot;-Wl,--rpath=${INSTALL_PREFIX}/lib&quot;</span>
+</span><span class='line'>
+</span><span class='line'>make -j <span class="k">${</span><span class="nv">CPUS</span><span class="k">}</span> <span class="k">${</span><span class="nv">VERBOSE</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># install it</span>
+</span><span class='line'>rm -rf <span class="k">${</span><span class="nv">INSTALL_PREFIX</span><span class="k">}</span>
+</span><span class='line'>make install
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+Conclusion
+----------
+
+It seems that quite a few people have had the same problem that I did -- hope this helps.  And many thanks to all the people who took the trouble to share their own problems and solutions getting python pretty-printing to work with gdb.
+
+---
+
+### Footnotes
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Remote Scripting with bash and ssh]]></title>
@@ -1130,82 +1457,6 @@ this information have been found in other sources, including the following:
 [^4]: I may go into more detail on this in a later post, but in the meantime if you're interested you should consult Ulrich Drepper's "How to Write Shared Libraries" at <http://www.akkadia.org/drepper/dsohowto.pdf>.
 
 [^5]: One reason is that gcc 4.9.0 can't compile libc++, the llvm version of the C++ standard library -- see <http://lists.llvm.org/pipermail/cfe-dev/2014-April/036650.html> for more detail.  While we're not going to discuss using libc++ in this post, we may get into that later on.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Repent, Sinner!]]></title>
-    <link href="http://btorpey.github.io/blog/2014/09/21/repent/"/>
-    <updated>2014-09-21T00:00:00-04:00</updated>
-    <id>http://btorpey.github.io/blog/2014/09/21/repent</id>
-    <content type="html"><![CDATA[<p><img class="left" src="/images/nun-with-ruler.jpg" width="240" height="160"> 
-
-When I was a kid I went to Catholic school, and back in those days 
-the nuns would indeed rap your knuckles with a ruler if you
-misbehaved. That doesn't happen so much any more, but when I see someone 
-making use of the [copy-paste anti-pattern](http://c2.com/cgi/wiki?CopyAndPasteProgramming), 
-I'm tempted to reach for a ruler myself. 
-(I know, probably not a good career move ;-)
-
-Short of rapping someone's knuckles with a ruler, though, how do you show some poor sinner the error of his ways?
-
-<!--more-->
-
-Enter [CPD, or copy-paste detector](http://pmd.sourceforge.net/pmd-5.1.3/cpd-usage.html). 
-This does pretty much what you would guess from its name -- it
-spins through all the code you give it, and analyzes it for repeated sequences.
-[^1]
-
-Here's an example of running the GUI version against the code I used 
-in an [earlier post](http://btorpey.github.io/blog/2014/02/12/shared-singletons/) on smart pointers.
-
-<img class="right" src="/images/cpd.png">
-
-(Note that the "Ignore literals" and "Ignore identifiers" checkboxes are
-disabled if you select C++ as the language - these options [are only implemented for Java currently](http://sourceforge.net/p/pmd/discussion/188193/thread/91553283)).
-
-The site has several more examples, but [this one](http://pmd.sourceforge.net/pmd-5.1.3/cpdresults.txt) just blew my mind -- 
-hard to imagine how anyone could write this code in
-the first place, much less be so confident that it is correct that they just
-copy and paste it in two different files (with nary a comment to tie the two
-together)?
-
-<pre>
-=====================================================================
-Found a 19 line (329 tokens) duplication in the following files: 
-Starting at line 685 of /usr/local/java/src/java/util/BitSet.java
-Starting at line 2270 of /usr/local/java/src/java/math/BigInteger.java
-    static int bitLen(int w) {
-        // Binary search - decision tree (5 tests, rarely 6)
-        return
-         (w < 1<<15 ?
-          (w < 1<<7 ?
-           (w < 1<<3 ?
-            (w < 1<<1 ? (w < 1<<0 ? (w<0 ? 32 : 0) : 1) : (w < 1<<2 ? 2 : 3)) :
-            (w < 1<<5 ? (w < 1<<4 ? 4 : 5) : (w < 1<<6 ? 6 : 7))) :
-           (w < 1<<11 ?
-            (w < 1<<9 ? (w < 1<<8 ? 8 : 9) : (w < 1<<10 ? 10 : 11)) :
-            (w < 1<<13 ? (w < 1<<12 ? 12 : 13) : (w < 1<<14 ? 14 : 15)))) :
-          (w < 1<<23 ?
-           (w < 1<<19 ?
-            (w < 1<<17 ? (w < 1<<16 ? 16 : 17) : (w < 1<<18 ? 18 : 19)) :
-            (w < 1<<21 ? (w < 1<<20 ? 20 : 21) : (w < 1<<22 ? 22 : 23))) :
-           (w < 1<<27 ?
-            (w < 1<<25 ? (w < 1<<24 ? 24 : 25) : (w < 1<<26 ? 26 : 27)) :
-            (w < 1<<29 ? (w < 1<<28 ? 28 : 29) : (w < 1<<30 ? 30 : 31)))));
-    }
-
-</pre>
-
-So, if you need to lead someone to the light, try PMD's copy-paste detector.  It
-may hurt a bit, but a lot less than a sharp rap on the knuckles!
-
-One last caveat about CPD: it does not like symlinks at all -- you must give it the real path names for any source files, or
-you will just get a bunch of "Skipping ... since it appears to be a symlink" messages.
-
-
-[^1]: CPD is part of the [PMD tool](http://pmd.sourceforge.net/pmd-5.1.3/), which can do a lot of useful things with Java code. But since I'm primarily dealing with C++ code these days (and because duplicate code is such a hot-button issue for me), CPD is the part that I use.
-</p>
 ]]></content>
   </entry>
   

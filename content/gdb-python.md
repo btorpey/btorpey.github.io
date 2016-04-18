@@ -16,11 +16,72 @@ First off, this whole ordeal was caused by the fact that I do almost all of my w
 
 That stability comes at a price, though.  One way that RedHat tries to provide stability is by freezing so-called "upstream" packages when they create a new major version.  So, the version of gdb installed with RH6 is gdb 7.2 (which was originally released back in 2010).  The latest gdb version at the time of this writing is 7.11, so there's obviously been a fair amount of water over the dam by now.  Plus, gdb 7.2 can't debug code compiled with gcc 5, and that's a show-stopper.
 
-So, it was time to update gdb.  How hard could that be?
+So, it was time to update gdb.  How hard could that be?  Well, it looked pretty straight-forward, and the build completed successfully.  But when I ran gdb, I noticed that it was no longer "pretty-printing" variables.
+
+## Pretty-printing in gdb with python
+
+Since about version 7, gdb has had the ability to "pretty-print" stl objects.  What that means is that when examining an stl object, gdb will display something more like what you would see in source code, as opposed to the internal representation of the stl object.  This is best illustrated with some example code, like the following:
+
+``` cpp
+#include <string>
+#include <vector>
+#include <map>
+
+int main(int argc, char** argv)
+{
+   std::string hello = "Hello, ";
+   std::string there = "there!";
+
+   std::vector<std::string> v;
+   v.push_back(hello);
+   v.push_back(there);
+
+   std::map<std::string, std::string>  m;
+   m[hello] = there;
+
+   return 0;
+}
+```
+
+We build the program, open it in the debugger, set a breakpoint on the `return` statement, and examine the variables.
+
+    g++ -g test.cpp
+    gdb a.out
+    b 17
+    r
+
+Without pretty printing, the output looks like this:
+
+    (gdb) p hello
+    $1 = {static npos = <optimized out>,
+      _M_dataplus = {<std::allocator<char>> = {<__gnu_cxx::new_allocator<char>> = {<No data fields>}, <No data fields>},
+        _M_p = 0x605028 "Hello, "}}
+    (gdb) p v
+    $2 = {<std::_Vector_base<std::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::basic_string<char, std::char_traits<char>, std::allocator<char> > > >> = {
+        _M_impl = {<std::allocator<std::basic_string<char, std::char_traits<char>, std::allocator<char> > >> = {<__gnu_cxx::new_allocator<std::basic_string<char, std::char_traits<char>, std::allocator<char> > >> = {<No data fields>}, <No data fields>},
+          _M_start = 0x605090, _M_finish = 0x6050a0, _M_end_of_storage = 0x6050a0}}, <No data fields>}
+    (gdb) p m
+    $3 = {_M_t = {
+        _M_impl = {<std::allocator<std::_Rb_tree_node<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >> = {<__gnu_cxx::new_allocator<std::_Rb_tree_node<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > const, std::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >> = {<No data fields>}, <No data fields>},
+          _M_key_compare = {<std::binary_function<std::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool>> = {<No data fields>}, <No data fields>}, _M_header = {
+            _M_color = std::_S_red, _M_parent = 0x6050b0, _M_left = 0x6050b0, _M_right = 0x6050b0}, _M_node_count = 1}}}
+
+But with pretty-printing enabled, the same debug session looks like this:
+
+    (gdb) p hello
+    $1 = "Hello, "
+    (gdb) p v
+    $3 = std::vector of length 2, capacity 2 = {"Hello, ", "there!"}
+    (gdb) p m
+    $4 = std::map with 1 elements = {
+     ["Hello, "] = "there!"
+    }
+
+Obviously, it would be nice to get pretty-printing working again.  So, what went wrong?
 
 ## Building gdb `--with-python`
 
-I had a relatively new-ish version of python (2.7.11) installed as my default, so I figured I could just crank up a build and gdb would find it and do the right thing.  When that didn't work ("Scripting in the "Python" language is not supported in this copy of GDB"), I went back to the build and explicitly specified `--with-python` in the `configure` command -- still no luck.  I tried several variations, and when none of them worked, I dug into the configure log, and found the following:
+Pretty-printing with gdb requires python support enabled in gdb at build time.  I had a relatively new-ish version of python (2.7.11) installed as my default, so I figured I could just crank up a build and gdb would find it and do the right thing.  When that didn't work, I went back to the build and explicitly specified `--with-python` in the `configure` command -- still no luck.  I tried several variations, and when none of them worked, I dug into the configure log, and found the following:
 
     configure:8458: checking whether to use python
     configure:8460: result: yes
@@ -59,27 +120,27 @@ The we build gdb using the hack script instead of the installed python-config:
 
 {% include_code gdb-python/build-gdb.sh  %}
 
-## Running gdb
+Now, we've got pretty-printing back!
 
-Let's create a little test program and see how we did:
-
-{% include_code gdb-python/test.cpp  %}
-
-When we debug the test program, we see that printing an stl object gives much more readable output:
-
-    $ g++ -g test.cpp
-    $ gdb a.out
-    ...
     (gdb) p hello
-    $1 = "Hello, world!"
+    $1 = "Hello, "
+    (gdb) p v
+    $3 = std::vector of length 2, capacity 2 = {"Hello, ", "there!"}
+    (gdb) p m
+    $4 = std::map with 1 elements = {
+     ["Hello, "] = "there!"
+    }
 
-But, you can still get to the underlying data structure if you need to:
+
+## Some notes on gdb
+
+Even if pretty-printing is enabled, you can still get to the underlying data structure if you need to:
 
     (gdb) p /r hello
     $2 = {static npos = 18446744073709551615,
       _M_dataplus = {<std::allocator<char>> = {<__gnu_cxx::new_allocator<char>> = {<No data fields>}, <No data fields>}, _M_p = 0x601028 "Hello, world!"}}
 
-One last thing -- don't confuse the gdb `set print pretty on` command with python pretty-printing.  All that `set print pretty` does is indent structure members, rather than printing the whole thing on a single line, like so:
+Don't confuse the gdb `set print pretty on` command with python pretty-printing.  All that `set print pretty` does is indent structure members, rather than printing the whole thing on a single line, like so:
 
     (gdb) set print pretty on
     (gdb) p /r hello
@@ -92,6 +153,9 @@ One last thing -- don't confuse the gdb `set print pretty on` command with pytho
         _M_p = 0x601028 "Hello, world!"
       }
     }
+
+You may run across instructions on the intertubes (e.g., [here](https://sourceware.org/gdb/wiki/STLSupport)) that talk about changing your `.gdbinit` to manually import the python drivers needed for pretty-printing.  These instructions appear to be obsolete, at least with the most recent version of gdb (7.11) -- pretty-printing works automagically, and no special configuration is required.
+
 
 <a id="building-python"></a>
 
@@ -109,7 +173,11 @@ Thanks to [this post](http://stackoverflow.com/a/32558660/203044), I modified th
 Conclusion
 ----------
 
-It seems that quite a few people have had the same problem that I did -- hope this helps.  And many thanks to all the people who took the trouble to share their own problems and solutions getting python pretty-printing to work with gdb.
+It seems that quite a few people have had similar difficulties getting pretty-printing working as I did, so I hope this longish explanation is helpful.  And many thanks to all the people who took the trouble to share their own problems and solutions getting python pretty-printing to work with gdb.
+
+As always, please leave a comment below (preferred), or  [contact me](<mailto:wallstprog@gmail.com>)
+directly with comments, suggestions, corrections, etc.
+
 
 Footnotes
 ---------

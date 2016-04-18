@@ -8,7 +8,7 @@ One of the bad guys in the movie is Kaa the python[^1], who was really sneaky, a
 
 Recently I was installing a new version of gdb, but no matter what I did I couldn't get pretty-printing to work.
 
-As it happens, Python was the sneaky bad guy here too.  Read on to see how to thwart him and get pretty-printing in your version of gdb.
+As it happens, Python was the villain here too.  Read on to see how to thwart him and get pretty-printing in your version of gdb.
 
 <!-- more -->
 

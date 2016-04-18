@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-04-17T22:49:18-04:00</updated>
+  <updated>2016-04-18T09:32:03-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Python pretty-printing in gdb]]></title>
+    <title type="html"><![CDATA[Pretty-printing in gdb with python]]></title>
     <link href="http://btorpey.github.io/blog/2016/04/16/python-pretty-printing-in-gdb/"/>
     <updated>2016-04-16T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2016/04/16/python-pretty-printing-in-gdb</id>
@@ -26,7 +26,7 @@
 
 <p>Recently I was installing a new version of gdb, but no matter what I did I couldn&rsquo;t get pretty-printing to work.</p>
 
-<p>As it happens, Python was the sneaky bad guy here too.  Read on to see how to thwart him and get pretty-printing in your version of gdb.</p>
+<p>As it happens, Python was the villain here too.  Read on to see how to thwart him and get pretty-printing in your version of gdb.</p>
 
 <!-- more -->
 

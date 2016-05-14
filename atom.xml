@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-05-14T13:33:40-04:00</updated>
+  <updated>2016-05-14T13:35:03-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -109,7 +109,7 @@ $ bear make
 </code></pre>
 
 <h2 id="establishing-a-baseline">Establishing a baseline</h2>
-<p>To make it possible to compare results from different analyzers, we first need to establish a baseline using the ITC benchmarks, and for that we’re going to need <a href="http://btorpey.github.io/blog/pages/REAME.md/index.html">this set of helper scripts</a>, which can be downloaded from <a href="https://github.com/btorpey/static">this GitHub repo</a>.</p>
+<p>To make it possible to compare results from different analyzers, we first need to establish a baseline using the ITC benchmarks, and for that we’re going to need <a href="http://btorpey.github.io/pages/REAME.md/index.html">this set of helper scripts</a>, which can be downloaded from <a href="https://github.com/btorpey/static">this GitHub repo</a>.</p>
 
 <pre><code>$ git clone https://github.com/btorpey/static
 </code></pre>
@@ -217,7 +217,7 @@ core.StackAddressEscape         Check that addresses to stack memory do not esca
 
 <p>If you’re on an older distro (in my case, RH6) where the system compiler is not C++1x-capable, see my <a href="http://btorpey.github.io/blog/2015/01/02/building-clang/">earlier post</a> about how to build clang (and/or gcc) to get a C++1x-capable compiler.  (Basically, it uses an older version of gcc to build a newer version, and the newer version to build clang).  </p>
 
-<p>It took some trial-and-error to get the cppcheck build parameters right, but the <a href="http://btorpey.github.io/blog/pages/build_cppcheck.sh/index.html">supplied build script</a> should get the job done<sup id="fnref:install"><a href="#fn:install" rel="footnote">6</a></sup>.</p>
+<p>It took some trial-and-error to get the cppcheck build parameters right, but the <a href="http://btorpey.github.io/pages/build_cppcheck.sh/index.html">supplied build script</a> should get the job done<sup id="fnref:install"><a href="#fn:install" rel="footnote">6</a></sup>.</p>
 
 <pre><code>$ ./build_cppcheck.sh 2&gt;&amp;1 | tee build_cppcheck.out
 </code></pre>
@@ -252,7 +252,7 @@ cppcheck2csv.pl -r ${ITCBENCH_ROOT} |
 sort -u &gt; cppcheck.csv
 </code></pre>
 
-<p>Note that instead of invoking cppcheck directly, we’re invoking it via the <a href="http://btorpey.github.io/blog/pages/cppcheck.sh/index.html">cppcheck.sh</a> helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler’s pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you’re trying to analyze uses <code>#ifdef</code>’s to control what code actually gets compiled (or seen by cppcheck).</p>
+<p>Note that instead of invoking cppcheck directly, we’re invoking it via the <a href="http://btorpey.github.io/pages/cppcheck.sh/index.html">cppcheck.sh</a> helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler’s pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you’re trying to analyze uses <code>#ifdef</code>’s to control what code actually gets compiled (or seen by cppcheck).</p>
 
 <p>One of the settings in the helper script enables what cppcheck calls “inconclusive” results.  These are exactly what the name implies – cppcheck isn’t positive that the code is wrong, but it is at least suspicious.  Including these inconclusive results should tend to increase the number of false positives in theory, but in practice I haven’t found false positives to be a big problem with either cppcheck or clang.  </p>
 
@@ -307,7 +307,7 @@ Other checks
 
 <p>Commercial tools can be expensive (although still cheap compared to the money they save), and open-source tools can sometimes be hard to use (or at least hard to learn how to use).</p>
 
-<p>The provided <a href="http://btorpey.github.io/blog/pages/REAME.md/index.html">helper scripts</a> (<a href="https://github.com/btorpey/static">repo here</a>) should make it much easier to use these tools, and to keep track of warnings and compare the outputs of different tools by using a common format.</p>
+<p>The provided <a href="http://btorpey.github.io/pages/REAME.md/index.html">helper scripts</a> (<a href="https://github.com/btorpey/static">repo here</a>) should make it much easier to use these tools, and to keep track of warnings and compare the outputs of different tools by using a common format.</p>
 
 <p>They can also be useful for before-and-after comparisions of different versions of a single codebase – for example, as changes are being made to address issues detected by the tools.</p>
 

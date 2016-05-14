@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-04-18T11:20:39-04:00</updated>
+  <updated>2016-05-14T13:13:02-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,329 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Mo' Static]]></title>
+    <link href="http://btorpey.github.io/blog/2016/04/07/mo-static/"/>
+    <updated>2016-04-07T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2016/04/07/mo-static</id>
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/nye-static.jpg" width="240" height="180"></p>
+
+<ul>
+<li>Will be replaced with the ToC, excluding the &ldquo;Contents&rdquo; header
+{:toc}</li>
+</ul>
+
+
+<p>In my day job, one of my main focuses is software reliability and correctness, so it makes sense that I would be a big fan of static analysis.</p>
+
+<p>I&rsquo;ve written previously about the <a href="http://btorpey.github.io/blog/2015/04/27/static-analysis-with-clang/">static analysis provided by clang</a>.  Today, I want to take a bit of a &ldquo;deep-dive&rdquo; into the whole subject by putting both clang and <a href="http://cppcheck.sourceforge.net/">cppcheck</a> through their paces, using them to analyze a benchmark suite designed to exercise static analysis tools.  In the course of doing that, I&rsquo;ll also provide some helper scripts that make working with the tools easier.</p>
+
+<!-- more -->
+
+
+<h2>Testing Static Analysis Tools</h2>
+
+<blockquote><p> And what is good Phaedrus, and what is not good &mdash; need we ask anyone to tell us these things? <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p></blockquote>
+
+<p>Obviously, the ultimate goal is to be able to run static analysis tools against our own codebase(s) to help detect and fix problems.  But how do we know if a particular tool is actually finding problems?  And, how do we know if we&rsquo;re running the tool properly?</p>
+
+<p>The perfect static analyzer would find all the latent bugs in our code, while not reporting any false positives<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>.  Since there are no perfect analyzers, any tool we use is going to miss some errors, and/or wrongly flag correct code.  So, the only way to evaluate an analyzer is to know where all the bugs are in our code &mdash; but if we knew that, we wouldn&rsquo;t need an analyzer.</p>
+
+<p>That&rsquo;s a dilemma. To resolve it, we&rsquo;re going to be using a codebase specifically designed to trigger static analysis warnings.  The code was originally developed by Toyota ITC, and is available on <a href="http://blog.regehr.org/archives/1217">John Regehr&rsquo;s excellent blog</a>.</p>
+
+<p>The ITC benchmarks attempt to resolve our dilemma by providing both a set of code that contains errors which <em>should</em> trigger warnings, as well as a second set of code, similar to the first, but which doesn&rsquo;t contain errors.  Each source file is annotated with comments documenting where the errors are (and aren&rsquo;t).  And that lets us create a catalog of both real errors and potential false positives<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>.</p>
+
+<p>To get started, download the code from <a href="https://github.com/regehr/itc-benchmarks">its GitHub repository</a>, and set the <code>ITCBENCH_ROOT</code> environment variable (which will come in handy later):</p>
+
+<pre><code>git clone git clone https://github.com/regehr/itc-benchmarks
+export ITCBENCH_ROOT=$(pwd)/itc-benchmarks
+</code></pre>
+
+<h2>Can I haz teh codez?</h2>
+
+<p>The remainder of this article goes step-by-step through the process of creating a compilation database from the ITC benchmark code, running clang&rsquo;s static analysis tools against that compilation database, building and installing cppcheck and running it against the compilation database, and analyzing the results.</p>
+
+<p>This is all good stuff, especially if you&rsquo;re going to be using these tools going forward.  But, there&rsquo;s a certain amount of unavoidable yak-shaving<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup> going on to get to that point.  So if you prefer to skip all that, I&rsquo;ve included the results of running the different tools in the samples directory of the <a href="https://github.com/btorpey/static">repo</a>.  The samples include all the files we&rsquo;re going to be generating the hard way, so you can follow along without all the requisite busy-work.  Hopefully, when we&rsquo;re done you&rsquo;ll want to go back and use these tools on your own codebase.</p>
+
+<h2>Creating a compilation database</h2>
+
+<p>To run both clang and cppcheck we first need to create a &ldquo;compilation database&rdquo; to supply them with required build settings.  The <a href="http://clang.llvm.org/docs/JSONCompilationDatabase.html">compilation database</a> format was developed as part of the clang project, to provide a way for different tools to query the actual options used to build each file.</p>
+
+<p>A <a href="http://eli.thegreenplace.net/2014/05/21/compilation-databases-for-clang-based-tools">good overview of how the compilation database works</a> with clang-based tools can be found at Eli Bendersky&rsquo;s excellent site.  His article illustrates the importance of making sure that code analysis tools are looking at the same (pre-processed) source that the actual compiler sees, in order to generate meaningful diagnostics with a minimum of false positives.</p>
+
+<ul>
+<li><p>If you are using <a href="http://cmake.org/">cmake</a> to drive your builds, creating a compilation database couldn&rsquo;t be easier &mdash; simply add the <code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code> parameter to the cmake build command, or add the following to your main CMakeLists.txt file:</p>
+
+<p>  <code>set(CMAKE_EXPORT_COMPILE_COMMANDS ON)</code></p></li>
+<li><p>If you&rsquo;re not using cmake, you can still create a compilation database using plain old make by front-ending make with <a href="https://github.com/rizsotto/Bear">Bear</a><sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup>, like so:</p>
+
+<p>  <code>bear make</code></p></li>
+</ul>
+
+
+<p>In either case, the end result should be the creation of a  <code>compile_commands.json</code> file in the current directory.</p>
+
+<p>Sadly, the ITC benchmark suite is stuck in the past using <a href="https://twitter.com/timmartin2/status/23365017839599616">autotools</a>, and worse yet, a version that needs to be installed from source (on RH6, at least).</p>
+
+<p>So, in the interest of immediate gratification, I&rsquo;ve included the compile_commands.json file <a href="http://btorpey.github.io/downloads/code/static/samples/compile_commands.json">here</a> &mdash; simply save it to the directory where you&rsquo;ve cloned the ITC code.  (The compile_commands.json file is also contained in the samples directory of the <a href="https://github.com/btorpey/static">repo for this article</a>).</p>
+
+<p>If you prefer to generate the compile_commands.json file yourself using Bear, you can so like this:</p>
+
+<pre><code>$ cd ${ITCBENCH_ROOT}  
+$ ./bootstrap
+$ ./configure
+$ bear make
+</code></pre>
+
+<h2>Establishing a baseline</h2>
+
+<p>To make it possible to compare results from different analyzers, we first need to establish a baseline using the ITC benchmarks, and for that we&rsquo;re going to need <a href="http://btorpey.github.io/pages/REAME.md/index.html">this set of helper scripts</a>, which can be downloaded from <a href="https://github.com/btorpey/static">this GitHub repo</a>.</p>
+
+<pre><code>$ git clone https://github.com/btorpey/static
+</code></pre>
+
+<p>Once you&rsquo;ve done that, you need to add the directory to your PATH:</p>
+
+<pre><code>$ export PATH=$(pwd)/static/scripts:$PATH 
+</code></pre>
+
+<p>Enter the following command from the ITC source directory to create a csv file with the error annotations from the ITC code:</p>
+
+<pre><code>$ cd ${ITCBENCH_ROOT}  
+$ cc_driver.pl -n grep -Hni ERROR: | 
+itc2csv.pl -r ${ITCBENCH_ROOT}/ | 
+sort -u &gt; itc.csv  
+</code></pre>
+
+<p>The command will create a file named <code>itc.csv</code> in the source directory that looks like this:</p>
+
+<pre><code>$ cat itc.csv
+"01.w_Defects/bit_shift.c:106","/*ERROR:Bit shift error*/"
+"01.w_Defects/bit_shift.c:120","/*ERROR:Bit shift error*/"
+"01.w_Defects/bit_shift.c:133","/*ERROR:Bit shift error*/"
+"01.w_Defects/bit_shift.c:146","/*ERROR:Bit shift error*/"
+"01.w_Defects/bit_shift.c:163","/*ERROR:Bit shift error*/"
+"01.w_Defects/bit_shift.c:175","/*ERROR:Bit shift error*/"
+...
+</code></pre>
+
+<p>The format of the csv file is really simple &mdash; just an entry for file and line number, and another with the error annotation munged from the source file.  This will give us a baseline against which to compare both clang and cppcheck.</p>
+
+<h2>Using clang&rsquo;s analysis tools</h2>
+
+<p>In a couple of previous posts, I wrote about <a href="http://btorpey.github.io/blog/2015/04/27/static-analysis-with-clang">static analysis with clang</a>, and <a href="http://btorpey.github.io/blog/2015/01/02/building-clang">how to build clang</a>.  This next bit assumes that you&rsquo;ve got clang ready-to-go, but if that&rsquo;s not the case, there can be a fair amount of work required to get to that point, so you may want to skip ahead to the section on <a href="#using-cppcheck">using cppcheck</a>.</p>
+
+<p>We&rsquo;re going to use a similar approach to the one we used above to generate the list of expected errors from the ITC code.  The command below will run clang-check against all the files in compile_commands.json, filter the results, and reformat the output in csv format:</p>
+
+<pre><code>$ cd ${ITCBENCH_ROOT}  
+$ cc_driver.pl clang-check -analyze 2&gt;&amp;1 | 
+clang2csv.pl -r ${ITCBENCH_ROOT}/ |
+sort -u &gt; clangcheck.csv
+</code></pre>
+
+<p>This gives us the diagnostic messages produced by clang, in the same csv format as we used for the list of errors, above:</p>
+
+<pre><code>$ cat clangcheck.csv
+"01.w_Defects/bit_shift.c:106","warning: The result of the '&lt;&lt;' expression is undefined"
+"01.w_Defects/bit_shift.c:133","warning: The result of the '&lt;&lt;' expression is undefined"
+"01.w_Defects/bit_shift.c:146","warning: The result of the '&lt;&lt;' expression is undefined"
+"01.w_Defects/bit_shift.c:163","warning: The result of the '&lt;&lt;' expression is undefined"
+"01.w_Defects/bit_shift.c:175","warning: The result of the '&lt;&lt;' expression is undefined"
+...
+</code></pre>
+
+<p>We can already see that there are some differences: the ITC code expects to see a diagnostic at 01.w_Defects/bit_shift.c:120, but clang doesn&rsquo;t output a warning for that line.</p>
+
+<h3>Analyzing the results</h3>
+
+<p>What I like to do at this point is fire up my all-time favorite tool, <a href="http://btorpey.github.io/blog/2013/01/29/beyond-compare/">Beyond Compare</a>, to generate a visual diff of the two files:</p>
+
+<p><img class="center" src="http://btorpey.github.io/images/itcvsclang.png"></p>
+
+<p>This view shows the expected diagnostics extracted from the ITC source files on the left, alongside the diagnostics generated by clang on the right.  We can see that clang catches some of the bugs in the source file, but misses others.  If we continue to read down the two files, we&rsquo;ll also see some potential &ldquo;false positives&rdquo; &mdash; i.e., diagnostics issued by clang that are not marked as expected errors in the source files.</p>
+
+<p>The visual approach using Beyond Compare works well for me, but with a csv-formatted datafile, other approaches are possible as well.  We could import the diagnostic messages into a spreadsheet program, or even a DBMS, for archiving, tracking and comparison.</p>
+
+<h2>Running clang analysis (again)</h2>
+
+<p>clang actually has two tools for doing static analysis &mdash; in the example above we ran <code>clang-check -analyze</code>, but now we&rsquo;re going to use <code>clang-tidy</code> instead.</p>
+
+<pre><code>$ cd ${ITCBENCH_ROOT}  
+$ cc_driver.pl clang-tidy 2&gt;&amp;1 | 
+clang2csv.pl -r ${ITCBENCH_ROOT}/ | 
+sort -u &gt; clangtidy.csv
+</code></pre>
+
+<p>If you compare the results from clang-check and clang-tidy, you&rsquo;ll notice that clang-tidy generally reports more warnings than clang-check.  Some of them are not necessarily defects, but are arguably bad practice (e.g., using <code>strcpy</code>).</p>
+
+<p><img class="center" src="http://btorpey.github.io/images/clangcheckvstidy.png"></p>
+
+<p>clang-tidy also outputs a slightly different format, including the name of the check in brackets.  (The name can also be used to suppress the warning).</p>
+
+<p>The choice of which to use is up to you &mdash; my preference is to use clang-check first, and follow up with clang-tidy, simply because the warnings produced by clang-tidy either duplicate those from clang-check, or are not as serious.</p>
+
+<p>Note that you can get a list of available checks from clang with the following command:</p>
+
+<pre><code>$ clang -cc1 -analyzer-checker-help
+...
+core.DivideZero                 Check for division by zero
+core.DynamicTypePropagation     Generate dynamic type information
+core.NonNullParamChecker        Check for null pointers passed as arguments to a function whose arguments are references or marked with the 'nonnull' attribute
+core.NullDereference            Check for dereferences of null pointers
+core.StackAddressEscape         Check that addresses to stack memory do not escape the function
+</code></pre>
+
+<h2>Using cppcheck</h2>
+
+<p>There&rsquo;s another static analysis tool that can provide results comparable to clang.  <a href="http://cppcheck.sourceforge.net/">cppcheck</a> has been around for a while, and I had tried to get it working in the past, but had given up after bumping into a few problems.</p>
+
+<p>I kept hearing good things about cppcheck in <a href="#references">articles and presentations by others</a>, though, so I finally decided it would be worth the trouble to get it working.</p>
+
+<p>It turns out the problems were not that difficult to solve, given a combination of documentation and experimentation.  And the benefits were significant, so I&rsquo;m quite happy to have added cppcheck to my tool box.</p>
+
+<h3>Installing cppchceck</h3>
+
+<p>While cppcheck is available bundled with some distros, it&rsquo;s often an older version, so we&rsquo;re going to build and install it from source. As is more and more often the case, cppcheck has started using features of C++1x, so we&rsquo;re going to need a C++1x-capable compiler to build it.</p>
+
+<p>If you&rsquo;re on an older distro (in my case, RH6) where the system compiler is not C++1x-capable, see my <a href="http://btorpey.github.io/blog/2015/01/02/building-clang/">earlier post</a> about how to build clang (and/or gcc) to get a C++1x-capable compiler.  (Basically, it uses an older version of gcc to build a newer version, and the newer version to build clang).</p>
+
+<p>It took some trial-and-error to get the cppcheck build parameters right, but the <a href="http://btorpey.github.io/pages/build_cppcheck.sh/index.html">supplied build script</a> should get the job done<sup id="fnref:6"><a href="#fn:6" rel="footnote">6</a></sup>.</p>
+
+<pre><code>$ ./build_cppcheck.sh 2&gt;&amp;1 | tee build_cppcheck.out
+</code></pre>
+
+<h4>Verifying the installation</h4>
+
+<p>You&rsquo;ll need to add the cppcheck directory to your PATH (assuming the install location from the build script):</p>
+
+<pre><code>export PATH=/build/share/cppcheck/1.73/bin:$PATH
+</code></pre>
+
+<p>If the build and install process worked, you should be able to invoke cppcheck from the command line, like so:</p>
+
+<pre><code>$ cppcheck --version
+Cppcheck 1.73
+</code></pre>
+
+<p>If you see the message below instead, there&rsquo;s a problem with the RPATH setting:</p>
+
+<pre><code>$ cppcheck --version
+cppcheck: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.15' not found (required by cppcheck)
+</code></pre>
+
+<p>The problem is typically either that the RPATH setting in the build is incorrect, or that the directory referenced by the RPATH setting does not exist.</p>
+
+<h3>Running cppcheck</h3>
+
+<p>Now we&rsquo;re ready to run cppcheck, using the same approach we used with clang:</p>
+
+<pre><code>$ cd ${ITCBENCH_ROOT}  
+$ cc_driver.pl cppcheck.sh  2&gt;&amp;1 | 
+cppcheck2csv.pl -r ${ITCBENCH_ROOT} | 
+sort -u &gt; cppcheck.csv
+</code></pre>
+
+<p>Note that instead of invoking cppcheck directly, we&rsquo;re invoking it via the <a href="http://btorpey.github.io/pages/cppcheck.sh/index.html">cppcheck.sh</a> helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler&rsquo;s pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you&rsquo;re trying to analyze uses <code>#ifdef</code>&rsquo;s to control what code actually gets compiled (or seen by cppcheck).</p>
+
+<p>One of the settings in the helper script enables what cppcheck calls &ldquo;inconclusive&rdquo; results.  These are exactly what the name implies &mdash; cppcheck isn&rsquo;t positive that the code is wrong, but it is at least suspicious.  Including these inconclusive results should tend to increase the number of false positives in theory, but in practice I haven&rsquo;t found false positives to be a big problem with either cppcheck or clang.</p>
+
+<h3>Analyzing the results</h3>
+
+<p>One of the first things you notice with cppcheck is that it includes more checks than clang.  Some of the additional warnings are for constructs that are not exactly <em>wrong</em>, but are either non-optimal, or indicators of potential problems.  For instance, cppcheck will warn when a variable is defined in a broader scope than is actually required (&ldquo;scope &hellip; can be reduced&rdquo;).</p>
+
+<p><img class="center" src="http://btorpey.github.io/images/itcvscppcheck.png"></p>
+
+<p>You can get a list of all the checks cppcheck is performing like so:</p>
+
+<pre><code>$ cppcheck --doc 
+...
+## Other ##
+Other checks
+- division with zero
+- scoped object destroyed immediately after construction
+- assignment in an assert statement
+- free() or delete of an invalid memory location
+- bitwise operation with negative right operand
+- provide wrong dimensioned array to pipe() system command (--std=posix)
+</code></pre>
+
+<p>You can also generate a list of error ID&rsquo;s with this command:</p>
+
+<pre><code>$ cppcheck --errorlist
+&lt;error id="stringLiteralWrite" severity="error" msg="Modifying string literal directly or indirectly is undefined behaviour."/&gt;
+&lt;error id="sprintfOverlappingData" severity="error" msg="Undefined behavior: Variable &amp;apos;varname&amp;apos; is used as parameter and destination in s[n]printf()."/&gt;
+&lt;error id="strPlusChar" severity="error" msg="Unusual pointer arithmetic. A value of type &amp;apos;char&amp;apos; is added to a string literal."/&gt;
+&lt;error id="incorrectStringCompare" severity="style" msg="String literal &amp;quot;Hello World&amp;quot; doesn&amp;apos;t match length argument for substr()."/&gt;
+&lt;error id="literalWithCharPtrCompare" severity="style" msg="String literal compared with variable &amp;apos;foo&amp;apos;. Did you intend to use strcmp() instead?"/&gt;
+&lt;error id="charLiteralWithCharPtrCompare" severity="style" msg="Char literal compared with pointer &amp;apos;foo&amp;apos;. Did you intend to dereference it?"/&gt;
+&lt;error id="incorrectStringBooleanError" severity="style" msg="Conversion of string literal &amp;quot;Hello World&amp;quot; to bool always evaluates to true."/&gt;
+</code></pre>
+
+<p>You can suppress any errors you don&rsquo;t care to see by passing its id in the <code>--suppress=</code> flag.</p>
+
+<h2>Comparing clang and cppcheck</h2>
+
+<p>There&rsquo;s a school of thought that says you should use as many compilers as possible to build your code, because each one will find different problems.  That&rsquo;s still a good idea, and even more so with static analysis tools.</p>
+
+<p>There&rsquo;s a certain amount of overlap between clang and cppcheck, but there are also significant differences.  In my experience, if clang reports something as a problem, it almost certainly is one, but clang also misses a lot of problems that it could detect.</p>
+
+<p><img class="center" src="http://btorpey.github.io/images/clangvscppcheck.png"></p>
+
+<p>cppcheck can generate more warnings, and some of them are more stylistic issues, but it does detect certain classes of problems, like dead code and arithmetic over/underflow that clang doesn&rsquo;t.</p>
+
+<p>As I mentioned earlier, I haven&rsquo;t found false positives to be a major problem with either clang or cppcheck.</p>
+
+<p>So, each tool has its place, and I like to use both.</p>
+
+<h1>Conclusions</h1>
+
+<p>Static analysis tools can add real value to the software development process by detecting errors, especially errors in code that is never or almost never executed.</p>
+
+<p>Commercial tools can be expensive (although still cheap compared to the money they save), and open-source tools can sometimes be hard to use (or at least hard to learn how to use).</p>
+
+<p>The provided <a href="http://btorpey.github.io/pages/REAME.md/index.html">helper scripts</a> (<a href="https://github.com/btorpey/static">repo here</a>) should make it much easier to use these tools, and to keep track of warnings and compare the outputs of different tools by using a common format.</p>
+
+<p>They can also be useful for before-and-after comparisions of different versions of a single codebase &mdash; for example, as changes are being made to address issues detected by the tools.</p>
+
+<h1>Acknowledgements</h1>
+
+<p>In addition to the people, projects and organizations mentioned earlier, the people at the NIST have been very helpful, and maintain an incredible collection of resources on the topic of static analysis for a number of languages, not just C++.  Some of those resources include the following, and are well worth checking out:</p>
+
+<p><a href="https://samate.nist.gov/index.php/SAMATE_Publications.html">https://samate.nist.gov/index.php/SAMATE_Publications.html</a><br/>
+<a href="https://samate.nist.gov/SARD/">https://samate.nist.gov/SARD/</a></p>
+
+<h1>References</h1>
+
+<p>Some helpful references that I ran across while researching this article:</p>
+
+<p><a href="http://www.viva64.com/en/a/0087/">Static Code Analysis, John Carmack</a></p>
+
+<p><a href="https://youtu.be/sn1Vg8A_MPU">CppCon 2015: Jason Turner “The Current State of (free) Static Analysis&#8221;</a></p>
+
+<p><a href="https://youtu.be/rKlHvAw1z50">CppCon 2015: Neil MacIntosh “Static Analysis and C++: More Than Lint&#8221;</a></p>
+
+<hr />
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>Robert Pirsig, &ldquo;Zen and the Art of Motorcycle Maintenance&rdquo;<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p>A &ldquo;false positive&rdquo; is when a tool reports an error that is actually not.<a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+<li id="fn:3">
+<p>Full disclaimer: I have not taken the time to review all of the ITC source to verify that the annotations are accurate and/or complete.  For the purpose of this exercise, we&rsquo;ll agree to assume that they are &mdash; but if you&rsquo;d like to suggest any improvements, I&rsquo;m guessing the best place to do that would on the <a href="https://github.com/regehr/itc-benchmarks">repo</a>.<a href="#fnref:3" rev="footnote">&#8617;</a></p></li>
+<li id="fn:4">
+<p>See <a href="https://en.wiktionary.org/wiki/yak_shaving">https://en.wiktionary.org/wiki/yak_shaving</a> for a description of this colorful term.<a href="#fnref:4" rev="footnote">&#8617;</a></p></li>
+<li id="fn:5">
+<p>Building and installing Bear from source is relatively straightforward &mdash; just keep in mind that you need python >= 2.7.<a href="#fnref:5" rev="footnote">&#8617;</a></p></li>
+<li id="fn:6">
+<p>As usual, I prefer installing external packages in a non-standard location, so the build script is set up to do that.  See <a href="http://btorpey.github.io/blog/2015/01/02/building-clang/">this post</a> for an explanation and rationale of this approach).<a href="#fnref:6" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Remote Scripting with bash and ssh]]></title>
@@ -1555,7 +1878,7 @@ regular expressions.</p>
 <a href="http://en.wikiquote.org/wiki/Jamie_Zawinski">&ldquo;Some people, when confronted with a problem, think &#8220;I know, I&rsquo;ll use regular expressions.&rdquo; Now they have two problems.&#8221;</a>.</p>
 
 <p>Well, I&rsquo;m here to tell you that it&rsquo;s possible to write whole Perl programs that
-actually accomplish useful work,<em> without any regular expressions at all!</em> And, if you do
+actually accomplish useful work, <strong>without any regular expressions at all</strong>! And, if you do
 that, you can actually <em>read the code!</em></p>
 
 <p>It turns out that Perl is a dandy scripting language, and while some may take issue

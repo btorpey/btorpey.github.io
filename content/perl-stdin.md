@@ -10,7 +10,7 @@ Or, as Jamie Zawinski once said
 ["Some people, when confronted with a problem, think "I know, I'll use regular expressions." Now they have two problems."](http://en.wikiquote.org/wiki/Jamie_Zawinski).
 
 Well, I'm here to tell you that it's possible to write whole Perl programs that
-actually accomplish useful work,* without any regular expressions at all!* And, if you do
+actually accomplish useful work, **without any regular expressions at all**! And, if you do
 that, you can actually *read the code!*
 
 It turns out that Perl is a dandy scripting language, and while some may take issue

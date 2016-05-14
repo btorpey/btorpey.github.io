@@ -66,7 +66,7 @@ If you prefer to generate the compile_commands.json file yourself using Bear, yo
 [^bear]: Building and installing Bear from source is relatively straightforward -- just keep in mind that you need python >= 2.7.
 
 ## Establishing a baseline
-To make it possible to compare results from different analyzers, we first need to establish a baseline using the ITC benchmarks, and for that we're going to need [this set of helper scripts](/pages/REAME.md/index.html), which can be downloaded from [this GitHub repo](https://github.com/btorpey/static).
+To make it possible to compare results from different analyzers, we first need to establish a baseline using the ITC benchmarks, and for that we're going to need [this set of helper scripts](/blog/pages/REAME.md/index.html), which can be downloaded from [this GitHub repo](https://github.com/btorpey/static).
 
     $ git clone https://github.com/btorpey/static
     
@@ -169,7 +169,7 @@ While cppcheck is available bundled with some distros, it's often an older versi
 
 If you're on an older distro (in my case, RH6) where the system compiler is not C++1x-capable, see my [earlier post](/blog/2015/01/02/building-clang/) about how to build clang (and/or gcc) to get a C++1x-capable compiler.  (Basically, it uses an older version of gcc to build a newer version, and the newer version to build clang).  
 
-It took some trial-and-error to get the cppcheck build parameters right, but the [supplied build script](/pages/build_cppcheck.sh/index.html) should get the job done[^install].
+It took some trial-and-error to get the cppcheck build parameters right, but the [supplied build script](/blog/pages/build_cppcheck.sh/index.html) should get the job done[^install].
 
     $ ./build_cppcheck.sh 2>&1 | tee build_cppcheck.out
 
@@ -201,7 +201,7 @@ Now we're ready to run cppcheck, using the same approach we used with clang:
     cppcheck2csv.pl -r ${ITCBENCH_ROOT} | 
     sort -u > cppcheck.csv
 
-Note that instead of invoking cppcheck directly, we're invoking it via the [cppcheck.sh](/pages/cppcheck.sh/index.html) helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler's pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you're trying to analyze uses `#ifdef`'s to control what code actually gets compiled (or seen by cppcheck).
+Note that instead of invoking cppcheck directly, we're invoking it via the [cppcheck.sh](/blog/pages/cppcheck.sh/index.html) helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler's pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you're trying to analyze uses `#ifdef`'s to control what code actually gets compiled (or seen by cppcheck).
 
 One of the settings in the helper script enables what cppcheck calls "inconclusive" results.  These are exactly what the name implies -- cppcheck isn't positive that the code is wrong, but it is at least suspicious.  Including these inconclusive results should tend to increase the number of false positives in theory, but in practice I haven't found false positives to be a big problem with either cppcheck or clang.  
 
@@ -256,7 +256,7 @@ Static analysis tools can add real value to the software development process by 
 
 Commercial tools can be expensive (although still cheap compared to the money they save), and open-source tools can sometimes be hard to use (or at least hard to learn how to use).
 
-The provided [helper scripts](/pages/REAME.md/index.html) ([repo here](https://github.com/btorpey/static)) should make it much easier to use these tools, and to keep track of warnings and compare the outputs of different tools by using a common format.
+The provided [helper scripts](/blog/pages/REAME.md/index.html) ([repo here](https://github.com/btorpey/static)) should make it much easier to use these tools, and to keep track of warnings and compare the outputs of different tools by using a common format.
 
 They can also be useful for before-and-after comparisions of different versions of a single codebase -- for example, as changes are being made to address issues detected by the tools.
 

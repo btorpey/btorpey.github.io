@@ -105,11 +105,11 @@
   </header>
 
 
-<div class="entry-content"><p><img class="left" src="/images/ping.png" width="320" height="240"></p>
+<div class="entry-content"><p><img class="left" src="/images/ping.png" width="320" height="240" /> </p>
 
-<p>I&rsquo;m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
-so when I&rsquo;m analyzing performance, latency, etc. I find it really helpful to be
-able to visualize what is going on on the machine.</p>
+<p>I’m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
+so when I’m analyzing performance, latency, etc. I find it really helpful to be
+able to visualize what is going on on the machine. </p>
 
 <p>As a result, I had gotten
 reasonably good at using Excel to produce charts, which sometimes helped to correlate observed
@@ -120,10 +120,9 @@ another tool that would give me the same or better functionality.</p>
 
 <!--more-->
 
-
 <p>For one thing, a little over a year ago I switched to a Mac as my main machine
 after years of using Windows. There was a certain amount of adjustment, but for
-the most part it&rsquo;s been smooth sailing. More than that, I was actually able to
+the most part it’s been smooth sailing. More than that, I was actually able to
 recapture some of the fun and excitement I remember from my first Apple (an
 Apple ][).</p>
 
@@ -133,71 +132,75 @@ scriptable so I could easily produce consistent charts for multiple test runs.</
 
 <p>I looked briefly at R, but ditched it when it used up all the 8GB in my laptop,
 plus the entire hard disk as swap, for a single dataset of 100,000 points.
-Probably my bad, but I didn&rsquo;t have the patience to figure out what I might be
+Probably my bad, but I didn’t have the patience to figure out what I might be
 doing wrong.</p>
 
-<p>At that point I turned to venerable (some would say crusty) gnuplot. It&rsquo;s a bit
+<p>At that point I turned to venerable (some would say crusty) gnuplot. It’s a bit
 long in the tooth, but I just wanted to plot latency over time, so how hard
-could that be? Well, I guess it&rsquo;s pretty easy if you already know how, but
+could that be? Well, I guess it’s pretty easy if you already know how, but
 starting from scratch is another story.</p>
 
 <p>Which brings me to my rant of the day, directed at techies in general, and to the
 (us?) Linux/Unix techies in particular.</p>
 
-<p>Short version: I don&rsquo;t want to learn gnuplot. I don&rsquo;t even want to <em>have
-learned</em> gnuplot &mdash; even if I could do that by just taking a pill. What I want
+<p>Short version: I don’t want to learn gnuplot. I don’t even want to <em>have
+learned</em> gnuplot – even if I could do that by just taking a pill. What I want
 is to be able to produce decent-looking charts <em>without</em> knowing <em>anything</em>
 about gnuplot.</p>
 
-<p>To be fair, the gnuplot docs did have some examples &mdash; more anyway than you
-would find in a typical man page, although that&rsquo;s admittedly a low bar. And
-while my google-fu is usually pretty good, I just couldn&rsquo;t find anything on the
+<p>To be fair, the gnuplot docs did have some examples – more anyway than you
+would find in a typical man page, although that’s admittedly a low bar. And
+while my google-fu is usually pretty good, I just couldn’t find anything on the
 intertubes that would work for me, so I had to learn <em>just a little</em> gnuplot.</p>
 
-<blockquote><p>When all else fails, read the instructions.</p></blockquote>
+<blockquote>
+  <p>When all else fails, read the instructions.</p>
+</blockquote>
 
 <p>It turns out that gnuplot works pretty well, and will probably work even better
 once I learn (sigh) how to use it better.</p>
 
-<p>But you don&rsquo;t have to learn diddly if you don&rsquo;t want to. <a href="https://github.com/btorpey/latency-utils.git">Here is the first</a> in
+<p>But you don’t have to learn diddly if you don’t want to. <a href="https://github.com/btorpey/latency-utils.git">Here is the first</a> in
 what will hopefully be a series of recipes that you can use with little or no
-modification.  Once you&rsquo;ve downloaded the repo, enter the following at the command prompt:</p>
+modification.  Once you’ve downloaded the repo, enter the following at the command prompt:</p>
 
 <p><code>./tsd.sh ping.csv x11</code></p>
 
 <p>Which should result in something like this:</p>
 
-<p><img class="center" src="/images/gnuplot.png"></p>
+<p><img class="center" src="/images/gnuplot.png" /> </p>
 
-<p>It&rsquo;s primitive, but that very primitiveness has its own appeal, especially for
-those of us for whom &ldquo;UI&rdquo; means bash, vi or emacs.</p>
+<p>It’s primitive, but that very primitiveness has its own appeal, especially for
+those of us for whom “UI” means bash, vi or emacs.</p>
 
 <p>A couple of points about the gnuplot command files:</p>
 
 <ul>
-<li><p>Sometimes you care about the actual time that an event took place, so you
-can correlate it with some other event; sometimes you don&rsquo;t. Accordingly, I&rsquo;ve
+  <li>
+    <p>Sometimes you care about the actual time that an event took place, so you
+can correlate it with some other event; sometimes you don’t. Accordingly, I’ve
 created two different files: one which displays actual time (ts.gp), the other
-which calculates and displays deltaT (tsd.gp).</p></li>
-<li><p>I&rsquo;ve been programming in C (and later C++) for many years, but I don&rsquo;t think
-I&rsquo;ve ever purposely used the comma operator before. Well, expressions in gnuplot
+which calculates and displays deltaT (tsd.gp).</p>
+  </li>
+  <li>
+    <p>I’ve been programming in C (and later C++) for many years, but I don’t think
+I’ve ever purposely used the comma operator before. Well, expressions in gnuplot
 follow C language rules for operators, precedence, etc. and that comma operator
-turns out to be handy &mdash; in this case it lets us
+turns out to be handy – in this case it lets us 
 update the origin in the same expression that calculates deltaT.
 (The return value of the comma
-operator is the right-hand expression).</p></li>
+operator is the right-hand expression).</p>
+  </li>
 </ul>
 
-
-<p>&mdash; (Note that the above requires something like gnuplot 4.6)</p>
+<p>– (Note that the above requires something like gnuplot 4.6)</p>
 
 <ul>
-<li>I&rsquo;ve left the default terminal in the gnuplot command files, but you can
-specify a different one on the command line.  To get a list of terminals supported
+  <li>I’ve left the default terminal in the gnuplot command files, but you can 
+specify a different one on the command line.  To get a list of terminals supported 
 in your version:
 <code>gnuplot -e "set terminal"</code>.</li>
 </ul>
-
 
 <p>Comments, suggestions, pull requests, etc. welcome.</p>
 </div>

@@ -9,8 +9,8 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="I&rsquo;m a visual thinker (I think I may have mentioned that before ),
-so when I&rsquo;m analyzing performance, latency, etc. I find it really &hellip;">
+  <meta name="description" content="I’m a visual thinker (I think I may have mentioned that before ),
+so when I’m analyzing performance, latency, etc. I find it really helpful to be &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -109,11 +109,11 @@ so when I&rsquo;m analyzing performance, latency, etc. I find it really &hellip;
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/ping.png" width="320" height="240"></p>
+  <div class="entry-content"><p><img class="left" src="/images/ping.png" width="320" height="240" /> </p>
 
-<p>I&rsquo;m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
-so when I&rsquo;m analyzing performance, latency, etc. I find it really helpful to be
-able to visualize what is going on on the machine.</p>
+<p>I’m a visual thinker (I think I may have <a href="http://btorpey.github.io/blog/2014/04/29/a-picture-is-worth-1k-words/">mentioned that before</a> ),
+so when I’m analyzing performance, latency, etc. I find it really helpful to be
+able to visualize what is going on on the machine. </p>
 
 <p>As a result, I had gotten
 reasonably good at using Excel to produce charts, which sometimes helped to correlate observed
@@ -162,26 +162,27 @@ another tool that would give me the same or better functionality.</p>
 
 
   <div class="entry-content"><p>You know those mutiple-choice tests that put you in one of four quadrants based
-on your answers to a bunch of seemingly irrelevant questions? We&rsquo;ve all taken
-them, and if you&rsquo;re like me they&rsquo;re kind of like reading your horoscope &mdash; it
-all seems so right and true when you&rsquo;re reading it, but you wonder if it would
+on your answers to a bunch of seemingly irrelevant questions? We’ve all taken
+them, and if you’re like me they’re kind of like reading your horoscope – it
+all seems so right and true when you’re reading it, but you wonder if it would
 still seem just as right and true if the horoscopes got jumbled at random?</p>
 
-<p>Well, I took one of these tests a while back that actually told me something about myself &mdash; it was the &ldquo;Learning-Style Inventory&rdquo;
-test, and what it said about me is that I&rsquo;m waaaayyy over at the end of the
+<p>Well, I took one of these tests a while back that actually told me something about myself – it was the “Learning-Style Inventory”
+test, and what it said about me is that I’m waaaayyy over at the end of the
 scale when it comes to visual thinking. That gave me an insight into the way my
-brain works that I&rsquo;ve found really helpful ever since. So, this next bit was right up my alley,
-but I&rsquo;m guessing you&rsquo;ll like it too.</p>
+brain works that I’ve found really helpful ever since. So, this next bit was right up my alley,
+but I’m guessing you’ll like it too.</p>
 
-<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240"></a></p>
+<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240" /></a></p>
 
 <p>We read a lot lately about NUMA architecture and how it presents a fundamental
-change in the way we approach writing efficient code: it&rsquo;s no longer about the
-CPU, it&rsquo;s all about RAM. We all nod and say &ldquo;Sure, I get that!&rdquo;  Well, I thought
-I got it too, but until I saw <a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html">this web page</a>,
-I really didn&rsquo;t.</p>
+change in the way we approach writing efficient code: it’s no longer about the
+CPU, it’s all about RAM. We all nod and say “Sure, I get that!”  Well, I thought
+I got it too, but until I saw <a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html">this web page</a>, 
+I really didn’t. </p>
 
 <p>See the full discussion at <a href="http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck">http://overbyte.com.au/index.php/overbyte-blog/entry/optimisation-lesson-3-the-memory-bottleneck</a>.</p>
+
 </div>
   
   
@@ -217,11 +218,11 @@ I really didn&rsquo;t.</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="http://planet.clang.org/images/DragonSmall.png"></p>
+  <div class="entry-content"><p><img class="right" src="http://planet.clang.org/images/DragonSmall.png" /> </p>
 
 <p>Valgrind has been an indispensable tool for C/C++ programmers for a long
-time, and I&rsquo;ve used it quite happily &mdash; it&rsquo;s a tremendous tool for doing dynamic
-analysis of program behavior at run time. valgrind<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> can detect reads of
+time, and I’ve used it quite happily – it’s a tremendous tool for doing dynamic
+analysis of program behavior at run time. valgrind<sup id="fnref:3"><a href="#fn:3" rel="footnote">1</a></sup> can detect reads of
 uninitialized memory, heap buffer overruns, memory leaks, and other errors that
 can be difficult or impossible to find by eyeballing the code, or by static
 analysis tools.  But that comes with a price, which in some cases can be quite steep, and some new
@@ -266,16 +267,16 @@ tools promise to provide some or all of the functionality valgrind provides with
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/dali.png"></p>
+  <div class="entry-content"><p><img class="left" src="/images/dali.png" /></p>
 
 <p>For measuring latency in modern systems, we need to be able to measure intervals
 in microseconds at least, and preferably in nanoseconds or better. The good news
 is that with relatively modern hardware and software, it is possible to
 accurately measure time intervals as small as (some smallish number of)
-nanoseconds.</p>
+nanoseconds. </p>
 
-<p>But, it&rsquo;s important to understand what you&rsquo;re measuring and what
-the different edge cases might be to ensure that your results are accurate.</p>
+<p>But, it’s important to understand what you’re measuring and what
+the different edge cases might be to ensure that your results are accurate.          </p>
 
 </div>
   
@@ -316,12 +317,12 @@ the different edge cases might be to ensure that your results are accurate.</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="/images/talkingHeads1.jpg" width="244" height="176"></p>
+  <div class="entry-content"><p><img class="right" src="/images/talkingHeads1.jpg" width="244" height="176" /> </p>
 
-<p>In addition to being a great line from David Byrne and Talking Heads (from &ldquo;Life
-During Wartime&rdquo;), this is also a question I often ask myself when
-looking at log files. Today&rsquo;s tip is worth the price of the whole blog (i.e.,
-free), but I predict that you&rsquo;ll be glad you know it.</p>
+<p>In addition to being a great line from David Byrne and Talking Heads (from “Life
+During Wartime”), this is also a question I often ask myself when
+looking at log files. Today’s tip is worth the price of the whole blog (i.e.,
+free), but I predict that you’ll be glad you know it.</p>
 
 </div>
   
@@ -362,14 +363,14 @@ free), but I predict that you&rsquo;ll be glad you know it.</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/caddyshack-11.jpg" width="320" height="240"></p>
+  <div class="entry-content"><p><img class="left" src="/images/caddyshack-11.jpg" width="320" height="240" /></p>
 
 <p>Singleton’s are kind of like Rodney Dangerfield – they don’t get no respect. And
 yet, there are scenarios where a singleton is just the ticket – for instance,
 when a relatively expensive and/or long-lived resource needs to be shared among
 a number of independent threads.</p>
 
-<p>shared_ptr&rsquo;s can help make this easier and less error-prone, but even so there are some
+<p>shared_ptr’s can help make this easier and less error-prone, but even so there are some 
 edge cases that need to be considered.</p>
 
 </div>
@@ -453,7 +454,7 @@ you see something like this…</p>
   </header>
 
 
-  <div class="entry-content"><p>Here&rsquo;s a handy tip for those who (like me) spend a fair amount of time staring
+  <div class="entry-content"><p>Here’s a handy tip for those who (like me) spend a fair amount of time staring
 at FIX logs.</p>
 
 </div>
@@ -495,7 +496,7 @@ at FIX logs.</p>
   </header>
 
 
-  <div class="entry-content"><p>I&rsquo;ve been a happy user of <a href="http://scootersoftware.com">Beyond Compare</a> on Windows for many years, so one of my big concerns when switching to Mac a while ago was, what was I going to use in its place?</p>
+  <div class="entry-content"><p>I’ve been a happy user of <a href="http://scootersoftware.com">Beyond Compare</a> on Windows for many years, so one of my big concerns when switching to Mac a while ago was, what was I going to use in its place?</p>
 
 </div>
   

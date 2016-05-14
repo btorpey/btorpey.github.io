@@ -105,22 +105,21 @@
   </header>
 
 
-<div class="entry-content"><p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"></p>
+<div class="entry-content"><p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240" /> </p>
 
-<p>From <em>Robinson Crusoe</em> to <em>Gilligan&rsquo;s Island</em> to <em>Lost</em>, tales of being
+<p>From <em>Robinson Crusoe</em> to <em>Gilligan’s Island</em> to <em>Lost</em>, tales of being
 stranded on a desert island seem to resonate with people in a special way. Some
 of that likely has to do with the exotic locales, and the practical challenges
 of getting water, food and shelter.</p>
 
-<p>But an even more basic part is the unanswered question: &ldquo;Where am I?&rdquo; that makes
-things so &mdash; well, <em>mysterious</em>.</p>
+<p>But an even more basic part is the unanswered question: “Where am I?” that makes
+things so – well, <em>mysterious</em>.</p>
 
 <p>Shell scripting can be pretty mysterious too at times, but in this installment
-we&rsquo;ll learn how to answer that basic question of &ldquo;Where am I?&rdquo; to make shell
+we’ll learn how to answer that basic question of “Where am I?” to make shell
 scripting a little less mysterious.</p>
 
 <!--more-->
-
 
 <p>One of the tenets of the Unix way is brevity, and one consequence of that is
 that well-behaved programs should be able to find whatever other resources they
@@ -131,12 +130,12 @@ for system programs), or where they can be found relative to the location of the
 program itself.</p>
 
 <p>Another attribute of a well-behaved Unix program is that it
-should be able to run from any location, whether it&rsquo;s invoked with a full path,
+should be able to run from any location, whether it’s invoked with a full path,
 or found via the PATH variable.</p>
 
 <p>So, how do we reconcile those two requirements? And specifically, how do we do
-that in shell scripts? Since &mdash; regardless of what your &ldquo;main&rdquo; language is, if
-you&rsquo;re programming in Unix/Linux, you&rsquo;re probably also writing a boatload of
+that in shell scripts? Since – regardless of what your “main” language is, if
+you’re programming in Unix/Linux, you’re probably also writing a boatload of
 shell scripts too.</p>
 
 <p>It turns out that, at least in bash, there is a
@@ -146,41 +145,40 @@ which goes something like this:</p>
 <pre><code>SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) &amp;&amp; /bin/pwd) 
 </code></pre>
 
-<p>Let&rsquo;s follow this through and see how it works:</p>
+<p>Let’s follow this through and see how it works:</p>
 
 <ul>
-<li><p>The <code>$( ... )</code> construct invokes a sub-shell. This is handy since it
+  <li>
+    <p>The <code>$( ... )</code> construct invokes a sub-shell. This is handy since it
 allows us to change the environment of the sub-shell (e.g., current directory)
-without affecting the current environment.</p></li>
-<li><p><code>$BASH_SOURCE</code> is a builtin variable that gives us the path to the shell
+without affecting the current environment.</p>
+  </li>
+  <li>
+    <p><code>$BASH_SOURCE</code> is a builtin variable that gives us the path to the shell
 script itself. For instance, if we invoke a script with <code>./scriptname.sh</code>,
-then that&rsquo;s what will end up in <code>${BASH_SOURCE}</code>.</p></li>
-<li><p>To get the full path then we extract just the path part with <code>dirname</code>, again
-in a sub-shell.</p></li>
-<li><p>We then <code>cd</code> into that directory, and if successful get the full pathname
-with <code>/bin/pwd</code>.</p>
-
-<ul>
-<li>Note that we use <code>/bin/pwd</code> to get the path. This version resolves any
+then that’s what will end up in <code>${BASH_SOURCE}</code>.</p>
+  </li>
+  <li>
+    <p>To get the full path then we extract just the path part with <code>dirname</code>, again
+in a sub-shell.</p>
+  </li>
+  <li>We then <code>cd</code> into that directory, and if successful get the full pathname
+with <code>/bin/pwd</code>.
+    <ul>
+      <li>Note that we use <code>/bin/pwd</code> to get the path. This version resolves any
 symbolic links to return the actual physical path. There is also a <code>pwd</code>
-built-in to bash, but that one does not expand symbolic links by default.</li>
+built-in to bash, but that one does not expand symbolic links by default.
+<br /></li>
+    </ul>
+  </li>
+  <li>Finally, the result is assigned to SCRIPT_DIR.</li>
 </ul>
-</li>
-</ul>
-
-
-<br>
-
-
-<ul>
-<li>Finally, the result is assigned to SCRIPT_DIR.</li>
-</ul>
-
 
 <p>We now have the full path of the script file itself, and can use that to locate
 any other resources needed by the script. For a real-world example, you can
 check out the <a href="https://github.com/btorpey/latency-utils.git">these scripts</a> from
  <a href="/blog/2014/05/16/visualizing-latency/">my earlier post on visualizing latency</a>.</p>
+
 </div>
 
 

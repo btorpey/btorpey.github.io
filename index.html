@@ -9,8 +9,7 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="Will be replaced with the ToC, excluding the &ldquo;Contents&rdquo; header
-{:toc} In my day job, one of my main focuses is software reliability and &hellip;">
+  <meta name="description" content="Testing Static Analysis Tools Can I haz teh codez? Creating a compilation database Establishing a baseline Using clang’s analysis tools Analyzing &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -109,17 +108,36 @@
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/nye-static.jpg" width="240" height="180"></p>
+  <div class="entry-content"><p><img class="left" src="/images/nye-static.jpg" width="240" height="180" /></p>
 
-<ul>
-<li>Will be replaced with the ToC, excluding the &ldquo;Contents&rdquo; header
-{:toc}</li>
+<ul id="markdown-toc">
+  <li><a href="#testing-static-analysis-tools">Testing Static Analysis Tools</a></li>
+  <li><a href="#can-i-haz-teh-codez">Can I haz teh codez?</a></li>
+  <li><a href="#creating-a-compilation-database">Creating a compilation database</a></li>
+  <li><a href="#establishing-a-baseline">Establishing a baseline</a></li>
+  <li><a href="#using-clangs-analysis-tools">Using clang’s analysis tools</a>    <ul>
+      <li><a href="#analyzing-the-results">Analyzing the results</a></li>
+    </ul>
+  </li>
+  <li><a href="#running-clang-analysis-again">Running clang analysis (again)</a></li>
+  <li><a href="#using-cppcheck">Using cppcheck</a>    <ul>
+      <li><a href="#installing-cppchceck">Installing cppchceck</a>        <ul>
+          <li><a href="#verifying-the-installation">Verifying the installation</a></li>
+        </ul>
+      </li>
+      <li><a href="#running-cppcheck">Running cppcheck</a></li>
+      <li><a href="#analyzing-the-results-1">Analyzing the results</a></li>
+    </ul>
+  </li>
+  <li><a href="#comparing-clang-and-cppcheck">Comparing clang and cppcheck</a></li>
+  <li><a href="#conclusions">Conclusions</a></li>
+  <li><a href="#acknowledgements">Acknowledgements</a></li>
+  <li><a href="#references">References</a></li>
 </ul>
-
 
 <p>In my day job, one of my main focuses is software reliability and correctness, so it makes sense that I would be a big fan of static analysis.</p>
 
-<p>I&rsquo;ve written previously about the <a href="/blog/2015/04/27/static-analysis-with-clang/">static analysis provided by clang</a>.  Today, I want to take a bit of a &ldquo;deep-dive&rdquo; into the whole subject by putting both clang and <a href="http://cppcheck.sourceforge.net/">cppcheck</a> through their paces, using them to analyze a benchmark suite designed to exercise static analysis tools.  In the course of doing that, I&rsquo;ll also provide some helper scripts that make working with the tools easier.</p>
+<p>I’ve written previously about the <a href="/blog/2015/04/27/static-analysis-with-clang/">static analysis provided by clang</a>.  Today, I want to take a bit of a “deep-dive” into the whole subject by putting both clang and <a href="http://cppcheck.sourceforge.net/">cppcheck</a> through their paces, using them to analyze a benchmark suite designed to exercise static analysis tools.  In the course of doing that, I’ll also provide some helper scripts that make working with the tools easier.  </p>
 
 </div>
   
@@ -160,12 +178,12 @@
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="/images/multimonitors.jpg" width="370" height="245"></p>
+  <div class="entry-content"><p><img class="right" src="/images/multimonitors.jpg" width="370" height="245" /></p>
 
-<p>Nowadays it&rsquo;s pretty common for applications to be distributed across multiple
+<p>Nowadays it’s pretty common for applications to be distributed across multiple
 machines, which can be good for scalability and resilience.</p>
 
-<p>But it does mean that we have more machines to monitor &mdash; sometimes a LOT more!</p>
+<p>But it does mean that we have more machines to monitor – sometimes a LOT more!</p>
 
 <p>Read on for a handy tip that will let you do a lot of those tasks from any old
 session (and maybe lose some of those screens)!</p>
@@ -209,13 +227,13 @@ session (and maybe lose some of those screens)!</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/coil3.jpg" width="195" height="281"></p>
+  <div class="entry-content"><p><img class="left" src="/images/coil3.jpg" width="195" height="281" /></p>
 
-<p>I keep singing the praises of clang, and with good reason &mdash; the <a href="http://clang.llvm.org/">clang project</a> has been advancing the state of C/C++ compiler technology on Linux and OS X for quite a while now.</p>
+<p>I keep singing the praises of clang, and with good reason – the <a href="http://clang.llvm.org/">clang project</a> has been advancing the state of C/C++ compiler technology on Linux and OS X for quite a while now.  </p>
 
-<p>The modular design of the compiler has also enabled the creation of a set of ancillary tools, including run-time &ldquo;sanitizers&rdquo; (which I <a href="http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer/">wrote about earlier</a>), as well as pretty-printers, and a tool to automatically upgrade code to C++11.</p>
+<p>The modular design of the compiler has also enabled the creation of a set of ancillary tools, including run-time “sanitizers” (which I <a href="http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer/">wrote about earlier</a>), as well as pretty-printers, and a tool to automatically upgrade code to C++11. </p>
 
-<p>Today I want to talk about clang&rsquo;s static analysis engine, which can do a deep-dive on your code and find problems that are hard for a human to detect, but that are amenable to a brute-force approach that models the run-time behavior of a piece of code, but at compile-time.</p>
+<p>Today I want to talk about clang’s static analysis engine, which can do a deep-dive on your code and find problems that are hard for a human to detect, but that are amenable to a brute-force approach that models the run-time behavior of a piece of code, but at compile-time.</p>
 
 </div>
   
@@ -256,15 +274,15 @@ session (and maybe lose some of those screens)!</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="/images/TheShadowComic01.jpg" width="222" height="333"></p>
+  <div class="entry-content"><p><img class="right" src="/images/TheShadowComic01.jpg" width="222" height="333" /></p>
 
-<p>Pity the poor Shadow!  Even with the recent glut of super-heroes in movies, games and TV, the Shadow is nowhere to be seen.</p>
+<p>Pity the poor Shadow!  Even with the recent glut of super-heroes in movies, games and TV, the Shadow is nowhere to be seen.  </p>
 
-<p>But I guess that&rsquo;s the whole point of being the Shadow.</p>
+<p>But I guess that’s the whole point of being the Shadow.  </p>
 
-<p>According to <a href="http://en.wikipedia.org/wiki/The_Shadow">this</a>, the Shadow had &ldquo;the mysterious power to cloud men&rsquo;s minds, so they could not see him&rdquo;.  Hmmm, that sounds like more than a few bugs I&rsquo;ve known.</p>
+<p>According to <a href="http://en.wikipedia.org/wiki/The_Shadow">this</a>, the Shadow had “the mysterious power to cloud men’s minds, so they could not see him”.  Hmmm, that sounds like more than a few bugs I’ve known.</p>
 
-<p>Read on to learn how to get your compiler to help you find and eliminate these &ldquo;shadow bugs&rdquo; from your code.</p>
+<p>Read on to learn how to get your compiler to help you find and eliminate these “shadow bugs” from your code.</p>
 
 </div>
   
@@ -305,12 +323,11 @@ session (and maybe lose some of those screens)!</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/timallen.jpg" width="230" height="240" title="" ></p>
+  <div class="entry-content"><p><img class="left" src="/images/timallen.jpg" width="230" height="240" title="" /></p>
 
-<p>clang is a great compiler, with a boatload of extremely helpful tools, including static analysis, run-time memory and data race analysis, and many others.  And it&rsquo;s apparently pretty easy to get those benefits on one of the supported platforms &mdash; basically Ubuntu and Mac (via XCode).</p>
+<p>clang is a great compiler, with a boatload of extremely helpful tools, including static analysis, run-time memory and data race analysis, and many others.  And it’s apparently pretty easy to get those benefits on one of the supported platforms – basically Ubuntu and Mac (via XCode).</p>
 
-<p>That&rsquo;s fine, but if you get paid to write software, there&rsquo;s a good chance it&rsquo;s going to be deployed on RedHat, or one of its variants.  And, getting clang working on RedHat is a huge pain in the neck.  The good news is that I did the dirty work for you (ouch!), so you don&rsquo;t have to.</p>
-
+<p>That’s fine, but if you get paid to write software, there’s a good chance it’s going to be deployed on RedHat, or one of its variants.  And, getting clang working on RedHat is a huge pain in the neck.  The good news is that I did the dirty work for you (ouch!), so you don’t have to.
 </div>
   
   
@@ -350,7 +367,7 @@ session (and maybe lose some of those screens)!</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="/images/m20.jpg" width="385" height="233"></p>
+  <div class="entry-content"><p><img class="right" src="/images/m20.jpg" width="385" height="233" /> </p>
 
 <p>I keep reading talk of the sort “I don’t know why anyone bothers
 with C++ — real programmers use C.  C++ is for wussies”, or words to that
@@ -398,16 +415,16 @@ I have to say that I think the C fanboys are just nuts.</p>
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/nun-with-ruler.jpg" width="240" height="160"></p>
+  <div class="entry-content"><p><img class="left" src="/images/nun-with-ruler.jpg" width="240" height="160" /> </p>
 
-<p>When I was a kid I went to Catholic school, and back in those days
+<p>When I was a kid I went to Catholic school, and back in those days 
 the nuns would indeed rap your knuckles with a ruler if you
-misbehaved. That doesn&rsquo;t happen so much any more, but when I see someone
-making use of the <a href="http://c2.com/cgi/wiki?CopyAndPasteProgramming">copy-paste anti-pattern</a>,
-I&rsquo;m tempted to reach for a ruler myself.
-(I know, probably not a good career move ;&ndash;)</p>
+misbehaved. That doesn’t happen so much any more, but when I see someone 
+making use of the <a href="http://c2.com/cgi/wiki?CopyAndPasteProgramming">copy-paste anti-pattern</a>, 
+I’m tempted to reach for a ruler myself. 
+(I know, probably not a good career move ;-)</p>
 
-<p>Short of rapping someone&rsquo;s knuckles with a ruler, though, how do you show some poor sinner the error of his ways?</p>
+<p>Short of rapping someone’s knuckles with a ruler, though, how do you show some poor sinner the error of his ways?</p>
 
 </div>
   
@@ -448,13 +465,13 @@ I&rsquo;m tempted to reach for a ruler myself.
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="/images/the-office-boring-meeting1.jpg" width="262" height="211"></p>
+  <div class="entry-content"><p><img class="right" src="/images/the-office-boring-meeting1.jpg" width="262" height="211" /> </p>
 
-<p>One of the banes of corporate life is the status meeting.  It would be nice to get rid of them, but then it would be nice to
-get rid of all the lawyers too<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>, and I don&rsquo;t see that happening either.</p>
+<p>One of the banes of corporate life is the status meeting.  It would be nice to get rid of them, but then it would be nice to 
+get rid of all the lawyers too<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>, and I don’t see that happening either.  </p>
 
 <p>So, how do we make them better?
-Well, for starters we could make them shorter.  Here&rsquo;s a way to do that.</p>
+Well, for starters we could make them shorter.  Here’s a way to do that.  </p>
 
 </div>
   
@@ -495,23 +512,23 @@ Well, for starters we could make them shorter.  Here&rsquo;s a way to do that.</
   </header>
 
 
-  <div class="entry-content"><p><img class="left" src="/images/phl.pm.org-camel.png" width="320" height="240"></p>
+  <div class="entry-content"><p><img class="left" src="/images/phl.pm.org-camel.png" width="320" height="240" /> </p>
 
-<p>No, not that &mdash; it&rsquo;s Perl day.  (Well, actually it&rsquo;s just Wednesday, but you get the idea).</p>
+<p>No, not that – it’s Perl day.  (Well, actually it’s just Wednesday, but you get the idea).</p>
 
 <p>Sometimes it seems that everybody likes to hate on Perl, but I think their
-animus is misdirected. It&rsquo;s not Perl that&rsquo;s the problem, it&rsquo;s those ^&#92;$(.#!)?$
+animus is misdirected. It’s not Perl that’s the problem, it’s those \^\$(.#!)?$
 regular expressions.</p>
 
-<p>Or, as Jamie Zawinski once said
-<a href="http://en.wikiquote.org/wiki/Jamie_Zawinski">&ldquo;Some people, when confronted with a problem, think &#8220;I know, I&rsquo;ll use regular expressions.&rdquo; Now they have two problems.&#8221;</a>.</p>
+<p>Or, as Jamie Zawinski once said 
+<a href="http://en.wikiquote.org/wiki/Jamie_Zawinski">“Some people, when confronted with a problem, think “I know, I’ll use regular expressions.” Now they have two problems.”</a>.</p>
 
-<p>Well, I&rsquo;m here to tell you that it&rsquo;s possible to write whole Perl programs that
+<p>Well, I’m here to tell you that it’s possible to write whole Perl programs that
 actually accomplish useful work, <strong>without any regular expressions at all</strong>! And, if you do
 that, you can actually <em>read the code!</em></p>
 
 <p>It turns out that Perl is a dandy scripting language, and while some may take issue
-with its flexibility (&ldquo;There&rsquo;s more than one way to do it&rdquo;), others (including me) find that flexibility very useful.</p>
+with its flexibility (“There’s more than one way to do it”), others (including me) find that flexibility very useful.</p>
 
 </div>
   
@@ -552,18 +569,18 @@ with its flexibility (&ldquo;There&rsquo;s more than one way to do it&rdquo;), o
   </header>
 
 
-  <div class="entry-content"><p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"></p>
+  <div class="entry-content"><p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240" /> </p>
 
-<p>From <em>Robinson Crusoe</em> to <em>Gilligan&rsquo;s Island</em> to <em>Lost</em>, tales of being
+<p>From <em>Robinson Crusoe</em> to <em>Gilligan’s Island</em> to <em>Lost</em>, tales of being
 stranded on a desert island seem to resonate with people in a special way. Some
 of that likely has to do with the exotic locales, and the practical challenges
 of getting water, food and shelter.</p>
 
-<p>But an even more basic part is the unanswered question: &ldquo;Where am I?&rdquo; that makes
-things so &mdash; well, <em>mysterious</em>.</p>
+<p>But an even more basic part is the unanswered question: “Where am I?” that makes
+things so – well, <em>mysterious</em>.</p>
 
 <p>Shell scripting can be pretty mysterious too at times, but in this installment
-we&rsquo;ll learn how to answer that basic question of &ldquo;Where am I?&rdquo; to make shell
+we’ll learn how to answer that basic question of “Where am I?” to make shell
 scripting a little less mysterious.</p>
 
 </div>

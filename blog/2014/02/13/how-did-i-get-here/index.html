@@ -105,17 +105,16 @@
   </header>
 
 
-<div class="entry-content"><p><img class="right" src="/images/talkingHeads1.jpg" width="244" height="176"></p>
+<div class="entry-content"><p><img class="right" src="/images/talkingHeads1.jpg" width="244" height="176" /> </p>
 
-<p>In addition to being a great line from David Byrne and Talking Heads (from &ldquo;Life
-During Wartime&rdquo;), this is also a question I often ask myself when
-looking at log files. Today&rsquo;s tip is worth the price of the whole blog (i.e.,
-free), but I predict that you&rsquo;ll be glad you know it.</p>
+<p>In addition to being a great line from David Byrne and Talking Heads (from “Life
+During Wartime”), this is also a question I often ask myself when
+looking at log files. Today’s tip is worth the price of the whole blog (i.e.,
+free), but I predict that you’ll be glad you know it.</p>
 
 <!--more-->
 
-
-<p>It&rsquo;s pretty common to pipe the output of a command, or string of commands, to a
+<p>It’s pretty common to pipe the output of a command, or string of commands, to a
 file to have a record of what happened when executing the command, something
 like this:</p>
 
@@ -126,34 +125,42 @@ big_gnarly_command_line_with_options itself?</p>
 
 <p>Try this instead:</p>
 
-<p><code>bash -x -c "big_gnarly_command_line_with_options" 2&gt;&amp;1 | tee logfile.out</code></p>
+<p><code> bash -x -c "big_gnarly_command_line_with_options" 2&gt;&amp;1 | tee logfile.out</code></p>
 
 <p>Now, your output file will look like this:</p>
 
-<p><code>+ big_gnarly_command_line_with_options</code><br>
+<p><code>+ big_gnarly_command_line_with_options</code><br />
 <code>... output of big_gnarly_command_line_with_options ...</code></p>
 
 <p>If your gnarly command is actually several gnarly commands, enclose the whole
 gnarly list in parentheses and separate with semicolons (or &amp;&amp;), like so:</p>
 
-<p><code>bash -x -c "(big_gnarly_command_line_with_options_1;
+<p><code> bash -x -c "(big_gnarly_command_line_with_options_1;
 big_gnarly_command_line_with_options_2)" 2&gt;&amp;1 | tee logfile.out</code></p>
 
 <p>Normal quoting rules apply:</p>
 
 <ul>
-<li><p>If you enclose the command(s) in double-quotes (&ldquo;), variable substitution
-will be done on the command line</p></li>
-<li><p>If you need to include a double-quote within double-quotes, you need to
-escape it (with the backslash (\) character)</p></li>
-<li><p>If you enclose the command line(s) in single quotes (&lsquo;), no variable
-substitution is done</p></li>
-<li><p>There is no way to include a single-quote within single-quotes, but there is
-a trick that gives a similar effect, that you can read about here (<a href="http://stackoverflow.com/a/1250279/203044">http://stackoverflow.com/a/1250279/203044</a>).</p></li>
+  <li>
+    <p>If you enclose the command(s) in double-quotes (“), variable substitution
+will be done on the command line</p>
+  </li>
+  <li>
+    <p>If you need to include a double-quote within double-quotes, you need to
+escape it (with the backslash (\) character)</p>
+  </li>
+  <li>
+    <p>If you enclose the command line(s) in single quotes (‘), no variable
+substitution is done</p>
+  </li>
+  <li>
+    <p>There is no way to include a single-quote within single-quotes, but there is
+a trick that gives a similar effect, that you can read about here (<a href="http://stackoverflow.com/a/1250279/203044">http://stackoverflow.com/a/1250279/203044</a>).</p>
+  </li>
 </ul>
 
+<p>Now you’ll never need to ask yourself “How did I get here”?</p>
 
-<p>Now you&rsquo;ll never need to ask yourself &ldquo;How did I get here&rdquo;?</p>
 </div>
 
 

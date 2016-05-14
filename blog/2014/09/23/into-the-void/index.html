@@ -105,7 +105,7 @@
   </header>
 
 
-<div class="entry-content"><p><img class="right" src="/images/m20.jpg" width="385" height="233"></p>
+<div class="entry-content"><p><img class="right" src="/images/m20.jpg" width="385" height="233" /> </p>
 
 <p>I keep reading talk of the sort “I don’t know why anyone bothers
 with C++ — real programmers use C.  C++ is for wussies”, or words to that
@@ -116,8 +116,7 @@ I have to say that I think the C fanboys are just nuts.</p>
 
 <!--more-->
 
-
-<p>The project I’m referring to involved packaging up NYSE’s (now SR Labs&#8217;) “Mama” middleware so
+<p>The project I’m referring to involved packaging up NYSE’s (now SR Labs’) “Mama” middleware so
 it could be released as <a href="http://www.openmama.org/">open source</a>, as well as implementing a new transport
 adapter for OpenMama using the open-source <a href="http://avis.sourceforge.net/why_avis.html">Avis</a> transport<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>.</p>
 
@@ -137,11 +136,11 @@ the underlying objects represented by the handles.</p>
 
 <p>This is a very popular idiom, and with good reason — hiding the inner details of
 the implementation insulates applications from changes in the implementation.
-It’s called <a href="http://en.wikipedia.org/wiki/Bridge_pattern">“Bridge”</a> by the GOF, and the more
+It’s called <a href="http://en.wikipedia.org/wiki/Bridge_pattern">“Bridge”</a> by the GOF, and the more 
 colorful <a href="http://www.gotw.ca/gotw/024.htm">“pImpl”</a> by Herb
 Sutter.</p>
 
-<p>Of course, in C the typical way to accomplish this is with
+<p>Of course, in C the typical way to accomplish this is with 
 <a href="http://stackoverflow.com/questions/1043034/what-does-void-mean-in-c-c-and-c">void</a>
  pointers, so the
 implementation spends a lot of time casting back and forth between <code>void*</code>’s and
@@ -177,14 +176,14 @@ and counter-intuitive?  Absolutely.</p>
 
 <p>But, at least for me, if I never see another <code>void*</code> as long as I live, that won’t
 be too long for me.</p>
-<div class="footnotes">
-<hr/>
-<ol>
-<li id="fn:1">
-<p>Don&rsquo;t ask.  Let&rsquo;s just say it wasn&rsquo;t my decision.  If you want to check out OpenMama, I would suggest using <a href="http://qpid.apache.org/proton/">Qpid/AMQP</a> instead.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
-</ol>
-</div>
 
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>Don’t ask.  Let’s just say it wasn’t my decision.  If you want to check out OpenMama, I would suggest using <a href="http://qpid.apache.org/proton/">Qpid/AMQP</a> instead.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
 </div>
 
 

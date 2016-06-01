@@ -4,7 +4,7 @@
   <title><![CDATA[Category: c++ | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/c-plus-plus/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-05-15T11:51:41-04:00</updated>
+  <updated>2016-05-31T20:26:31-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -47,8 +47,8 @@ The ITC benchmarks attempt to resolve our dilemma by providing both a set of cod
 
 To get started, download the code from [its GitHub repository](https://github.com/regehr/itc-benchmarks), and set the `ITCBENCH_ROOT` environment variable (which will come in handy later):
 
-    git clone git clone https://github.com/regehr/itc-benchmarks
-    export ITCBENCH_ROOT=$(pwd)/itc-benchmarks
+    $ git clone https://github.com/regehr/itc-benchmarks
+    $ export ITCBENCH_ROOT=$(pwd)/itc-benchmarks
 
 ## Can I haz teh codez?
 The remainder of this article goes step-by-step through the process of creating a compilation database from the ITC benchmark code, running clang's static analysis tools against that compilation database, building and installing cppcheck and running it against the compilation database, and analyzing the results.
@@ -76,7 +76,7 @@ Sadly, the ITC benchmark suite is stuck in the past using [autotools](https://tw
 
 So, in the interest of immediate gratification, I've included the compile\_commands.json file [here](/downloads/code/static/samples/compile_commands.json) -- simply save it to the directory where you've cloned the ITC code.  (The compile_commands.json file is also contained in the samples directory of the [repo for this article](https://github.com/btorpey/static)).
 
-If you prefer to generate the compile_commands.json file yourself using Bear, you can so like this:
+If you prefer to generate the compile_commands.json file yourself using Bear, you can do so like this:
 
     $ cd ${ITCBENCH_ROOT}  
     $ ./bootstrap
@@ -221,7 +221,9 @@ Now we're ready to run cppcheck, using the same approach we used with clang:
     cppcheck2csv.pl -r ${ITCBENCH_ROOT} | 
     sort -u > cppcheck.csv
 
-Note that instead of invoking cppcheck directly, we're invoking it via the [cppcheck.sh](/pages/cppcheck.sh/index.html) helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler's pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you're trying to analyze uses `#ifdef`'s to control what code actually gets compiled (or seen by cppcheck).
+Note that instead of invoking cppcheck directly, we're invoking it via the [cppcheck.sh](/pages/cppcheck.sh/index.html) helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler's pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you're trying to analyze uses `#ifdef`'s to control what code actually gets compiled (or seen by cppcheck)[^nosys].
+
+[^nosys]: Note that cppcheck does not particularly like it when you include system include directories using `-I`.  Accordingly, we don't pass the `-s` switch to  cc_driver.pl when running cppcheck.
 
 One of the settings in the helper script enables what cppcheck calls "inconclusive" results.  These are exactly what the name implies -- cppcheck isn't positive that the code is wrong, but it is at least suspicious.  Including these inconclusive results should tend to increase the number of false positives in theory, but in practice I haven't found false positives to be a big problem with either cppcheck or clang.  
 
@@ -265,7 +267,7 @@ There's a certain amount of overlap between clang and cppcheck, but there are al
 
 <img class="center" src="/images/clangvscppcheck.png"> 
 
-cppcheck can generate more warnings, and some of them are more stylistic issues, but it does detect certain classes of problems, like dead code and arithmetic over/underflow that clang doesn't.
+cppcheck can generate more warnings, and some of them are more stylistic issues, but it does detect certain classes of problems, like dead code and arithmetic over/underflow, that clang doesn't.
 
 As I mentioned earlier, I haven't found false positives to be a major problem with either clang or cppcheck.
 
@@ -285,6 +287,10 @@ In addition to the people, projects and organizations mentioned earlier, the peo
 
 <https://samate.nist.gov/index.php/SAMATE_Publications.html>  
 <https://samate.nist.gov/SARD/>  
+
+If you've read any of my other posts, you may have noticed that the contents sidebar at the beginning of the article is a new thing.  Especially for longer-format articles, that TOC would seem to be very helpful.  Many thanks to [Robert Riemann](http://blog.riemann.cc/2013/04/10/table-of-contents-in-octopress/) for taking the trouble to explain how to do it.
+
+I've been using the very nice [MacDown](http://macdown.uranusjr.com/) editor to create these posts -- thanks, Tzu-Ping!
 
 # References
 Some helpful references that I ran across while researching this article:

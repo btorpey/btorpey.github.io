@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-05-15T11:51:41-04:00</updated>
+  <updated>2016-05-31T20:26:31-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -67,8 +67,8 @@
 
 <p>To get started, download the code from <a href="https://github.com/regehr/itc-benchmarks">its GitHub repository</a>, and set the <code>ITCBENCH_ROOT</code> environment variable (which will come in handy later):</p>
 
-<pre><code>git clone git clone https://github.com/regehr/itc-benchmarks
-export ITCBENCH_ROOT=$(pwd)/itc-benchmarks
+<pre><code>$ git clone https://github.com/regehr/itc-benchmarks
+$ export ITCBENCH_ROOT=$(pwd)/itc-benchmarks
 </code></pre>
 
 <h2 id="can-i-haz-teh-codez">Can I haz teh codez?</h2>
@@ -100,7 +100,7 @@ export ITCBENCH_ROOT=$(pwd)/itc-benchmarks
 
 <p>So, in the interest of immediate gratification, I’ve included the compile_commands.json file <a href="http://btorpey.github.io/downloads/code/static/samples/compile_commands.json">here</a> – simply save it to the directory where you’ve cloned the ITC code.  (The compile_commands.json file is also contained in the samples directory of the <a href="https://github.com/btorpey/static">repo for this article</a>).</p>
 
-<p>If you prefer to generate the compile_commands.json file yourself using Bear, you can so like this:</p>
+<p>If you prefer to generate the compile_commands.json file yourself using Bear, you can do so like this:</p>
 
 <pre><code>$ cd ${ITCBENCH_ROOT}  
 $ ./bootstrap
@@ -252,7 +252,7 @@ cppcheck2csv.pl -r ${ITCBENCH_ROOT} |
 sort -u &gt; cppcheck.csv
 </code></pre>
 
-<p>Note that instead of invoking cppcheck directly, we’re invoking it via the <a href="http://btorpey.github.io/pages/cppcheck.sh/index.html">cppcheck.sh</a> helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler’s pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you’re trying to analyze uses <code>#ifdef</code>’s to control what code actually gets compiled (or seen by cppcheck).</p>
+<p>Note that instead of invoking cppcheck directly, we’re invoking it via the <a href="http://btorpey.github.io/pages/cppcheck.sh/index.html">cppcheck.sh</a> helper script, which supplies needed parameters to cppcheck.  It also creates an include file with the compiler’s pre-defined macros, so those definitions will be visible to cppcheck.  This turns out to be particularly important with cppcheck, especially if the code you’re trying to analyze uses <code>#ifdef</code>’s to control what code actually gets compiled (or seen by cppcheck)<sup id="fnref:nosys"><a href="#fn:nosys" rel="footnote">7</a></sup>.</p>
 
 <p>One of the settings in the helper script enables what cppcheck calls “inconclusive” results.  These are exactly what the name implies – cppcheck isn’t positive that the code is wrong, but it is at least suspicious.  Including these inconclusive results should tend to increase the number of false positives in theory, but in practice I haven’t found false positives to be a big problem with either cppcheck or clang.  </p>
 
@@ -296,7 +296,7 @@ Other checks
 
 <p><img class="center" src="http://btorpey.github.io/images/clangvscppcheck.png" /> </p>
 
-<p>cppcheck can generate more warnings, and some of them are more stylistic issues, but it does detect certain classes of problems, like dead code and arithmetic over/underflow that clang doesn’t.</p>
+<p>cppcheck can generate more warnings, and some of them are more stylistic issues, but it does detect certain classes of problems, like dead code and arithmetic over/underflow, that clang doesn’t.</p>
 
 <p>As I mentioned earlier, I haven’t found false positives to be a major problem with either clang or cppcheck.</p>
 
@@ -316,6 +316,10 @@ Other checks
 
 <p><a href="https://samate.nist.gov/index.php/SAMATE_Publications.html">https://samate.nist.gov/index.php/SAMATE_Publications.html</a><br />
 <a href="https://samate.nist.gov/SARD/">https://samate.nist.gov/SARD/</a>  </p>
+
+<p>If you’ve read any of my other posts, you may have noticed that the contents sidebar at the beginning of the article is a new thing.  Especially for longer-format articles, that TOC would seem to be very helpful.  Many thanks to <a href="http://blog.riemann.cc/2013/04/10/table-of-contents-in-octopress/">Robert Riemann</a> for taking the trouble to explain how to do it.</p>
+
+<p>I’ve been using the very nice <a href="http://macdown.uranusjr.com/">MacDown</a> editor to create these posts – thanks, Tzu-Ping!</p>
 
 <h1 id="references">References</h1>
 <p>Some helpful references that I ran across while researching this article:</p>
@@ -347,6 +351,9 @@ Other checks
     </li>
     <li id="fn:install">
       <p>As usual, I prefer installing external packages in a non-standard location, so the build script is set up to do that.  See <a href="http://btorpey.github.io/blog/2015/01/02/building-clang/">this post</a> for an explanation and rationale of this approach).<a href="#fnref:install" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:nosys">
+      <p>Note that cppcheck does not particularly like it when you include system include directories using <code>-I</code>.  Accordingly, we don’t pass the <code>-s</code> switch to  cc_driver.pl when running cppcheck.<a href="#fnref:nosys" rel="reference">&#8617;</a></p>
     </li>
   </ol>
 </div>

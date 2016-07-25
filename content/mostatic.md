@@ -178,7 +178,7 @@ It took some trial-and-error to get the cppcheck build parameters right, but the
 #### Verifying the installation
 You'll need to add the cppcheck directory to your PATH (assuming the install location from the build script):
 
-    export PATH=/build/share/cppcheck/1.73/bin:$PATH
+    $ export PATH=/build/share/cppcheck/1.73/bin:$PATH
 
 If the build and install process worked, you should be able to invoke cppcheck from the command line, like so:
 

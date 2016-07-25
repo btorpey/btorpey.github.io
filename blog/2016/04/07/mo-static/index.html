@@ -9,8 +9,8 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="Testing Static Analysis Tools Can I haz teh codez? Creating a compilation database Establishing a baseline Using clang’s analysis tools Analyzing &hellip;">
-  <meta name="keywords" content="C++, linux, clang, static analysis">
+  <meta name="description" content="A how-to guide and comparison of static analysis for C++ using clang and cppcheck">
+  <meta name="keywords" content="C++, linux, clang, static analysis, cppcheck">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -312,7 +312,7 @@ core.StackAddressEscape         Check that addresses to stack memory do not esca
 <h4 id="verifying-the-installation">Verifying the installation</h4>
 <p>You’ll need to add the cppcheck directory to your PATH (assuming the install location from the build script):</p>
 
-<pre><code>export PATH=/build/share/cppcheck/1.73/bin:$PATH
+<pre><code>$ export PATH=/build/share/cppcheck/1.73/bin:$PATH
 </code></pre>
 
 <p>If the build and install process worked, you should be able to invoke cppcheck from the command line, like so:</p>

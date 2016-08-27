@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-07-25T10:34:49-04:00</updated>
+  <updated>2016-08-27T11:05:03-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -886,11 +886,12 @@ Note that if you're using cmake, the way to enable `-isystem` is to use the SYST
 ## Fixing the code
 There are three types of shadow warnings, each with a different cause and potential to cause trouble.  The different types are distinguished by what follows after the "warning: declaration shadows a" message:
 
-Type  | Explanation
-------------- | -------------
-local variable|These are typically the least likely to be real problems, since local variables have limited lifetimes by defintion.  Even if these warnings don't indicate a genuine problem, it is best to eliminate them  by changing one or the other variable name, if only to prevent future confusion.
-field of "X"|As in the example above, these shadow warnings often point to a potential problem, given how easy it is to inadvertently include a type prefix in the statement meant to initialize the member variable, thereby declaring (and initializing) a new local variable instead. 
-variable in the global namespace|This is perhaps the most dangerous of the three types, since accidentally introducing a new variable into scope can easily go unnoticed.  Everything appears to be working correctly, until at some point the newly introduced variable goes out of scope, exposing the un-initialized global variable.  
+|Type  | Explanation |
+|------------- | -------------------------------------------- | 
+| local variable | These are typically the least likely to be real problems, since local variables have limited lifetimes by defintion.  Even if these warnings don't indicate a genuine problem, it is best to eliminate them  by changing one or the other variable name, if only to prevent future confusion.
+| field of "X" | As in the example above, these shadow warnings often point to a potential problem, given how easy it is to inadvertently include a type prefix in the statement meant to initialize the member variable, thereby declaring (and initializing) a new local variable instead.
+| variable in the global namespace | This is perhaps the most dangerous of the three types, since accidentally introducing a new variable into scope can easily go unnoticed.  Everything appears to be working correctly, until at some point the newly introduced variable goes out of scope, exposing the un-initialized global variable.  
+
 <br>
 
 # Conclusion

@@ -71,9 +71,9 @@ But with pretty-printing enabled, the same debug session looks like this:
     (gdb) p hello
     $1 = "Hello, "
     (gdb) p v
-    $3 = std::vector of length 2, capacity 2 = {"Hello, ", "there!"}
+    $2 = std::vector of length 2, capacity 2 = {"Hello, ", "there!"}
     (gdb) p m
-    $4 = std::map with 1 elements = {
+    $3 = std::map with 1 elements = {
      ["Hello, "] = "there!"
     }
 
@@ -116,6 +116,8 @@ Well, the same approach works even when *not* cross-compiling, so I put together
 
 {% include_code gdb-python/python-hack.sh  %}
 
+## Building gdb
+
 The we build gdb using the hack script instead of the installed python-config:
 
 {% include_code gdb-python/build-gdb.sh  %}
@@ -154,7 +156,56 @@ Don't confuse the gdb `set print pretty on` command with python pretty-printing.
       }
     }
 
-You may run across instructions on the intertubes (e.g., [here](https://sourceware.org/gdb/wiki/STLSupport)) that talk about changing your `.gdbinit` to manually import the python drivers needed for pretty-printing.  These instructions appear to be obsolete, at least with the most recent version of gdb (7.11) -- pretty-printing works automagically, and no special configuration is required.
+## Loading pretty printers at gdb startup
+
+You may run across instructions on the intertubes (e.g., [here](https://sourceware.org/gdb/wiki/STLSupport)) that talk about changing your `.gdbinit` to manually import the python drivers needed for pretty-printing.  These instructions are somewhat dated -- while they still work, recent versions of gdb and gcc cooperate to make this all work "automagically", based on a fairly simple convention:
+
+- When gdb loads your executable, it also needs to load any shared libraries that your executable uses.  One of these is libstdc++.so.
+- When gdb loads libstdc++.so, if python scripting is enabled it also looks for a file named libstdc++.so.x.y.z-gdb.py (where x, y and z correspond to the version number of libstdc++.so) in the same directory.
+- If it finds one, it executes it under control of the python interpreter.
+
+(A snip from) That file is reproduced following -- note that the last two lines actually load and register the pretty printers associated with that version of the libstdc++.so.
+
+{% include_code gdb-python/libstdc++.so.6.0.18-gdb.py  %}
+
+Note that the values of `pythondir` and `libdir` match the location where the compiler and standard library are installed.  In my case, I'm using a version of gcc 4.8.2 that I compiled from source -- see [this recent post]() to find out more about the how's and why's of building from source and installing in a non-standard location).
+
+This convention assumes that the version of the libstdc++ that gdb finds is the same as the version that was used to compile the executable.  They usually are, but if that is not the case, it's possible that the pretty printers will fail in interesting ways ;-)  See the next section for more on that.
+
+## So, what could possibly go wrong?
+
+Well, a whole bunch of things, as it turns out.  Some of them we've already touched on, but for the sake of completeness I'll mention them all here.
+
+### Bad path in .gdbinit
+
+    $ gdb a.out
+    Python Exception <type 'exceptions.ImportError'> No module named gdb:
+    /build/share/gdb/7.11/bin/gdb: warning:
+    Could not load the Python gdb module from `/build/share/gdb/7.11/share/gdb/python'.
+    Limited Python support is available from the _gdb module.
+    Suggest passing --data-directory=/path/to/gdb/data-directory.
+
+This is caused if you specify the wrong path in the `sys.path.insert` statement in .gdbinit.  As mentioned [above](#loading-pretty-printers-at-gdb-startup), it's not necessary to include this boilerplate in .gdbinit with more recent versions of gdb -- gdb will load the pretty-printers automatically.
+
+
+### No python support in gdb
+
+### gdb can't find libpython
+
+    $ gdb a.out
+    gdb: error while loading shared libraries: libpython2.7.so.1.0: cannot open shared object file: No such file or directory
+
+If gdb can't find libpython.so, you will get this error from the loader.  To fix this, you can either include the python lib directory in LD\_LIBRARY\_PATH, or you can build gdb with an RPATH entry for libpython.so.  The latter approach is simpler, and if you use the build script [supplied earlier](#building-gdb), it will do that.
+
+
+### Some variables print garbled
+
+
+There can be (and are) differences in the internal implementations between different versions of libstdc++.  Application programs aren't affected by these differences, but the pretty-printers depend on those internal implementation details. Which means that the pretty-printer code is tied to a particular implementation, and a particular version (or versions) of libstdc++.
+
+You can get output similar to the above if the python pretty-printers were written against a different version of libstdc++.so than the one that is loaded by gdb.  This can happen if you change your LD\_LIBRARY\_PATH to find another version of libstdc++.so th
+
+to be obsolete, at least with the most recent version of gdb (7.11) -- pretty-printing works automagically, and no special configuration is required.
 
 
 <a id="building-python"></a>

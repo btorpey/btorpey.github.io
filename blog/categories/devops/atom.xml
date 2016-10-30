@@ -4,7 +4,7 @@
   <title><![CDATA[Category: devops | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/devops/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-08-27T11:05:03-04:00</updated>
+  <updated>2016-10-30T11:11:56-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,60 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Custom-Tailored Configuration]]></title>
+    <link href="http://btorpey.github.io/blog/2016/10/13/custom-tailor/"/>
+    <updated>2016-10-13T08:56:26-04:00</updated>
+    <id>http://btorpey.github.io/blog/2016/10/13/custom-tailor</id>
+    <content type="html"><![CDATA[<p><img class="right" src="/images/customtailor.jpg">
+
+As developers, we seem to take a special delight in personalizing the virtual worlds in which we work -- from color palettes to keyboards, fonts, macros, you name it.  "Off-the-rack" is never good enough, we want Saville Row tailoring for our environments.
+
+And a lot of the tools we use support and encourage that customization, giving us control over every little option.
+
+But not every tool we use does so -- read on to learn a very simple trick to how to take control even when your tool doesn't make that easy.
+
+<!-- more -->
+
+In Linux, we have a couple of common ways to customize the way our tools work -- by defining environment variables, and by using configuration files.  Sometimes these two mechanisms work well together, and we can include environment variables in configuration files to make them flexible in different situations.
+
+Not every tool can expand environment varaiables in its configuration files, however.  In that case, you can use this simple Perl one-liner to subsitute values from the environment into any plain-text file.
+
+    perl -pe '$_=qx"/bin/echo -n \"$_\"";' < sample.ini
+
+
+What's happpening here is
+
+The `-p` switch tells Perl to read every line of input and print it.
+
+The `-e` switch tells Perl to execute the supplied Perl code against every line of input.
+
+The code snippet replaces the value of the input line (`$_`) with the results of the shell command specified by the `qx` function.  That shell command simply echos[^echo] the value of the line (`$_`), but it does so inside double quotes (the `\"`), which causes the shell to replace any environment variable with its value.
+
+[^echo]: Note that we use /bin/echo here, instead of just plain echo, to get around an issue with the echo command in BSD (i.e., OSX).
+
+And that's it!  Since the subsitution is being done by the shell itself, you can use either form for the environment variable (either `$VARIABLE` or `${VARIABLE}`), and the replacement is always done using the rules for the current shell.
+
+Here's an example -- let's create a simple .ini type file, like so:
+
+    username=$USER
+    host=$HOSTNAME
+    home-directory=$HOME
+    current-directory=$PWD
+
+When we run this file through our Perl one-liner, we get:
+
+    perl -pe '$_=qx"/bin/echo -n \"$_\"";' < sample.ini
+    username=btorpey
+    host=btmac
+    home-directory=/Users/btorpey
+    current-directory=/Users/btorpey/blog/code/tailor
+
+One thing to watch out for is that things can get a little hinky if your input file contains quotes, since the shell will interpret those, and probably not in the way you intend.  At least in my experience, that would be pretty rare -- but if you do get peculiar output that would be something to check.
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Remote Scripting with bash and ssh]]></title>
@@ -91,34 +145,26 @@ Where ht.sh looks like this:
 <span class='line-number'>18</span>
 <span class='line-number'>19</span>
 <span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/sh</span>
-</span><span class='line'><span class="nv">CPUFILE</span><span class="o">=</span>/proc/cpuinfo
-</span><span class='line'><span class="nb">test</span> -f <span class="nv">$CPUFILE</span> <span class="o">||</span> <span class="nb">exit </span>1
-</span><span class='line'><span class="nv">NUMPHY</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;physical id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
-</span><span class='line'><span class="nv">NUMLOG</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;processor&quot;</span> <span class="nv">$CPUFILE</span> | wc -l<span class="sb">`</span>
-</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMPHY</span> -eq 1 <span class="o">]</span>
-</span><span class='line'>  <span class="k">then</span>
-</span><span class='line'><span class="k">    </span><span class="nb">echo </span>This system has one physical CPU,
-</span><span class='line'>  <span class="k">else</span>
-</span><span class='line'><span class="k">    </span><span class="nb">echo </span>This system has <span class="nv">$NUMPHY</span> physical CPUs,
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># cribbed from http://unix.stackexchange.com/questions/33450/checking-if-hyperthreading-is-enabled-or-not</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># NOTE:  There does not seem to be a good way to determine if HT is available but not enabled on a particular machine:</span>
+</span><span class='line'><span class="c"># - &#39;ht&#39; flag in /proc/cpuinfo is unreliable</span>
+</span><span class='line'><span class="c"># - lscpu could be used, but is not part of RH5</span>
+</span><span class='line'><span class="c"># - dmidecode could be used, but requires root permissions</span>
+</span><span class='line'><span class="c">#</span>
+</span><span class='line'><span class="c"># So for now we just report whether HT is enabled or not</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">echo</span> -n <span class="k">${</span><span class="nv">HOSTNAME</span><span class="k">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">nproc</span><span class="o">=</span><span class="k">$(</span>grep -i <span class="s2">&quot;processor&quot;</span> /proc/cpuinfo | sort -u | wc -l<span class="k">)</span>
+</span><span class='line'><span class="nv">phycore</span><span class="o">=</span><span class="k">$(</span>cat /proc/cpuinfo | egrep <span class="s2">&quot;core id|physical id&quot;</span> | tr -d <span class="s2">&quot;\n&quot;</span> | sed s/physical/<span class="se">\\</span>nphysical/g | grep -v ^<span class="nv">$ </span>| sort -u | wc -l<span class="k">)</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> -z <span class="s2">&quot;$(echo &quot;</span><span class="nv">$phycore</span> *2<span class="s2">&quot; | bc | grep $nproc)&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+</span><span class='line'><span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;: HT disabled&quot;</span>
+</span><span class='line'><span class="k">else</span>
+</span><span class='line'><span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;: HT enabled&quot;</span>
 </span><span class='line'><span class="k">fi</span>
-</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMLOG</span> -gt 1 <span class="o">]</span>
-</span><span class='line'>  <span class="k">then</span>
-</span><span class='line'><span class="k">    </span><span class="nb">echo </span>and <span class="nv">$NUMLOG</span> logical CPUs.
-</span><span class='line'>    <span class="nv">NUMCORE</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;core id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
-</span><span class='line'>    <span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMCORE</span> -gt 1 <span class="o">]</span>
-</span><span class='line'>      <span class="k">then</span>
-</span><span class='line'><span class="k">        </span><span class="nb">echo </span>For every physical CPU there are <span class="nv">$NUMCORE</span> cores.
-</span><span class='line'>    <span class="k">fi</span>
-</span><span class='line'><span class="k">  else</span>
-</span><span class='line'><span class="k">    </span><span class="nb">echo </span>and one logical CPU.
-</span><span class='line'><span class="k">fi</span>
-</span><span class='line'><span class="nb">echo</span> -n The CPU is a <span class="sb">`</span>grep <span class="s2">&quot;model name&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | cut -d : -f 2-<span class="sb">`</span>
-</span><span class='line'><span class="nb">echo</span> <span class="s2">&quot; with`grep &quot;</span>cache size<span class="s2">&quot; $CPUFILE | sort -u | cut -d : -f 2-` cache&quot;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 

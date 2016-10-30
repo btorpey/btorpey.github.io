@@ -179,34 +179,26 @@ ssh HOST 'bash -s' &lt; ht.sh
 <span class="line-number">18</span>
 <span class="line-number">19</span>
 <span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="c">#!/bin/sh</span>
-</span><span class="line"><span class="nv">CPUFILE</span><span class="o">=</span>/proc/cpuinfo
-</span><span class="line"><span class="nb">test</span> -f <span class="nv">$CPUFILE</span> <span class="o">||</span> <span class="nb">exit </span>1
-</span><span class="line"><span class="nv">NUMPHY</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;physical id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
-</span><span class="line"><span class="nv">NUMLOG</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;processor&quot;</span> <span class="nv">$CPUFILE</span> | wc -l<span class="sb">`</span>
-</span><span class="line"><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMPHY</span> -eq 1 <span class="o">]</span>
-</span><span class="line">  <span class="k">then</span>
-</span><span class="line"><span class="k">    </span><span class="nb">echo </span>This system has one physical CPU,
-</span><span class="line">  <span class="k">else</span>
-</span><span class="line"><span class="k">    </span><span class="nb">echo </span>This system has <span class="nv">$NUMPHY</span> physical CPUs,
+</pre></td><td class="code"><pre><code class="bash"><span class="line"><span class="c">#!/bin/bash</span>
+</span><span class="line">
+</span><span class="line"><span class="c"># cribbed from http://unix.stackexchange.com/questions/33450/checking-if-hyperthreading-is-enabled-or-not</span>
+</span><span class="line"><span class="c">#</span>
+</span><span class="line"><span class="c"># NOTE:  There does not seem to be a good way to determine if HT is available but not enabled on a particular machine:</span>
+</span><span class="line"><span class="c"># - &#39;ht&#39; flag in /proc/cpuinfo is unreliable</span>
+</span><span class="line"><span class="c"># - lscpu could be used, but is not part of RH5</span>
+</span><span class="line"><span class="c"># - dmidecode could be used, but requires root permissions</span>
+</span><span class="line"><span class="c">#</span>
+</span><span class="line"><span class="c"># So for now we just report whether HT is enabled or not</span>
+</span><span class="line">
+</span><span class="line"><span class="nb">echo</span> -n <span class="k">${</span><span class="nv">HOSTNAME</span><span class="k">}</span>
+</span><span class="line">
+</span><span class="line"><span class="nv">nproc</span><span class="o">=</span><span class="k">$(</span>grep -i <span class="s2">&quot;processor&quot;</span> /proc/cpuinfo | sort -u | wc -l<span class="k">)</span>
+</span><span class="line"><span class="nv">phycore</span><span class="o">=</span><span class="k">$(</span>cat /proc/cpuinfo | egrep <span class="s2">&quot;core id|physical id&quot;</span> | tr -d <span class="s2">&quot;\n&quot;</span> | sed s/physical/<span class="se">\\</span>nphysical/g | grep -v ^<span class="nv">$ </span>| sort -u | wc -l<span class="k">)</span>
+</span><span class="line"><span class="k">if</span> <span class="o">[</span> -z <span class="s2">&quot;$(echo &quot;</span><span class="nv">$phycore</span> *2<span class="s2">&quot; | bc | grep $nproc)&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+</span><span class="line"><span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;: HT disabled&quot;</span>
+</span><span class="line"><span class="k">else</span>
+</span><span class="line"><span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;: HT enabled&quot;</span>
 </span><span class="line"><span class="k">fi</span>
-</span><span class="line"><span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMLOG</span> -gt 1 <span class="o">]</span>
-</span><span class="line">  <span class="k">then</span>
-</span><span class="line"><span class="k">    </span><span class="nb">echo </span>and <span class="nv">$NUMLOG</span> logical CPUs.
-</span><span class="line">    <span class="nv">NUMCORE</span><span class="o">=</span><span class="sb">`</span>grep <span class="s2">&quot;core id&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | wc -l<span class="sb">`</span>
-</span><span class="line">    <span class="k">if</span> <span class="o">[</span> <span class="nv">$NUMCORE</span> -gt 1 <span class="o">]</span>
-</span><span class="line">      <span class="k">then</span>
-</span><span class="line"><span class="k">        </span><span class="nb">echo </span>For every physical CPU there are <span class="nv">$NUMCORE</span> cores.
-</span><span class="line">    <span class="k">fi</span>
-</span><span class="line"><span class="k">  else</span>
-</span><span class="line"><span class="k">    </span><span class="nb">echo </span>and one logical CPU.
-</span><span class="line"><span class="k">fi</span>
-</span><span class="line"><span class="nb">echo</span> -n The CPU is a <span class="sb">`</span>grep <span class="s2">&quot;model name&quot;</span> <span class="nv">$CPUFILE</span> | sort -u | cut -d : -f 2-<span class="sb">`</span>
-</span><span class="line"><span class="nb">echo</span> <span class="s2">&quot; with`grep &quot;</span>cache size<span class="s2">&quot; $CPUFILE | sort -u | cut -d : -f 2-` cache&quot;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>(The script above was cribbed from http://unix.stackexchange.com/a/33509 –
@@ -288,6 +280,10 @@ you’ll be able to get rid of a few of those monitors!</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/10/13/custom-tailor/">Custom-Tailored Configuration</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/04/07/mo-static/">Mo' Static</a>
       </li>
     
@@ -301,10 +297,6 @@ you’ll be able to get rid of a few of those monitors!</p>
     
       <li class="post">
         <a href="/blog/2015/03/17/shadow/">Who Knows What Evil Lurks ...</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/01/02/building-clang/">Building clang on RedHat</a>
       </li>
     
   </ul>

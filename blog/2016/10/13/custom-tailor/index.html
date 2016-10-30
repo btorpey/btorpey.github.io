@@ -5,13 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Confessions of a Wall Street Programmer</title>
+  <title>Custom-Tailored Configuration - Confessions of a Wall Street Programmer</title>
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="Static Analysis Helper Scripts
-A few scripts that can be helpful in the use and evaluation of C++ static analysis tools. Script Description &hellip;">
-  
+  <meta name="description" content="As developers, we seem to take a special delight in personalizing the virtual worlds in which we work – from color palettes to keyboards, fonts, &hellip;">
+  <meta name="keywords" content="linux, bash, ssh, devops">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -19,7 +18,7 @@ A few scripts that can be helpful in the use and evaluation of C++ static analys
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://btorpey.github.io/pages/REAME.md">
+  <link rel="canonical" href="http://btorpey.github.io/blog/2016/10/13/custom-tailor">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Confessions of a Wall Street Programmer" type="application/atom+xml">
@@ -79,68 +78,136 @@ A few scripts that can be helpful in the use and evaluation of C++ static analys
   <div id="main">
     <div id="content">
       <div>
-<article role="article">
+<article class="hentry" role="article">
   
-  <h1 id="static-analysis-helper-scripts">Static Analysis Helper Scripts</h1>
-<p>A few scripts that can be helpful in the use and evaluation of C++ static analysis tools.</p>
+  <header>
+    
+      <h1 class="entry-title">Custom-Tailored Configuration</h1>
+    
+    
+      <p class="meta">
+        
 
-<table>
-  <thead>
-    <tr>
-      <th>Script</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="/pages/build_cppcheck.sh/index.html">build_cppcheck.sh</a></td>
-      <td>Script to build cppcheck for installation in a non-standard location (i.e., not /usr, /usr/local).</td>
-    </tr>
-    <tr>
-      <td><a href="/pages/cc_driver.pl/index.html">cc_driver.pl</a></td>
-      <td>Iterates over a compilation database (compile_commands.json) file, and executes a specified command for each build target, passing the compiler flags from the normal build.</td>
-    </tr>
-    <tr>
-      <td><a href="/pages/cppcheck.sh/index.html">cppcheck.sh</a></td>
-      <td>Invokes cppcheck defining a number of common parameters, also generates and includes compiler pre-defined macros.</td>
-    </tr>
-    <tr>
-      <td><a href="/pages/cppcheck2csv.pl/index.html">cppcheck2csv.pl</a></td>
-      <td>Takes (filtered or un-filtered) output from cppcheck, and formats it in csv format.</td>
-    </tr>
-    <tr>
-      <td><a href="/pages/clang2csv.pl/index.html">clang2csv.pl</a></td>
-      <td>Takes (filtered or un-filtered) output from clang tools (clang-check and clang-tidy), and formats it in csv format.</td>
-    </tr>
-    <tr>
-      <td><a href="/pages/itc2csv.pl/index.html">itc2csv.pl</a></td>
-      <td>Takes a list of error annotations from ITC benchmark suite, and formats it in csv format.</td>
-    </tr>
-  </tbody>
-</table>
 
-<p><br /></p>
 
-<p>Most of the scripts are written in Perl, simply because that was easiest (especially given the excellent debugging support available under <a href="https://eclipse.org/">Eclipse</a> with <a href="http://www.epic-ide.org/">EPIC</a>).  Plus, I kind of like Perl, <a href="/blog/2014/07/23/perl-stdin/">as I’ve mentioned before</a>.</p>
 
-<p>The scripts have been tested on CentOS 6.</p>
+
+
 
 
   
-    <footer>
+
+
+<time datetime="2016-10-13T08:56:26-04:00" pubdate data-updated="true">Oct 13<span>th</span>, 2016</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><img class="right" src="/images/customtailor.jpg" /></p>
+
+<p>As developers, we seem to take a special delight in personalizing the virtual worlds in which we work – from color palettes to keyboards, fonts, macros, you name it.  “Off-the-rack” is never good enough, we want Saville Row tailoring for our environments.</p>
+
+<p>And a lot of the tools we use support and encourage that customization, giving us control over every little option.</p>
+
+<p>But not every tool we use does so – read on to learn a very simple trick to how to take control even when your tool doesn’t make that easy.</p>
+
+<!-- more -->
+
+<p>In Linux, we have a couple of common ways to customize the way our tools work – by defining environment variables, and by using configuration files.  Sometimes these two mechanisms work well together, and we can include environment variables in configuration files to make them flexible in different situations.</p>
+
+<p>Not every tool can expand environment varaiables in its configuration files, however.  In that case, you can use this simple Perl one-liner to subsitute values from the environment into any plain-text file.</p>
+
+<pre><code>perl -pe '$_=qx"/bin/echo -n \"$_\"";' &lt; sample.ini
+</code></pre>
+
+<p>What’s happpening here is</p>
+
+<p>The <code>-p</code> switch tells Perl to read every line of input and print it.</p>
+
+<p>The <code>-e</code> switch tells Perl to execute the supplied Perl code against every line of input.</p>
+
+<p>The code snippet replaces the value of the input line (<code>$_</code>) with the results of the shell command specified by the <code>qx</code> function.  That shell command simply echos<sup id="fnref:echo"><a href="#fn:echo" rel="footnote">1</a></sup> the value of the line (<code>$_</code>), but it does so inside double quotes (the <code>\"</code>), which causes the shell to replace any environment variable with its value.</p>
+
+<p>And that’s it!  Since the subsitution is being done by the shell itself, you can use either form for the environment variable (either <code>$VARIABLE</code> or <code>${VARIABLE}</code>), and the replacement is always done using the rules for the current shell.</p>
+
+<p>Here’s an example – let’s create a simple .ini type file, like so:</p>
+
+<pre><code>username=$USER
+host=$HOSTNAME
+home-directory=$HOME
+current-directory=$PWD
+</code></pre>
+
+<p>When we run this file through our Perl one-liner, we get:</p>
+
+<pre><code>perl -pe '$_=qx"/bin/echo -n \"$_\"";' &lt; sample.ini
+username=btorpey
+host=btmac
+home-directory=/Users/btorpey
+current-directory=/Users/btorpey/blog/code/tailor
+</code></pre>
+
+<p>One thing to watch out for is that things can get a little hinky if your input file contains quotes, since the shell will interpret those, and probably not in the way you intend.  At least in my experience, that would be pretty rare – but if you do get peculiar output that would be something to check.</p>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:echo">
+      <p>Note that we use /bin/echo here, instead of just plain echo, to get around an issue with the echo command in BSD (i.e., OSX).<a href="#fnref:echo" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+</div>
+
+
+  <footer>
+    <p class="meta">
       
-      
-        <div class="sharing">
   
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://btorpey.github.io/pages/REAME.md/index.html" data-via="wallstprog" data-counturl="http://btorpey.github.io/pages/REAME.md/index.html" >Tweet</a>
+
+<span class="byline author vcard">Posted by <span class="fn">Bill Torpey</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-10-13T08:56:26-04:00" pubdate data-updated="true">Oct 13<span>th</span>, 2016</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/devops/'>devops</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/tidbits/'>tidbits</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://btorpey.github.io/blog/2016/10/13/custom-tailor/" data-via="wallstprog" data-counturl="http://btorpey.github.io/blog/2016/10/13/custom-tailor/" >Tweet</a>
   
   
   
 </div>
 
+    
+    <p class="meta">
       
-    </footer>
-  
+        <a class="basic-alignment left" href="/blog/2016/04/07/mo-static/" title="Previous Post: Mo' Static">&laquo; Mo' Static</a>
+      
+      
+    </p>
+  </footer>
 </article>
 
   <section>
@@ -206,8 +273,8 @@ Copyright &copy; 2016 - Bill Torpey. &nbsp; All Rights Reserved.
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://btorpey.github.io/pages/REAME.md/index.html';
-        var disqus_url = 'http://btorpey.github.io/pages/REAME.md/index.html';
+        var disqus_identifier = 'http://btorpey.github.io/blog/2016/10/13/custom-tailor/';
+        var disqus_url = 'http://btorpey.github.io/blog/2016/10/13/custom-tailor/';
         var disqus_script = 'embed.js';
       
     (function () {

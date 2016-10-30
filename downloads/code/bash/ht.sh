@@ -1,25 +1,20 @@
-#!/bin/sh
-CPUFILE=/proc/cpuinfo
-test -f $CPUFILE || exit 1
-NUMPHY=`grep "physical id" $CPUFILE | sort -u | wc -l`
-NUMLOG=`grep "processor" $CPUFILE | wc -l`
-if [ $NUMPHY -eq 1 ]
-  then
-    echo This system has one physical CPU,
-  else
-    echo This system has $NUMPHY physical CPUs,
-fi
-if [ $NUMLOG -gt 1 ]
-  then
-    echo and $NUMLOG logical CPUs.
-    NUMCORE=`grep "core id" $CPUFILE | sort -u | wc -l`
-    if [ $NUMCORE -gt 1 ]
-      then
-        echo For every physical CPU there are $NUMCORE cores.
-    fi
-  else
-    echo and one logical CPU.
-fi
-echo -n The CPU is a `grep "model name" $CPUFILE | sort -u | cut -d : -f 2-`
-echo " with`grep "cache size" $CPUFILE | sort -u | cut -d : -f 2-` cache"
+#!/bin/bash
 
+# cribbed from http://unix.stackexchange.com/questions/33450/checking-if-hyperthreading-is-enabled-or-not
+#
+# NOTE:  There does not seem to be a good way to determine if HT is available but not enabled on a particular machine:
+# - 'ht' flag in /proc/cpuinfo is unreliable
+# - lscpu could be used, but is not part of RH5
+# - dmidecode could be used, but requires root permissions
+#
+# So for now we just report whether HT is enabled or not
+
+echo -n ${HOSTNAME}
+
+nproc=$(grep -i "processor" /proc/cpuinfo | sort -u | wc -l)
+phycore=$(cat /proc/cpuinfo | egrep "core id|physical id" | tr -d "\n" | sed s/physical/\\nphysical/g | grep -v ^$ | sort -u | wc -l)
+if [ -z "$(echo "$phycore *2" | bc | grep $nproc)" ]; then
+   echo ": HT disabled"
+else
+   echo ": HT enabled"
+fi

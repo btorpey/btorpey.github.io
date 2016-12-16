@@ -1,4 +1,4 @@
-{% img right http://planet.clang.org/images/DragonSmall.png %} 
+{% img right /images/DragonSmall.png %} 
 
 Valgrind has been an indispensable tool for C/C++ programmers for a long
 time, and I've used it quite happily -- it's a tremendous tool for doing dynamic

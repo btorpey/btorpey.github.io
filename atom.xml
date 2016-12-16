@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-12-16T11:44:36-05:00</updated>
+  <updated>2016-12-16T11:57:32-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -2188,7 +2188,7 @@ I really didn’t. </p>
     <link href="http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer/"/>
     <updated>2014-03-27T00:00:00-04:00</updated>
     <id>http://btorpey.github.io/blog/2014/03/27/using-clangs-address-sanitizer</id>
-    <content type="html"><![CDATA[<p><img class="right" src="http://planet.clang.org/images/DragonSmall.png" /> </p>
+    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/DragonSmall.png" /> </p>
 
 <p>Valgrind has been an indispensable tool for C/C++ programmers for a long
 time, and I’ve used it quite happily – it’s a tremendous tool for doing dynamic

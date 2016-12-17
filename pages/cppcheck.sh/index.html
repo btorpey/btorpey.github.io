@@ -129,6 +129,7 @@
 <span class="line-number">25</span>
 <span class="line-number">26</span>
 <span class="line-number">27</span>
+<span class="line-number">28</span>
 </pre></td><td class="code"><pre><code class="sh"><span class="line"><span class="c">#!/bin/bash</span>
 </span><span class="line"><span class="c">#</span>
 </span><span class="line"><span class="c"># helper script for cppcheck that defines a number of common parameters</span>
@@ -147,6 +148,7 @@
 </span><span class="line"><span class="c"># note that you must also supply the required path in place of &quot;&lt;&gt;&quot;</span>
 </span><span class="line"><span class="c">#LD_LIBRARY_PATH=&lt;&gt;:$LD_LIBRARY_PATH \</span>
 </span><span class="line">cppcheck --enable<span class="o">=</span>all --inconclusive <span class="se">\</span>
+</span><span class="line">--error-exitcode<span class="o">=</span>19 <span class="se">\</span>
 </span><span class="line">--std<span class="o">=</span>posix --std<span class="o">=</span>c++03 --std<span class="o">=</span>c++11 <span class="se">\</span>
 </span><span class="line">--include<span class="o">=</span><span class="k">${</span><span class="nv">TEMPFILE</span><span class="k">}</span> <span class="se">\</span>
 </span><span class="line">--platform<span class="o">=</span>unix64 <span class="se">\</span>

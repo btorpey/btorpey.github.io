@@ -388,6 +388,11 @@ cd {directory}; [command] {file} -- [parameters] -I .. -D ..
 <span class="line-number">196</span>
 <span class="line-number">197</span>
 <span class="line-number">198</span>
+<span class="line-number">199</span>
+<span class="line-number">200</span>
+<span class="line-number">201</span>
+<span class="line-number">202</span>
+<span class="line-number">203</span>
 </pre></td><td class="code"><pre><code class="perl"><span class="line"><span class="c1">#!/usr/bin/perl</span>
 </span><span class="line"><span class="c1">#</span>
 </span><span class="line"><span class="c1"># Copyright 2016 by Bill Torpey. All Rights Reserved.</span>
@@ -572,9 +577,14 @@ cd {directory}; [command] {file} -- [parameters] -I .. -D ..
 </span><span class="line">      <span class="p">((</span><span class="nb">defined</span> <span class="nv">$match</span><span class="p">)</span>   <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nv">$file</span> <span class="o">!~</span> <span class="sr">/$match/</span><span class="p">))</span>   <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nv">$run</span> <span class="o">=</span> <span class="mi">0</span><span class="p">);</span>
 </span><span class="line">      <span class="p">((</span><span class="nb">defined</span> <span class="nv">$exclude</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nv">$file</span> <span class="o">=~</span><span class="sr"> /$exclude/</span><span class="p">))</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nv">$run</span> <span class="o">=</span> <span class="mi">0</span><span class="p">);</span>
 </span><span class="line">      <span class="k">if</span> <span class="p">(</span><span class="nv">$run</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">         <span class="k">my</span> <span class="nv">$output</span><span class="p">;</span>
 </span><span class="line">         <span class="p">(</span><span class="nv">$verbose</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">print</span> <span class="s">&quot;$cmd\n&quot;</span><span class="p">;</span>
 </span><span class="line">         <span class="k">if</span> <span class="p">(</span><span class="nv">$debug</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">            <span class="k">my</span> <span class="nv">$output</span> <span class="o">=</span> <span class="sb">`$cmd 2&gt;&amp;1`</span><span class="p">;</span>
+</span><span class="line">            <span class="nv">$output</span> <span class="o">=</span> <span class="sb">`$cmd 2&gt;&amp;1`</span><span class="p">;</span>
+</span><span class="line">            <span class="k">my</span> <span class="nv">$rc</span> <span class="o">=</span> <span class="vg">$?</span><span class="p">;</span>
+</span><span class="line">            <span class="k">if</span> <span class="p">(</span><span class="nv">$rc</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">               <span class="nb">die</span> <span class="s">&quot;$cmd returned $rc!&quot;</span><span class="p">;</span>
+</span><span class="line">            <span class="p">}</span>
 </span><span class="line">            <span class="k">print</span> <span class="s">&quot;$output\n&quot;</span><span class="p">;</span>
 </span><span class="line">         <span class="p">}</span>
 </span><span class="line">      <span class="p">}</span>

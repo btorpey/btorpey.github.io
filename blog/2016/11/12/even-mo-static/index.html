@@ -305,10 +305,10 @@
 <p>When you run this program, you’ll get the following output:</p>
 
 <pre><code>$ gcc test1.c &amp;&amp; ./a.out
-Value of sink=0
+Value of sink=-128
 </code></pre>
 
-<p>What is happening here is that the value 0x80 would fit in an <em>unsigned</em> char, but because the high-order bit is dedicated to the sign bit, the maximum value that can be represented in a signed char is 127.  So, the result of the assignment is zero, which is very likely not what would have been intended by the programmer.</p>
+<p>So, <code>a</code> has the value 128, but when <code>a</code> is assigned to the (signed) char <code>ret</code>,  the bit pattern <code>0x80</code> is interpreted in the context of a (signed) char, and the sign is lost.  If <code>ret</code> had been declared as an unsigned char, then the assigment would not lose the sign of <code>a</code>.</p>
 
 <h4 class="no_toc" id="arithmetic-expressions">Arithmetic expressions</h4>
 <p>cppcheck does do a slightly better job of detecting integer overflow and underflow in arithmetic expressions compared to PVS, but still misses a number of seeded errors.</p>

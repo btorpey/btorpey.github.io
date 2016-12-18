@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-12-17T16:50:27-05:00</updated>
+  <updated>2016-12-18T11:07:27-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -205,9 +205,9 @@ I wanted to convince myself that the ITC code was correct, so I pasted some of t
 When you run this program, you'll get the following output:
 
     $ gcc test1.c && ./a.out
-    Value of sink=0
+    Value of sink=-128
 
-What is happening here is that the value 0x80 would fit in an *unsigned* char, but because the high-order bit is dedicated to the sign bit, the maximum value that can be represented in a signed char is 127.  So, the result of the assignment is zero, which is very likely not what would have been intended by the programmer.
+So, `a` has the value 128, but when `a` is assigned to the (signed) char `ret`,  the bit pattern `0x80` is interpreted in the context of a (signed) char, and the sign is lost.  If `ret` had been declared as an unsigned char, then the assigment would not lose the sign of `a`.
 
 #### Arithmetic expressions
 {:.no_toc}

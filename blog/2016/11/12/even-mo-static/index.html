@@ -325,7 +325,7 @@ Value of sink=-128
 <p>As mentioned above, neither tool detects <em>any</em> of the concurrency-related errors seeded in the ITC code.  Again, I regard that as a reasonable design choice, given the relatively small percentage of such errors that can be detected at compile-time.</p>
 
 <h3 class="no_toc" id="memory-errors">Memory Errors</h3>
-<p>As discussed earlier, not all memory errors can be detected at compile-time, so the lack of any error output certainly doesn’t mean that the code doesn’t have memory errors – it just means that they can’t be detected by the tools. But while may memory errors cannot be detected at compile-time, for those that can be, detecting them is a big win.</p>
+<p>As discussed earlier, not all memory errors can be detected at compile-time, so the lack of any error output certainly doesn’t mean that the code doesn’t have memory errors – it just means that they can’t be detected by the tools. But while many memory errors cannot be detected at compile-time, for those that can be, detecting them is a big win.</p>
 
 <h4 class="no_toc" id="double-free">Double free</h4>
 <p>cppcheck does an excellent job of detecting double-free errors (11 out of 12), while PVS-Studio only flags one of the seeded errors.</p>

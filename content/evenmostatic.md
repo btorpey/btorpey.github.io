@@ -172,7 +172,7 @@ As mentioned above, neither tool detects *any* of the concurrency-related errors
 
 ### Memory Errors
 {:.no_toc}
-As discussed earlier, not all memory errors can be detected at compile-time, so the lack of any error output certainly doesn't mean that the code doesn't have memory errors -- it just means that they can't be detected by the tools. But while may memory errors cannot be detected at compile-time, for those that can be, detecting them is a big win.
+As discussed earlier, not all memory errors can be detected at compile-time, so the lack of any error output certainly doesn't mean that the code doesn't have memory errors -- it just means that they can't be detected by the tools. But while many memory errors cannot be detected at compile-time, for those that can be, detecting them is a big win.
 
 #### Double free
 {:.no_toc}

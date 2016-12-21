@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-12-20T19:35:04-05:00</updated>
+  <updated>2016-12-20T19:37:13-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -201,7 +201,7 @@ I wanted to convince myself that the ITC code was correct, so I pasted some of t
 </span><span class='line'>
 </span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 </span><span class='line'><span class="p">{</span>
-</span><span class='line'>
+</span><span class='line'>   <span class="n">data_lost_001</span><span class="p">();</span>
 </span><span class='line'>   <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Value of sink=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">sink</span><span class="p">);</span>
 </span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>

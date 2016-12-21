@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-12-18T11:10:54-05:00</updated>
+  <updated>2016-12-20T19:35:04-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -47,7 +47,7 @@
 
 <p>In <a href="http://btorpey.github.io/blog/2016/04/07/mo-static/">the earlier article</a>, I used a <a href="https://github.com/regehr/itc-benchmarks">benchmark suite</a> developed by Toyota ITC, and written about by <a href="http://blog.regehr.org/archives/1217">John Regehr</a>, who is a professor of Computer Science at the University of Utah.  The ITC suite consists of code that is specially written to exhibit certain errors that can be detected by static analysis, so that the code can be used to evaluate the performance of different tools.</p>
 
-<p>In this article, I am going to use the same test suite to compare PVS-Studio with cppcheck.  I’ll also talk about my experience using both tools to analyze two relatively large real-world codebases that I help maintain as part of my day job.</p>
+<p>In this article, I am going to use the same test suite to evaluate  PVS-Studio, and to compare it against cppcheck.  I’ll also talk about my experience using both tools to analyze two relatively large real-world codebases that I help maintain as part of my day job.</p>
 
 <h2 id="tldr">TL;DR</h2>
 <p>Using any static analysis tool is better than using none, and in general the more the merrier.  Each tool has its own design philosophy, and corresponding strengths and weaknesses.</p>
@@ -62,7 +62,7 @@
 
 <p>So, if your budget can handle it, use both.  If money is a concern, then you may want to start out with cppcheck and use that to help build a case for spending the additional coin that it will take to include commercial tools like PVS-Studio in your toolbox.</p>
 
-<p>Note also that PVS-Studio offers a trial version, so you can give it a go on your own code, which is, after all, the best way to see what the tool can do.  And, if you use the provided <a href="http://btorpey.github.io/pages/REAME.md/index.html">helper scripts</a> (<a href="https://github.com/btorpey/static">repo here</a>), your results will be in a format that makes it easy to compare the tools.</p>
+<p>Note also that PVS-Studio offers a trial version<sup id="fnref:free"><a href="#fn:free" rel="footnote">2</a></sup>, so you can give it a go on your own code, which is, after all, the best way to see what the tool can do.  And, if you use the provided <a href="http://btorpey.github.io/pages/REAME.md/index.html">helper scripts</a> (<a href="https://github.com/btorpey/static">repo here</a>), your results will be in a format that makes it easy to compare the tools.</p>
 
 <h2 id="methodology">Methodology</h2>
 <p>In comparing cppcheck and PVS-Studio, I used the ITC test suite that I wrote about in an <a href="http://btorpey.github.io/blog/2016/04/07/mo-static/">earlier article</a>.  I also used both tools to analyze real-world code bases which I deal with on a day-to-day basis and that I am intimately familiar with.</p>
@@ -92,6 +92,8 @@
 
 <p>With those caveats out of the way, though, the ITC test suite does provide at least a good starting point towards a comprehensive set of test cases that can be used to exercise different static analyzers.</p>
 
+<p>The results of running PVS-Studio (and other tools) against the ITC code can be found in the <a href="https://github.com/btorpey/static/tree/master/samples">samples directory of the repo</a>.</p>
+
 <h2 id="real-world-test-results">Real-world test results</h2>
 <p>I also ran both cppcheck and PVS-Studio on the code bases that I maintain as part of my day job, to get an idea of how the tools compare in more of a real-world situation.  While I can’t share the detailed comparisons, following are some of the major points.</p>
 
@@ -115,7 +117,7 @@
 
 <ul>
   <li>classes that define a copy ctor without <code>operator=</code>, and vice-versa</li>
-  <li>potential floating-point problems<sup id="fnref:float"><a href="#fn:float" rel="footnote">2</a></sup>, e.g., comparing floating-point values for an exact match using <code>==</code></li>
+  <li>potential floating-point problems<sup id="fnref:float"><a href="#fn:float" rel="footnote">3</a></sup>, e.g., comparing floating-point values for an exact match using <code>==</code></li>
   <li>empty <code>catch</code> clauses</li>
   <li>catching exceptions by value rather than by reference</li>
 </ul>
@@ -296,6 +298,9 @@ Value of sink=-128
   <ol>
     <li id="fn:daniel">
       <p>Daniel was recently interviewed on <a href="http://cppcast.com/2016/11/daniel-marjamaki/">CppCast</a>. <a href="#fnref:daniel" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:free">
+      <p>The folks at PVS-Studio asked me to mention that they’ve also recently introduced a free version of their software for educational purposes. The free version does have some strings attached, see <a href="http://www.viva64.com/en/b/0457/">this post</a> for details.<a href="#fnref:free" rel="reference">&#8617;</a></p>
     </li>
     <li id="fn:float">
       <p>See <a href="http://blog.reverberate.org/2014/09/what-every-computer-programmer-should.html">here</a> and <a href="http://floating-point-gui.de/">here</a> for an explanation of how floating-point arithmetic can produce unexpected results if you’re not careful.<a href="#fnref:float" rel="reference">&#8617;</a></p>

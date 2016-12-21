@@ -11,7 +11,7 @@ So I did.  Read on for an overview of PVS-Studio, and how it compared to [cppche
 
 In [the earlier article](/blog/2016/04/07/mo-static/), I used a [benchmark suite](https://github.com/regehr/itc-benchmarks) developed by Toyota ITC, and written about by [John Regehr](http://blog.regehr.org/archives/1217), who is a professor of Computer Science at the University of Utah.  The ITC suite consists of code that is specially written to exhibit certain errors that can be detected by static analysis, so that the code can be used to evaluate the performance of different tools.
 
-In this article, I am going to use the same test suite to compare PVS-Studio with cppcheck.  I'll also talk about my experience using both tools to analyze two relatively large real-world codebases that I help maintain as part of my day job.
+In this article, I am going to use the same test suite to evaluate  PVS-Studio, and to compare it against cppcheck.  I'll also talk about my experience using both tools to analyze two relatively large real-world codebases that I help maintain as part of my day job.
 
 ## TL;DR
 Using any static analysis tool is better than using none, and in general the more the merrier.  Each tool has its own design philosophy, and corresponding strengths and weaknesses.
@@ -28,7 +28,9 @@ And while PVS-Studio doesn't appear to have been adopted by a high-profile proje
 
 So, if your budget can handle it, use both.  If money is a concern, then you may want to start out with cppcheck and use that to help build a case for spending the additional coin that it will take to include commercial tools like PVS-Studio in your toolbox.
 
-Note also that PVS-Studio offers a trial version, so you can give it a go on your own code, which is, after all, the best way to see what the tool can do.  And, if you use the provided [helper scripts](/pages/REAME.md/index.html) ([repo here](https://github.com/btorpey/static)), your results will be in a format that makes it easy to compare the tools.
+Note also that PVS-Studio offers a trial version[^free], so you can give it a go on your own code, which is, after all, the best way to see what the tool can do.  And, if you use the provided [helper scripts](/pages/REAME.md/index.html) ([repo here](https://github.com/btorpey/static)), your results will be in a format that makes it easy to compare the tools.
+
+[^free]: The folks at PVS-Studio asked me to mention that they've also recently introduced a free version of their software for educational purposes. The free version does have some strings attached, see [this post](http://www.viva64.com/en/b/0457/) for details.
 
 ## Methodology
 In comparing cppcheck and PVS-Studio, I used the ITC test suite that I wrote about in an [earlier article](/blog/2016/04/07/mo-static/).  I also used both tools to analyze real-world code bases which I deal with on a day-to-day basis and that I am intimately familiar with.
@@ -57,6 +59,8 @@ A similar situation exists with regard to concurrency (threading) errors -- thou
 Also, in the interest of full disclosure, I have spot-checked some of the ITC code, but by no means all, to assure myself that its diagnostics were reasonable. 
 
 With those caveats out of the way, though, the ITC test suite does provide at least a good starting point towards a comprehensive set of test cases that can be used to exercise different static analyzers.
+
+The results of running PVS-Studio (and other tools) against the ITC code can be found in the [samples directory of the repo](https://github.com/btorpey/static/tree/master/samples).
 
 ## Real-world test results
 I also ran both cppcheck and PVS-Studio on the code bases that I maintain as part of my day job, to get an idea of how the tools compare in more of a real-world situation.  While I can't share the detailed comparisons, following are some of the major points.

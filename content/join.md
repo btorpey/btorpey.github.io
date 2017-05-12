@@ -29,8 +29,6 @@ But what we really want is something like this:
 | HH:MM:SS| x | y |
 
 <br>
-I had stumbled across the `join` command and thought it would be a good way to combine the two files.
-
 Here are snips from the two files:
 
     $ cat recv.txt
@@ -44,8 +42,6 @@ Here are snips from the two files:
     2016/10/25-16:05:58	3
     2016/10/25-16:06:01	9
     2016/10/25-16:06:28	3
-<br>
-
     $ cat send.txt
     Timestamp	Send
     2016/10/25-16:04:58	6
@@ -58,6 +54,8 @@ Here are snips from the two files:
     2016/10/25-16:06:31	9
     2016/10/25-16:06:58	3
 
+
+I had stumbled across the `join` command and thought it would be a good way to combine the two files.
 
 Doing a simple join with no parameters gives this:
 
@@ -97,10 +95,11 @@ A brief run-down of the parameters is probably in order:
 |Parameter | Description
 |----------|------------
 | `-t $'\t'` | The `-t` parameter tells `join` what to use as the separator between fields.  The tab character is the best choice, as most Unix utilities assume that by default, and both Excel and Numbers can work with tab-delimited files.<br>The leading dollar-sign is a [trick](https://unix.stackexchange.com/a/46931/198530) used to to pass a literal tab character on the command line  .
-| `-o&nbsp;0,1.2,2.2` | Specifies which fields to output.  In this case, we want the "join field" (in this case, the first field from both files), then the second field from file #1, then the second field from file #2.
+| `-o 0,1.2,2.2` | Specifies which fields to output.  In this case, we want the "join field" (in this case, the first field from both files), then the second field from file #1, then the second field from file #2.
 | `-a 1` | Tells `join` that we want **all** the fields from file #1.
 | `-a 2` | Ditto for file #2.
 
+<br>
 As you can probably see, you can also get fancy and do things like left outer joins and right outer joins, depending on the parameters passed.
 
 Of course, you could easily import these text files into a "real" database and generate reports that way.  But, you can accomplish a surprising amount of data manipulation and reporting with Linux's built-in utilities and plain old text files.

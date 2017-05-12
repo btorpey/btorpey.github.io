@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2017-05-11T21:15:36-04:00</updated>
+  <updated>2017-05-11T21:16:40-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -84,9 +84,7 @@ But what we really want is something like this:</p>
 </table>
 
 <p><br />
-I had stumbled across the <code>join</code> command and thought it would be a good way to combine the two files.</p>
-
-<p>Here are snips from the two files:</p>
+Here are snips from the two files:</p>
 
 <pre><code>$ cat recv.txt
 Timestamp	Recv
@@ -98,8 +96,7 @@ Timestamp	Recv
 2016/10/25-16:05:31	9
 2016/10/25-16:05:58	3
 2016/10/25-16:06:01	9
-2016/10/25-16:06:28	3 &lt;br&gt;
-
+2016/10/25-16:06:28	3
 $ cat send.txt
 Timestamp	Send
 2016/10/25-16:04:58	6
@@ -112,6 +109,8 @@ Timestamp	Send
 2016/10/25-16:06:31	9
 2016/10/25-16:06:58	3
 </code></pre>
+
+<p>I had stumbled across the <code>join</code> command and thought it would be a good way to combine the two files.</p>
 
 <p>Doing a simple join with no parameters gives this:</p>
 
@@ -162,7 +161,7 @@ Timestamp	Recv	Send
       <td>The <code>-t</code> parameter tells <code>join</code> what to use as the separator between fields.  The tab character is the best choice, as most Unix utilities assume that by default, and both Excel and Numbers can work with tab-delimited files.<br />The leading dollar-sign is a <a href="https://unix.stackexchange.com/a/46931/198530">trick</a> used to to pass a literal tab character on the command line  .</td>
     </tr>
     <tr>
-      <td><code>-o&amp;nbsp;0,1.2,2.2</code></td>
+      <td><code>-o 0,1.2,2.2</code></td>
       <td>Specifies which fields to output.  In this case, we want the “join field” (in this case, the first field from both files), then the second field from file #1, then the second field from file #2.</td>
     </tr>
     <tr>
@@ -176,7 +175,8 @@ Timestamp	Recv	Send
   </tbody>
 </table>
 
-<p>As you can probably see, you can also get fancy and do things like left outer joins and right outer joins, depending on the parameters passed.</p>
+<p><br />
+As you can probably see, you can also get fancy and do things like left outer joins and right outer joins, depending on the parameters passed.</p>
 
 <p>Of course, you could easily import these text files into a “real” database and generate reports that way.  But, you can accomplish a surprising amount of data manipulation and reporting with Linux’s built-in utilities and plain old text files.</p>
 

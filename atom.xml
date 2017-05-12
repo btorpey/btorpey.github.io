@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-12-20T19:37:13-05:00</updated>
+  <updated>2017-05-11T21:15:36-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,176 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[We Don't Need No Stinkin' Databases]]></title>
+    <link href="http://btorpey.github.io/blog/2017/05/10/join/"/>
+    <updated>2017-05-10T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2017/05/10/join</id>
+    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/Gold_Hat_portrayed_by_Alfonso_Bedoya.jpg" width="220" height="162" /></p>
+
+<p>I’ve been working on performance analysis recently, and a large part of that is scraping log files to capture interesting events and chart them.</p>
+
+<p>I’m continually surprised by the things that you can do using plain old bash and his friends, but this latest one took the cake for me.</p>
+
+<!-- more -->
+
+<p>Did you know that Linux includes a utility named <code>join</code>?  Me neither.  Can you guess what it does?  Yup, that’s right – it does the equivalent of a database join across plain text files.</p>
+
+<p>Let me clarify that with a real-world example – one of the datasets I’ve been analyzing counts the number of messages sent and received in a format roughly like this:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Timestamp</th>
+      <th style="text-align: right">Recv</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">HH:MM:SS</td>
+      <td style="text-align: right">x</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br />
+Complicating matters is that sent and received messages are parsed out separately, so we also have a separate file that looks like this:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Timestamp</th>
+      <th style="text-align: right">Send</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">HH:MM:SS</td>
+      <td style="text-align: right">y</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br />
+But what we really want is something like this:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Timestamp</th>
+      <th style="text-align: right">Recv</th>
+      <th style="text-align: right">Send</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">HH:MM:SS</td>
+      <td style="text-align: right">x</td>
+      <td style="text-align: right">y</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br />
+I had stumbled across the <code>join</code> command and thought it would be a good way to combine the two files.</p>
+
+<p>Here are snips from the two files:</p>
+
+<pre><code>$ cat recv.txt
+Timestamp	Recv
+2016/10/25-16:04:58	7
+2016/10/25-16:04:59	1
+2016/10/25-16:05:00	7
+2016/10/25-16:05:01	9
+2016/10/25-16:05:28	3
+2016/10/25-16:05:31	9
+2016/10/25-16:05:58	3
+2016/10/25-16:06:01	9
+2016/10/25-16:06:28	3 &lt;br&gt;
+
+$ cat send.txt
+Timestamp	Send
+2016/10/25-16:04:58	6
+2016/10/25-16:05:01	18
+2016/10/25-16:05:28	3
+2016/10/25-16:05:31	9
+2016/10/25-16:05:58	3
+2016/10/25-16:06:01	9
+2016/10/25-16:06:28	3
+2016/10/25-16:06:31	9
+2016/10/25-16:06:58	3
+</code></pre>
+
+<p>Doing a simple join with no parameters gives this:</p>
+
+<pre><code>$ join recv.txt send.txt
+Timestamp Recv Send
+2016/10/25-16:04:58 7 6
+2016/10/25-16:05:01 9 18
+2016/10/25-16:05:28 3 3
+2016/10/25-16:05:31 9 9
+2016/10/25-16:05:58 3 3
+2016/10/25-16:06:01 9 9
+2016/10/25-16:06:28 3 3
+</code></pre>
+
+<p>As you can see, we’re missing some of the measurements.  This is because by default <code>join</code> does an <a href="https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join">inner join</a> of the two files (the intersection, in set theory).</p>
+
+<p>That’s OK, but not really what we want.  We really need to be able to reflect each value from both datasets, and for that we need an <a href="https://en.wikipedia.org/wiki/Join_(SQL)#Outer_join">outer join</a>, or union.</p>
+
+<p>It turns out that <code>join</code> can do that too, although the syntax is a bit more complicated:</p>
+
+<pre><code>$ join -t $'\t' -o 0,1.2,2.2 -a 1 -a 2 recv.txt send.txt
+Timestamp	Recv	Send
+2016/10/25-16:04:58	7	6
+2016/10/25-16:04:59	1
+2016/10/25-16:05:00	7
+2016/10/25-16:05:01	9	18
+2016/10/25-16:05:28	3	3
+2016/10/25-16:05:31	9	9
+2016/10/25-16:05:58	3	3
+2016/10/25-16:06:01	9	9
+2016/10/25-16:06:28	3	3
+2016/10/25-16:06:31		9
+2016/10/25-16:06:58		3
+</code></pre>
+
+<p>A brief run-down of the parameters is probably in order:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>-t $'\t'</code></td>
+      <td>The <code>-t</code> parameter tells <code>join</code> what to use as the separator between fields.  The tab character is the best choice, as most Unix utilities assume that by default, and both Excel and Numbers can work with tab-delimited files.<br />The leading dollar-sign is a <a href="https://unix.stackexchange.com/a/46931/198530">trick</a> used to to pass a literal tab character on the command line  .</td>
+    </tr>
+    <tr>
+      <td><code>-o&amp;nbsp;0,1.2,2.2</code></td>
+      <td>Specifies which fields to output.  In this case, we want the “join field” (in this case, the first field from both files), then the second field from file #1, then the second field from file #2.</td>
+    </tr>
+    <tr>
+      <td><code>-a 1</code></td>
+      <td>Tells <code>join</code> that we want <strong>all</strong> the fields from file #1.</td>
+    </tr>
+    <tr>
+      <td><code>-a 2</code></td>
+      <td>Ditto for file #2.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As you can probably see, you can also get fancy and do things like left outer joins and right outer joins, depending on the parameters passed.</p>
+
+<p>Of course, you could easily import these text files into a “real” database and generate reports that way.  But, you can accomplish a surprising amount of data manipulation and reporting with Linux’s built-in utilities and plain old text files.</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Even Mo' Static]]></title>
@@ -4130,38 +4300,6 @@ you see something like this…</p>
     </li>
   </ol>
 </div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[FIXing less]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/10/fixing-less/"/>
-    <updated>2014-02-10T00:00:00-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/10/fixing-less</id>
-    <content type="html"><![CDATA[<p>Here’s a handy tip for those who (like me) spend a fair amount of time staring
-at FIX logs.</p>
-
-<!--more-->
-
-<p>FIX may be the protocol that everybody loves to hate, but it doesn’t look like it’s
-going anywhere, so I guess we all just need to get over it and learn to live with it.</p>
-
-<p>One of the things that is hard to live with, though – at least for me – is the
-visual cacophony that results when browsing FIX logs with less.
-<img class="center" src="http://btorpey.github.io/images/less-before.png" /> </p>
-
-<p>It turns out that it’s possible to control how less displays the x’01’
-delimiters to make this chore a little easier on the eyes.  In my case, I
-use the following in my .bash_profile:</p>
-
-<p><code>export LESSBINFMT="*u%x"</code></p>
-
-<p>This dials down the visual clutter to a level that I find much easier to deal
-with.
-<img class="center" src="http://btorpey.github.io/images/less-after.png" /> </p>
-
-<p>(Note that the man page for less mentions that it’s possible to display the hex codes in square brackets, but I have not found that to work on any of the systems where I’ve tried it – YMMV).</p>
-
 ]]></content>
   </entry>
   

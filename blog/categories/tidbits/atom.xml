@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tidbits | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tidbits/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2016-12-20T19:37:13-05:00</updated>
+  <updated>2017-05-11T21:15:36-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,121 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[We Don't Need No Stinkin' Databases]]></title>
+    <link href="http://btorpey.github.io/blog/2017/05/10/join/"/>
+    <updated>2017-05-10T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2017/05/10/join</id>
+    <content type="html"><![CDATA[<p><img class="right" src="/images/Gold_Hat_portrayed_by_Alfonso_Bedoya.jpg" width="220" height="162">
+
+I've been working on performance analysis recently, and a large part of that is scraping log files to capture interesting events and chart them.
+
+I'm continually surprised by the things that you can do using plain old bash and his friends, but this latest one took the cake for me.
+
+<!-- more -->
+
+Did you know that Linux includes a utility named `join`?  Me neither.  Can you guess what it does?  Yup, that's right -- it does the equivalent of a database join across plain text files.
+
+Let me clarify that with a real-world example -- one of the datasets I've been analyzing counts the number of messages sent and received in a format roughly like this:
+
+|Timestamp| Recv |
+|:--------|-----:|
+| HH:MM:SS| x |
+
+<br>
+Complicating matters is that sent and received messages are parsed out separately, so we also have a separate file that looks like this:
+
+|Timestamp| Send |
+|:--------|-----:|
+| HH:MM:SS| y |
+
+<br>
+But what we really want is something like this:
+
+|Timestamp| Recv | Send |
+|:--------|-----:|------:|
+| HH:MM:SS| x | y |
+
+<br>
+I had stumbled across the `join` command and thought it would be a good way to combine the two files.
+
+Here are snips from the two files:
+
+    $ cat recv.txt
+    Timestamp	Recv
+    2016/10/25-16:04:58	7
+    2016/10/25-16:04:59	1
+    2016/10/25-16:05:00	7
+    2016/10/25-16:05:01	9
+    2016/10/25-16:05:28	3
+    2016/10/25-16:05:31	9
+    2016/10/25-16:05:58	3
+    2016/10/25-16:06:01	9
+    2016/10/25-16:06:28	3
+<br>
+
+    $ cat send.txt
+    Timestamp	Send
+    2016/10/25-16:04:58	6
+    2016/10/25-16:05:01	18
+    2016/10/25-16:05:28	3
+    2016/10/25-16:05:31	9
+    2016/10/25-16:05:58	3
+    2016/10/25-16:06:01	9
+    2016/10/25-16:06:28	3
+    2016/10/25-16:06:31	9
+    2016/10/25-16:06:58	3
+
+
+Doing a simple join with no parameters gives this:
+
+    $ join recv.txt send.txt
+    Timestamp Recv Send
+    2016/10/25-16:04:58 7 6
+    2016/10/25-16:05:01 9 18
+    2016/10/25-16:05:28 3 3
+    2016/10/25-16:05:31 9 9
+    2016/10/25-16:05:58 3 3
+    2016/10/25-16:06:01 9 9
+    2016/10/25-16:06:28 3 3
+
+As you can see, we're missing some of the measurements.  This is because by default `join` does an [inner join](https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join) of the two files (the intersection, in set theory).
+
+That's OK, but not really what we want.  We really need to be able to reflect each value from both datasets, and for that we need an [outer join](https://en.wikipedia.org/wiki/Join_(SQL)#Outer_join), or union.
+
+It turns out that `join` can do that too, although the syntax is a bit more complicated:
+
+    $ join -t $'\t' -o 0,1.2,2.2 -a 1 -a 2 recv.txt send.txt
+    Timestamp	Recv	Send
+    2016/10/25-16:04:58	7	6
+    2016/10/25-16:04:59	1
+    2016/10/25-16:05:00	7
+    2016/10/25-16:05:01	9	18
+    2016/10/25-16:05:28	3	3
+    2016/10/25-16:05:31	9	9
+    2016/10/25-16:05:58	3	3
+    2016/10/25-16:06:01	9	9
+    2016/10/25-16:06:28	3	3
+    2016/10/25-16:06:31		9
+    2016/10/25-16:06:58		3
+
+
+A brief run-down of the parameters is probably in order:
+
+|Parameter | Description
+|----------|------------
+| `-t $'\t'` | The `-t` parameter tells `join` what to use as the separator between fields.  The tab character is the best choice, as most Unix utilities assume that by default, and both Excel and Numbers can work with tab-delimited files.<br>The leading dollar-sign is a [trick](https://unix.stackexchange.com/a/46931/198530) used to to pass a literal tab character on the command line  .
+| `-o&nbsp;0,1.2,2.2` | Specifies which fields to output.  In this case, we want the "join field" (in this case, the first field from both files), then the second field from file #1, then the second field from file #2.
+| `-a 1` | Tells `join` that we want **all** the fields from file #1.
+| `-a 2` | Ditto for file #2.
+
+As you can probably see, you can also get fancy and do things like left outer joins and right outer joins, depending on the parameters passed.
+
+Of course, you could easily import these text files into a "real" database and generate reports that way.  But, you can accomplish a surprising amount of data manipulation and reporting with Linux's built-in utilities and plain old text files.
+</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Custom-Tailored Configuration]]></title>
@@ -302,81 +417,6 @@ can read input either from stdin, or from a file specified on the command line.
 The above snippet does just that, and also works well with command-line parsers
 (e.g., `GetOpt`) that eat their parameters by removing them from the ARGV
 array.
-
-
-</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Where Am I?]]></title>
-    <link href="http://btorpey.github.io/blog/2014/05/29/where-am-i/"/>
-    <updated>2014-05-29T00:00:00-04:00</updated>
-    <id>http://btorpey.github.io/blog/2014/05/29/where-am-i</id>
-    <content type="html"><![CDATA[<p><img class="right" src="/images/gilligans-island-tv-show.jpg" width="320" height="240"> 
-
-From *Robinson Crusoe* to *Gilligan's Island* to *Lost*, tales of being
-stranded on a desert island seem to resonate with people in a special way. Some
-of that likely has to do with the exotic locales, and the practical challenges
-of getting water, food and shelter.
-
-But an even more basic part is the unanswered question: "Where am I?" that makes
-things so -- well, *mysterious*.
-
-Shell scripting can be pretty mysterious too at times, but in this installment
-we'll learn how to answer that basic question of "Where am I?" to make shell
-scripting a little less mysterious.
-
-<!--more-->
-
-One of the tenets of the Unix way is brevity, and one consequence of that is
-that well-behaved programs should be able to find whatever other resources they
-need without having to be told where they are. Windows attempts to
-solve this problem with the (gack!) registry, but Unix tends to use a simpler
-approach: needed resources are placed either in well-known locations (e.g., /etc
-for system programs), or where they can be found relative to the location of the
-program itself.
-
-Another attribute of a well-behaved Unix program is that it
-should be able to run from any location, whether it's invoked with a full path,
-or found via the PATH variable.
-
-So, how do we reconcile those two requirements? And specifically, how do we do
-that in shell scripts? Since -- regardless of what your "main" language is, if
-you're programming in Unix/Linux, you're probably also writing a boatload of
-shell scripts too.
-
-It turns out that, at least in bash, there is a
-simple but non-obvious way to do get the location of the script file itself,
-which goes something like this:
-
-    SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE}) && /bin/pwd) 
-
-Let's follow this through and see how it works:
-
--   The `$( ... )` construct invokes a sub-shell. This is handy since it
-allows us to change the environment of the sub-shell (e.g., current directory)
-without affecting the current environment.
-
--   `$BASH_SOURCE` is a builtin variable that gives us the path to the shell
-script itself. For instance, if we invoke a script with `./scriptname.sh`,
-then that's what will end up in `${BASH_SOURCE}`.
-
--   To get the full path then we extract just the path part with `dirname`, again
-in a sub-shell.
-
--   We then `cd` into that directory, and if successful get the full pathname
-with `/bin/pwd`.
-    -   Note that we use `/bin/pwd` to get the path. This version resolves any
-    symbolic links to return the actual physical path. There is also a `pwd`
-    built-in to bash, but that one does not expand symbolic links by default.
-<br>
--   Finally, the result is assigned to SCRIPT_DIR.
-
-We now have the full path of the script file itself, and can use that to locate
-any other resources needed by the script. For a real-world example, you can
-check out the [these scripts](<https://github.com/btorpey/latency-utils.git>) from
- [my earlier post on visualizing latency](</blog/2014/05/16/visualizing-latency/>).
 
 
 </p>

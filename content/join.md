@@ -103,3 +103,8 @@ A brief run-down of the parameters is probably in order:
 As you can probably see, you can also get fancy and do things like left outer joins and right outer joins, depending on the parameters passed.
 
 Of course, you could easily import these text files into a "real" database and generate reports that way.  But, you can accomplish a surprising amount of data manipulation and reporting with Linux's built-in utilities and plain old text files.
+
+### Acknowledgements
+I couldn't remember where I had originally seen the `join` command, but recently found it again in a [nice post by Alexander Blagoev](http://ablagoev.github.io/linux/adventures/commands/2017/02/19/adventures-in-usr-bin.html).  Check it out for even more obscure commands!  And, thanks Alexander!  
+
+And thanks also to Igor for his own [very nice post](http://shiroyasha.io/coreutils-that-you-might-not-know.html) that led  me back to Alexander's.

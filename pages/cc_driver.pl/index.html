@@ -393,6 +393,7 @@ cd {directory}; [command] {file} -- [parameters] -I .. -D ..
 <span class="line-number">201</span>
 <span class="line-number">202</span>
 <span class="line-number">203</span>
+<span class="line-number">204</span>
 </pre></td><td class="code"><pre><code class="perl"><span class="line"><span class="c1">#!/usr/bin/perl</span>
 </span><span class="line"><span class="c1">#</span>
 </span><span class="line"><span class="c1"># Copyright 2016 by Bill Torpey. All Rights Reserved.</span>
@@ -484,6 +485,7 @@ cd {directory}; [command] {file} -- [parameters] -I .. -D ..
 </span><span class="line">
 </span><span class="line"><span class="c1">###############################################################</span>
 </span><span class="line"><span class="c1"># main</span>
+</span><span class="line">
 </span><span class="line"><span class="k">my</span> <span class="nv">$compile_commands</span><span class="p">;</span>
 </span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="o">-</span><span class="n">f</span> <span class="nv">$build_path</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="line">   <span class="nv">$compile_commands</span> <span class="o">=</span> <span class="nv">$build_path</span><span class="p">;</span>
@@ -559,7 +561,7 @@ cd {directory}; [command] {file} -- [parameters] -I .. -D ..
 </span><span class="line">   <span class="k">elsif</span> <span class="p">(</span><span class="nv">$tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">eq</span> <span class="s">&#39;&quot;file&quot;:&#39;</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="line">      <span class="nv">$file</span> <span class="o">=</span> <span class="n">trim</span><span class="p">(</span><span class="nv">$tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
 </span><span class="line">   <span class="p">}</span>
-</span><span class="line">   <span class="k">elsif</span> <span class="p">(</span><span class="nv">$tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">eq</span> <span class="s">&#39;},&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">   <span class="k">elsif</span> <span class="p">((</span><span class="nv">$tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">eq</span> <span class="s">&#39;},&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="nv">$tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">eq</span> <span class="s">&#39;}&#39;</span><span class="p">))</span> <span class="p">{</span>
 </span><span class="line">      <span class="c1"># end of an entry</span>
 </span><span class="line">      <span class="k">my</span> <span class="nv">$params</span> <span class="o">=</span> <span class="nb">join</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="nv">@params</span><span class="p">);</span>
 </span><span class="line">      <span class="k">my</span> <span class="nv">$system_includes</span> <span class="o">=</span> <span class="nb">join</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="nv">@system_includes</span><span class="p">);</span>

@@ -128,13 +128,15 @@ Well, as the saying goes: In theory, there’s no difference between theory and 
 
 <p>In 2014, the Wombat business was sold by NYSE to <a href="https://www.velatradingtech.com/">Vela Trading Technologies</a> (née SR Labs), which provides the proprietary Data Fabric middleware, and is also the primary maintainer for OpenMAMA.</p>
 
-<p>Which brings us to the present day – I continue to use the commercial variant at my day job, where it provides the message bus that we use to process millions of transactional messages every day. And, I’ve recently started working with OpenMAMA again, so it seemed like a good idea to use that code as an example of how to use static analysis tools to identify latent bugs.</p>
+<p>Which brings us to the present day – I’ve recently started working with OpenMAMA again, so it seemed like a good idea to use that code as an example of how to use static analysis tools to identify latent bugs.</p>
+
+<p>And, just to be clear, this is not a criticism of OpenMAMA – it’s an impressive piece of work, and has proven itself in demanding real-world situations.  </p>
 
 <h2 id="following-along">Following along</h2>
 
 <p>The analysis presented here is based on OpenMAMA release 6.2.1, which can be found <a href="https://github.com/OpenMAMA/OpenMAMA/releases/tag/OpenMAMA-6.2.1-release">here</a>.</p>
 
-<p>I use <a href="http://cppcheck.sourceforge.net/">cppcheck version 1.80</a> and <a href="http://releases.llvm.org/download.html#5.0.0">clang version 5.0.0</a>.</p>
+<p>I used <a href="http://cppcheck.sourceforge.net/">cppcheck version 1.80</a> and <a href="http://releases.llvm.org/download.html#5.0.0">clang version 5.0.0</a>.</p>
 
 <p>Check out the <a href="/blog/categories/static-analysis/">earlier articles in this series</a> for more on building and running the various tools, including a bunch of helper scripts in the <a href="https://github.com/btorpey/static">GitHub repo</a>.</p>
 

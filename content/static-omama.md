@@ -32,13 +32,15 @@ In 2012 NYSE Technologies donated OpenMAMA to the Linux Foundation, again with t
 
 In 2014, the Wombat business was sold by NYSE to [Vela Trading Technologies](https://www.velatradingtech.com/) (née SR Labs), which provides the proprietary Data Fabric middleware, and is also the primary maintainer for OpenMAMA.
 
-Which brings us to the present day -- I continue to use the commercial variant at my day job, where it provides the message bus that we use to process millions of transactional messages every day. And, I've recently started working with OpenMAMA again, so it seemed like a good idea to use that code as an example of how to use static analysis tools to identify latent bugs.
+Which brings us to the present day -- I've recently started working with OpenMAMA again, so it seemed like a good idea to use that code as an example of how to use static analysis tools to identify latent bugs.
+
+And, just to be clear, this is not a criticism of OpenMAMA -- it's an impressive piece of work, and has proven itself in demanding real-world situations.  
 
 ## Following along
 
 The analysis presented here is based on OpenMAMA release 6.2.1, which can be found [here](https://github.com/OpenMAMA/OpenMAMA/releases/tag/OpenMAMA-6.2.1-release).
 
-I use [cppcheck version 1.80](http://cppcheck.sourceforge.net/) and [clang version 5.0.0](http://releases.llvm.org/download.html#5.0.0).
+I used [cppcheck version 1.80](http://cppcheck.sourceforge.net/) and [clang version 5.0.0](http://releases.llvm.org/download.html#5.0.0).
 
 Check out the [earlier articles in this series](/blog/categories/static-analysis/) for more on building and running the various tools, including a bunch of helper scripts in the [GitHub repo](https://github.com/btorpey/static).
 

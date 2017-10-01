@@ -106,7 +106,7 @@
 
 <p>In the earlier articles I used a synthetic code-base <a href="https://github.com/regehr/itc-benchmarks">from ITC Research</a> to test clang, cppcheck and PVS-Studio.  I also ran all three tools on the code-bases that I’m responsible for maintaining at my “day job”, but I wasn’t able to share detailed results from that analysis, given that the code is not public.</p>
 
-<p>In this article, I want to continue the discussion of static analysis by diving into a real-world, open-source code base that I’ve been working with lately.</p>
+<p>In this article, I want to expand the discussion of static analysis by diving into a real-world, open-source code base that I’ve been working with lately, with specific examples of the kinds of problems static analysis can expose.</p>
 
 <!-- more -->
 
@@ -117,16 +117,11 @@
 
 <p>So Wombat developed an open API which could sit on top of any messaging middleware, and they called it MAMA, for Middleware Agnostic Messaging API.  They also developed bindings for Rendezvous, in addition to their own software, so that prospective customers would have a warm and fuzzy feeling that they could write their applications once, and seamlessly switch out the underlying middleware software with little or no changes to their code.</p>
 
-<p>That strategy worked well enough that in 2008 Wombat was acquired by the New York Stock Exchange, which renamed the software “Data Fabric” and used it as the backbone of their market-data network (SuperFeed).
-When the company I was working for was also acquired by NYSE in 2009 I was tasked with replacing our existing middleware layer, which used Rendezvous, with the Mama/Wombat middleware.</p>
+<p>That strategy worked well enough that in 2008 Wombat was acquired by the New York Stock Exchange, which renamed the software “Data Fabric” and used it as the backbone of their market-data network (SuperFeed).</p>
 
-<p><span class="pullquote-right" data-pullquote="In theory, there&#8217;s no difference between theory and practice.  In practice, there is.">
-Well, as the saying goes: In theory, there’s no difference between theory and practice.  In practice, there is.  That turned out to be quite a big job, mostly resolving problems related to object lifetimes.  (Transactional messaging is very different from market-data).  But it eventually got done, and in the process I came to appreciate the “pluggable” architecture of MAMA – it doesn’t make the issues related to different messaging systems go away, but it does provide a framework for dealing with them.
-</span></p>
+<p>When the company I was working for was also acquired by NYSE in 2009 I was tasked with replacing our existing middleware layer with the Mama/Wombat middleware, and in the process I came to appreciate the “pluggable” architecture of MAMA – it doesn’t make the issues related to different messaging systems go away, but it does provide a framework for dealing with them.</p>
 
-<p>In 2012 NYSE Technologies donated OpenMAMA to the Linux Foundation, again with the idea of using the “one API to rule them all” concept to help promote its proprietary DataFabric middleware, which was built on the MAMA API.  While I was working for NYSE Technologies, I developed the first open-source transport for OpenMAMA<sup id="fnref:avis"><a href="#fn:avis" rel="footnote">1</a></sup>.</p>
-
-<p>In 2014, the Wombat business was sold by NYSE to <a href="https://www.velatradingtech.com/">Vela Trading Technologies</a> (née SR Labs), which provides the proprietary Data Fabric middleware, and is also the primary maintainer for OpenMAMA.</p>
+<p>In 2011 NYSE Technologies donated OpenMAMA to the Linux Foundation.  Then, in 2014, the Wombat business was sold by NYSE to <a href="https://www.velatradingtech.com/">Vela Trading Technologies</a> (née SR Labs), which provides the proprietary Data Fabric middleware, and is also the primary maintainer for OpenMAMA.  There are a number of different <a href="http://www.openmama.org/what-is-openmama/supported-software">open-source and commercial implementations of OpenMAMA</a>.</p>
 
 <p>Which brings us to the present day – I’ve recently started working with OpenMAMA again, so it seemed like a good idea to use that code as an example of how to use static analysis tools to identify latent bugs.</p>
 
@@ -140,17 +135,41 @@ Well, as the saying goes: In theory, there’s no difference between theory and 
 
 <p>Check out the <a href="/blog/categories/static-analysis/">earlier articles in this series</a> for more on building and running the various tools, including a bunch of helper scripts in the <a href="https://github.com/btorpey/static">GitHub repo</a>.</p>
 
-<p>The results from running the tools on OpenMAMA can also be found in <a href="https://github.com/btorpey/static/tree/master/openmama">the repo</a>.</p>
+<p>For the OpenMAMA analysis, I first built OpenMAMA using Bear to create a compilation database from the scons build:  </p>
+
+<pre><code class="language-bash">bear scons blddir=build product=mama with_unittest=n \
+middleware=qpid with_testtools=n with_docs=n
+</code></pre>
+
+<p>With the compilation database in place, I ran the following scripts<sup id="fnref:tools"><a href="#fn:tools" rel="footnote">1</a></sup>, redirecting their output to create the result files:</p>
+
+<pre><code class="language-bash">cc_cppcheck.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+cc_clangcheck.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+cc_clangtidy.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+</code></pre>
+
+<p>The results from running the tools on OpenMAMA can also be found in <a href="https://github.com/btorpey/static/tree/master/openmama">the repo</a>, along with a <code>compile_commands.json</code> file that can be used without the need to build OpenMAMA from source<sup id="fnref:mamabuild"><a href="#fn:mamabuild" rel="footnote">2</a></sup>.  To do that, use the following commands:</p>
+
+<pre><code>cd [directory]
+git clone https://github.com/OpenMAMA/OpenMAMA.git
+git clone https://github.com/btorpey/static.git
+export PATH=$(/bin/pwd)/static/scripts:$PATH
+cp static/openmama/* OpenMAMA
+cd OpenMAMA
+cc_cppcheck.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+</code></pre>
+
+<p>I use the wonderful <a href="/blog/2013/01/29/beyond-compare/">Beyond Compare</a> to, well, compare the results from different tools.</p>
 
 <h2 id="false-positives">False Positives</h2>
-<p>Before we do anything else, let’s deal with the elephant in the room – false positives.  As in, warning messages whining about code that is actually perfectly fine.  Apparently, a lot of people have been burned by “lint”-type programs with terrible signal-to-noise ratios.  I know – I’ve been there too.</p>
+<p>Before we do anything else, let’s deal with the elephant in the room – false positives.  As in, warning messages for code that is actually perfectly fine.  Apparently, a lot of people have been burned by “lint”-type programs with terrible signal-to-noise ratios.  I know – I’ve been there too.</p>
 
 <p>Well, let me be clear – these are not your father’s lints.  I’ve been running these tools on a lot of real-world code for a while now, and there are essentially  NO false positives.  If one of these tools complains about some code, there’s something wrong with it, and you really want to fix it.</p>
 
 <h2 id="style-vs-substance">Style vs. Substance</h2>
 <p>cppcheck includes a lot of “style” checks, although the term can be misleading  – there are a number of “style” issues that can have a significant impact on quality.</p>
 
-<p>One of them crops up all over the place in OpenMAMA code, and that is the “The scope of the variable ‘&lt;name&gt;’ can be reduced” messages.  The reason for these is because of OpenMAMA’s insistence on K&amp;R-style variable declarations (i.e., all block-local variables must be declared before any executable statements).  This is apparently a holdover caused by a requirement to support old and broken Microsoft compilers<sup id="fnref:vs"><a href="#fn:vs" rel="footnote">2</a></sup>.</p>
+<p>One of them crops up all over the place in OpenMAMA code, and that is the “The scope of the variable ‘&lt;name&gt;’ can be reduced” messages.  The reason for these is because of OpenMAMA’s insistence on K&amp;R-style variable declarations (i.e., all block-local variables must be declared before any executable statements).  Which, in turn, is caused by OpenMAMA’s decision to support several old and broken Microsoft compilers<sup id="fnref:vs"><a href="#fn:vs" rel="footnote">3</a></sup>.</p>
 
 <p>The consensus has come to favor declaring variables as close to first use as possible, and that is part of the <a href="https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#es21-dont-introduce-a-variable-or-constant-before-you-need-to-use-it">C++ Core Guidelines</a>.  The only possible down-side to this approach is that it makes it easier to inadvertently declare “shadow” variables (i.e., variables with the same name in both inner and outer scopes), but modern compilers can flag shadow variables, which mitigates this potential problem (see my earlier article <a href="/blog/2015/03/17/shadow/">“Who Knows What Evil Lurks…”</a> for more).</p>
 
@@ -218,8 +237,7 @@ Similar, but potentially more serious is this one:</p>
 
 <p>Here’s the offending line of code:</p>
 
-<pre><code class="language-c">    version-&gt;mExtra[VERSION_INFO_EXTRA_MAX] = '\0';
-
+<pre><code>    version-&gt;mExtra[VERSION_INFO_EXTRA_MAX] = '\0';
 </code></pre>
 
 <p>And here’s the declaration:</p>
@@ -262,8 +280,9 @@ Similar, but potentially more serious is this one:</p>
 <p>For instance, cppcheck has gotten quite clever about being able to infer run-time behavior at compile-time, as in this example:</p>
 
 <blockquote>
-  <p>“mama/c_cpp/src/c/transport.c:269”,”(error) Memory leak: transport”
-“mama/c_cpp/src/c/transport.c:278”,”(error) Memory leak: transport”</p>
+  <p>[mama/c_cpp/src/c/transport.c:269]: (error) Memory leak: transport
+<br />
+[mama/c_cpp/src/c/transport.c:278]: (error) Memory leak: transport</p>
 </blockquote>
 
 <p>Here’s the code:</p>
@@ -320,7 +339,7 @@ Similar, but potentially more serious is this one:</p>
 <p>Not to be outdone, clang-tidy is doing some kind of flow analysis that allows it to catch this one:</p>
 
 <blockquote>
-  <p>“mama/c_cpp/src/c/queue.c:778”,”warning: Use of memory after it is freed”</p>
+  <p>[mama/c_cpp/src/c/queue.c:778]: warning: Use of memory after it is freed</p>
 </blockquote>
 
 <p>Here’s a snip of the code that clang-tidy is complaining about:</p>
@@ -341,7 +360,7 @@ Similar, but potentially more serious is this one:</p>
 783 }
 </code></pre>
 
-<p>clang-tidy understands that <code>queue</code> and <code>impl</code> are aliases for the same variable, and thus knows that it is illegal to access <code>queue</code> after <code>impl</code> has been freed.  In this case, the access causes no problems, because we’re only printing the address, but clang-tidy can’t know that<sup id="fnref:interproc"><a href="#fn:interproc" rel="footnote">3</a></sup>.</p>
+<p>clang-tidy understands that <code>queue</code> and <code>impl</code> are aliases for the same variable, and thus knows that it is illegal to access <code>queue</code> after <code>impl</code> has been freed.  In this case, the access causes no problems, because we’re only printing the address, but clang-tidy can’t know that<sup id="fnref:interproc"><a href="#fn:interproc" rel="footnote">4</a></sup>.</p>
 
 <h2 id="pointer-errors">Pointer Errors</h2>
 <p>I’ve <del>ranted</del> written <a href="/blog/2014/09/23/into-the-void/">before</a> on how much I hate <code>void*</code>’s.  For better or worse, the core OpenMAMA code is written in C, so there are a whole bunch of casts between <code>void*</code>s and “real” pointers that have the purpose of encapsulating the internal workings of the internal objects managed by the code.</p>
@@ -349,7 +368,7 @@ Similar, but potentially more serious is this one:</p>
 <p>In C this is about the best that can be done, but it can be hard to keep things straight, which can be a source of errors (like this one):</p>
 
 <blockquote>
-  <p>“mama/c_cpp/src/c/fielddesc.c:76”,”(warning) Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?”</p>
+  <p>[mama/c_cpp/src/c/fielddesc.c:76]: (warning) Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?</p>
 </blockquote>
 
 <p>And here’s the code:</p>
@@ -405,8 +424,11 @@ Similar, but potentially more serious is this one:</p>
 
 <div class="footnotes">
   <ol>
-    <li id="fn:avis">
-      <p>Which unfortunately was targeted at a rather feeble middleware solution called <a href="http://avis.sourceforge.net/why_avis.html">Avis</a>, so as not to compete with Data Fabric.  I argued against that decision, but I lost.  Later, Avis was replaced with <a href="https://qpid.apache.org/">Qpid/AMQP</a>, which for all its shortcomings is at least a reasonable choice for some applications.<a href="#fnref:avis" rel="reference">&#8617;</a></p>
+    <li id="fn:tools">
+      <p>Simply clone the <a href="https://github.com/btorpey/static">GitHub repo</a> to any directory, and then add the <code>scripts</code> directory to your <code>PATH</code>.<a href="#fnref:tools" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:mamabuild">
+      <p>OpenMAMA has its share of prerequisites – you can get a full list <a href="https://openmama.github.io/openmama_build_instructions.html">here</a>.<a href="#fnref:mamabuild" rel="reference">&#8617;</a></p>
     </li>
     <li id="fn:vs">
       <p>The list of supported platforms for OpenMAMA is <a href="https://openmama.github.io/openmama_supported_platforms.html">here</a>.  You can also find a lot of griping on the intertubes about Microsoft’s refusal to support C99, including <a href="https://visualstudio.uservoice.com/forums/121579-visual-studio-ide/suggestions/2089423-c99-support">this rather weak response</a> from Herb Sutter.  Happily, VS 2013 ended up supporting (most of) C99. <a href="#fnref:vs" rel="reference">&#8617;</a></p>

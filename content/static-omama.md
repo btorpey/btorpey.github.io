@@ -275,9 +275,9 @@ The state of the art in static analysis keeps advancing, thanks to people like D
 
 In particular, the latest releases of cppcheck and clang-tidy are detecting errors that previously could only be found by run-time analyzers like valgrind and Address Sanitizer.  This is great stuff, especially given how easy it is to run static analysis on your code.
 
-The benefits of using one (or more) static analysis tools just keep getting more and more compelling -- if you aren't using one of these tools, what are you waiting for?
+The benefits of using one (or more) static analysis tools just keep getting more and more compelling -- if you aren't using one of these tools, I hope this will encourage you to do so.
 
-If you found this article interesting or helpful, you might want to check out the other posts in [this series](/blog/categories/static-analysis/).  And please leave a comment below or [drop me a line](<mailto:wallstprog@gmail.com>) with any questions, suggestions, etc.
+If you found this article interesting or helpful, you might want to also check out the other posts in [this series](/blog/categories/static-analysis/).  And please leave a comment below or [drop me a line](<mailto:wallstprog@gmail.com>) with any questions, suggestions, etc.
 
 <hr>
 ## Footnotes

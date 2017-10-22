@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2017-10-01T11:54:18-04:00</updated>
+  <updated>2017-10-22T18:35:33-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,367 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Lots o' static]]></title>
+    <link href="http://btorpey.github.io/blog/2017/09/17/lotso-static/"/>
+    <updated>2017-09-17T00:00:00-04:00</updated>
+    <id>http://btorpey.github.io/blog/2017/09/17/lotso-static</id>
+    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/static-cat.jpg" width="250" height="188" /></p>
+
+<ul id="markdown-toc">
+  <li><a href="#openmama">OpenMAMA</a></li>
+  <li><a href="#following-along">Following along</a></li>
+  <li><a href="#false-positives">False Positives</a></li>
+  <li><a href="#style-vs-substance">Style vs. Substance</a></li>
+  <li><a href="#dead-code">Dead Code</a></li>
+  <li><a href="#buffer-overflow">Buffer Overflow</a></li>
+  <li><a href="#null-pointer-dereference">NULL pointer dereference</a></li>
+  <li><a href="#leaks">Leaks</a></li>
+  <li><a href="#pointer-errors">Pointer Errors</a></li>
+  <li><a href="#but-wait-theres-more">But Wait, There’s More!</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#footnotes">Footnotes</a></li>
+</ul>
+
+<p>I’ve written before about <a href="http://btorpey.github.io/blog/categories/static-analysis/">static analysis</a>, but in those earlier posts I wasn’t able to give specific examples of real-world code where static analysis is able to discover latent errors.</p>
+
+<p>In the earlier articles I used a synthetic code-base <a href="https://github.com/regehr/itc-benchmarks">from ITC Research</a> to test clang, cppcheck and PVS-Studio.  I also ran all three tools on the code-bases that I’m responsible for maintaining at my “day job”, but I wasn’t able to share detailed results from that analysis, given that the code is not public.</p>
+
+<p>In this article, I want to expand the discussion of static analysis by diving into a real-world, open-source code base that I’ve been working with lately, with specific examples of the kinds of problems static analysis can expose.</p>
+
+<!-- more -->
+
+<h2 id="openmama">OpenMAMA</h2>
+<p>For this example, I’ll be using the <a href="http://openmama.org">OpenMAMA</a> source code.  OpenMAMA is an open-source messaging middleware framework that provides a high-level API for a bunch of messaging transports, including open-source (Qpid/AMQP, ZeroMQ) and commercial (DataFabric, Rendezvous, Solace, etc).</p>
+
+<p>OpenMAMA is an interesting project – it started back in 2004 with Wombat Financial Software, which was attempting to sell its market-data software, but found it to be tough sledding.  While Wombat’s software performed better and was less expensive than Tibco’s Rendezvous (the de-facto standard at the time), no one wanted to rewrite their applications to target an API from a small company that might not be around in a couple of years.</p>
+
+<p>So Wombat developed an open API which could sit on top of any messaging middleware, and they called it MAMA, for Middleware Agnostic Messaging API.  They also developed bindings for Rendezvous, in addition to their own software, so that prospective customers would have a warm and fuzzy feeling that they could write their applications once, and seamlessly switch out the underlying middleware software with little or no changes to their code.</p>
+
+<p>That strategy worked well enough that in 2008 Wombat was acquired by the New York Stock Exchange, which renamed the software “Data Fabric” and used it as the backbone of their market-data network (SuperFeed).</p>
+
+<p>When the company I was working for was also acquired by NYSE in 2009 I was tasked with replacing our existing middleware layer with the Mama/Wombat middleware, and in the process I came to appreciate the “pluggable” architecture of MAMA – it doesn’t make the issues related to different messaging systems go away, but it does provide a framework for dealing with them.</p>
+
+<p>In 2011 NYSE Technologies donated OpenMAMA to the Linux Foundation.  Then, in 2014, the Wombat business was sold by NYSE to <a href="https://www.velatradingtech.com/">Vela Trading Technologies</a> (née SR Labs), which provides the proprietary Data Fabric middleware, and is also the primary maintainer for OpenMAMA.  There are a number of different <a href="http://www.openmama.org/what-is-openmama/supported-software">open-source and commercial implementations of OpenMAMA</a>.</p>
+
+<p>Which brings us to the present day – I’ve recently started working with OpenMAMA again, so it seemed like a good idea to use that code as an example of how to use static analysis tools to identify latent bugs.</p>
+
+<p>And, just to be clear, this is not a criticism of OpenMAMA – it’s an impressive piece of work, and has proven itself in demanding real-world situations.  </p>
+
+<h2 id="following-along">Following along</h2>
+
+<p>The analysis presented here is based on OpenMAMA release 6.2.1, which can be found <a href="https://github.com/OpenMAMA/OpenMAMA/releases/tag/OpenMAMA-6.2.1-release">here</a>.</p>
+
+<p>I used <a href="http://cppcheck.sourceforge.net/">cppcheck version 1.80</a> and <a href="http://releases.llvm.org/download.html#5.0.0">clang version 5.0.0</a>.</p>
+
+<p>Check out the <a href="http://btorpey.github.io/blog/categories/static-analysis/">earlier articles in this series</a> for more on building and running the various tools, including a bunch of helper scripts in the <a href="https://github.com/btorpey/static">GitHub repo</a>.</p>
+
+<p>For the OpenMAMA analysis, I first built OpenMAMA using Bear to create a compilation database from the scons build:  </p>
+
+<pre><code class="language-bash">bear scons blddir=build product=mama with_unittest=n \
+middleware=qpid with_testtools=n with_docs=n
+</code></pre>
+
+<p>With the compilation database in place, I ran the following scripts<sup id="fnref:tools"><a href="#fn:tools" rel="footnote">1</a></sup>, redirecting their output to create the result files:</p>
+
+<pre><code class="language-bash">cc_cppcheck.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+cc_clangcheck.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+cc_clangtidy.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+</code></pre>
+
+<p>The results from running the tools on OpenMAMA can also be found in <a href="https://github.com/btorpey/static/tree/master/openmama">the repo</a>, along with a <code>compile_commands.json</code> file that can be used without the need to build OpenMAMA from source<sup id="fnref:mamabuild"><a href="#fn:mamabuild" rel="footnote">2</a></sup>.  To do that, use the following commands:</p>
+
+<pre><code>cd [directory]
+git clone https://github.com/OpenMAMA/OpenMAMA.git
+git clone https://github.com/btorpey/static.git
+export PATH=$(/bin/pwd)/static/scripts:$PATH
+cp static/openmama/* OpenMAMA
+cd OpenMAMA
+cc_cppcheck.sh -i common/c_cpp/src/c/ -i mama/c_cpp/src/c/ -c 
+</code></pre>
+
+<p>I use the wonderful <a href="http://btorpey.github.io/blog/2013/01/29/beyond-compare/">Beyond Compare</a> to, well, compare the results from different tools.</p>
+
+<h2 id="false-positives">False Positives</h2>
+<p>Before we do anything else, let’s deal with the elephant in the room – false positives.  As in, warning messages for code that is actually perfectly fine.  Apparently, a lot of people have been burned by “lint”-type programs with terrible signal-to-noise ratios.  I know – I’ve been there too.</p>
+
+<p>Well, let me be clear – these are not your father’s lints.  I’ve been running these tools on a lot of real-world code for a while now, and there are essentially  NO false positives.  If one of these tools complains about some code, there’s something wrong with it, and you really want to fix it.</p>
+
+<h2 id="style-vs-substance">Style vs. Substance</h2>
+<p>cppcheck includes a lot of “style” checks, although the term can be misleading  – there are a number of “style” issues that can have a significant impact on quality.</p>
+
+<p>One of them crops up all over the place in OpenMAMA code, and that is the “The scope of the variable ‘&lt;name&gt;’ can be reduced” messages.  The reason for these is because of OpenMAMA’s insistence on K&amp;R-style variable declarations (i.e., all block-local variables must be declared before any executable statements).  Which, in turn, is caused by OpenMAMA’s decision to support several old and broken Microsoft compilers<sup id="fnref:vs"><a href="#fn:vs" rel="footnote">3</a></sup>.</p>
+
+<p>The consensus has come to favor declaring variables as close to first use as possible, and that is part of the <a href="https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#es21-dont-introduce-a-variable-or-constant-before-you-need-to-use-it">C++ Core Guidelines</a>.  The only possible down-side to this approach is that it makes it easier to inadvertently declare “shadow” variables (i.e., variables with the same name in both inner and outer scopes), but modern compilers can flag shadow variables, which mitigates this potential problem (see my earlier article <a href="http://btorpey.github.io/blog/2015/03/17/shadow/">“Who Knows What Evil Lurks…”</a> for more).</p>
+
+<p>Some other “style” warnings produced by cppcheck include:</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/bridge/qpid/transport.c:1413]: (style) Consecutive return, break, continue, goto or throw statements are unnecessary.</p>
+</blockquote>
+
+<p>These are mostly benign, but reflect a lack of understanding of what statements like <code>continue</code> and <code>return</code> do, and can be confusing.
+<br />
+<br /></p>
+
+<blockquote>
+  <p>[common/c_cpp/src/c/list.c:295 -&gt; common/c_cpp/src/c/list.c:298]: (style) Variable ‘rval’ is reassigned a value before the old one has been used.</p>
+</blockquote>
+
+<p>There are a lot of these in OpenMAMA, and most of them are probably caused by the unfortunate decision to standardize on K&amp;R-style local variable declarations, but in other cases this can point to a potential logic problem.  (Another good reason to avoid K&amp;R-style declarations).</p>
+
+<p><br />
+Similar, but potentially more serious is this one:</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/bridge/qpid/transport.c:275]: (style) Variable ‘next’ is assigned a value that is never used.</p>
+</blockquote>
+
+<p>Maybe the variable was used in an earlier version of the code, but is no longer needed.  Or maybe we ended up using the wrong variable when we mean to use <code>next</code>.</p>
+
+<h2 id="dead-code">Dead Code</h2>
+
+<p>There are also cases where the analyzer can determine that the code as written is meaningless</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/bridge/qpid/subscription.c:179]: (style) A pointer can not be negative so it is either pointless or an error to check if it is.</p>
+</blockquote>
+
+<p>If something cannot happen, there is little point to testing for it – so testing for impossible conditions is almost always a sign that something is wrong with the code.</p>
+
+<p>Here are a few more of the same ilk:</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/dictionary.c:323]: (style) Checking if unsigned variable ‘*size’ is less than zero.</p>
+</blockquote>
+
+<!-- -->
+<blockquote>
+  <p>[mama/c_cpp/src/c/statslogger.c:731]: (style) Condition ‘status!=MAMA_STATUS_OK’ is always false</p>
+</blockquote>
+
+<!-- -->
+<blockquote>
+  <p>[mama/c_cpp/src/c/dqstrategy.c:543]: (style) Redundant condition: If ‘EXPR == 3’, the comparison ‘EXPR != 2’ is always true.</p>
+</blockquote>
+
+<p>Whether these warnings represent real bugs is a question that needs to be answered on a case-by-case basis, but I hope we can agree that they at the very least represent a <a href="https://en.wikipedia.org/wiki/Code_smell">“code smell”</a>, and the fewer of these in our code, the better.</p>
+
+<h2 id="buffer-overflow">Buffer Overflow</h2>
+<p>There are bugs, and there are bugs, but bugs that have a “delayed reaction”, are arguably the worst, partly because they can be so hard to track down.  Buffer overflows are a major cause of these kinds of bugs – a buffer overflow can trash return addresses on the stack causing a crash, or worse they can alter the program’s flow in ways that seem completely random.</p>
+
+<p>Here’s an example of a buffer overflow in OpenMAMA that was detected by cppcheck:</p>
+
+<blockquote>
+  <p>[common/c_cpp/src/c/strutils.c:632]: (error) Array ‘version.mExtra[16]’ accessed at index 16, which is out of bounds.</p>
+</blockquote>
+
+<p>Here’s the offending line of code:</p>
+
+<pre><code>    version-&gt;mExtra[VERSION_INFO_EXTRA_MAX] = '\0';
+</code></pre>
+
+<p>And here’s the declaration:</p>
+
+<pre><code class="language-c">    char mExtra[VERSION_INFO_EXTRA_MAX];
+</code></pre>
+
+<p>It turns out that this particular bug was fixed subsequent to the release – the bug report is <a href="https://github.com/OpenMAMA/OpenMAMA/pull/310">here</a>.  Interestingly, the bug report mentions that the bug was found using clang’s Address Sanitizer,  which means that code must have been executed to expose the bug.     Static analyzers like cppcheck can detect this bug without the need to run the code, which is a big advantage of static analysis.  In this example, cppcheck can tell at compile-time that the access is out-of-bounds, since it knows the size of mExtra.</p>
+
+<p>Of course, a static analyzer like cppcheck can’t detect <em>all</em> buffer overflows – just the ones that can be evaluated at compile-time.  So, we still need Address Sanitizer, or valgrind, or some other run-time analyzer, to detect overflows that depend on the run-time behavior of the program.  But I’ll take all the help I can get, and detecting at least some of these nasty bugs at compile-time is a win.</p>
+
+<h2 id="null-pointer-dereference">NULL pointer dereference</h2>
+<p>In contrast to the buffer overflow type of problem, dereferencing a NULL pointer is not mysterious at all – you’re going down hard, right now.</p>
+
+<p>So, reasonable programmers insert checks for NULL pointers, but reasonable is not the same as perfect, and sometimes we get it wrong.</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/msg.c:3619] -&gt; [mama/c_cpp/src/c/msg.c:3617]: (warning, inconclusive) Either the condition ‘!impl’ is redundant or there is possible null pointer dereference: impl.</p>
+</blockquote>
+
+<p>Here’s a snip of the code in question – see if you can spot the problem:</p>
+
+<pre><code class="language-c">3613    mamaMsgField
+3614    mamaMsgIterator_next (mamaMsgIterator iterator)
+3615    {
+3616        mamaMsgIteratorImpl* impl         = (mamaMsgIteratorImpl*)iterator;
+3617        mamaMsgFieldImpl*    currentField = (mamaMsgFieldImpl*) impl-&gt;mCurrentField;
+3618
+3619        if (!impl)
+3620            return (NULL);
+</code></pre>
+
+<p>cppcheck works similarly to other static analyzers when checking for possible NULL pointer dereference – it looks to see if a pointer is checked for NULL, and if it is, looks for code that dereferences the pointer outside the scope of that check.</p>
+
+<p>In this case, the code checks for <code>impl</code> being NULL, but not until it has already dereferenced the pointer.  cppcheck even helpfully ties together the check for NULL and the (earlier) dereference. (Ahem – yet another reason to avoid K&amp;R-style declarations).</p>
+
+<h2 id="leaks">Leaks</h2>
+<p>Similarly to checking for NULL pointers, detecting leaks is more of a job for valgrind, Address Sanitizer or some other run-time analysis tool.  However, that doesn’t mean that static analysis can’t give us a head-start on getting rid of our leaks.</p>
+
+<p>For instance, cppcheck has gotten quite clever about being able to infer run-time behavior at compile-time, as in this example:</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/transport.c:269]: (error) Memory leak: transport
+<br />
+[mama/c_cpp/src/c/transport.c:278]: (error) Memory leak: transport</p>
+</blockquote>
+
+<p>Here’s the code:</p>
+
+<pre><code class="language-c">253 mama_status
+254 mamaTransport_allocate (mamaTransport* result)
+255 {
+256     transportImpl*  transport    =   NULL;
+257     mama_status     status       =   MAMA_STATUS_OK;
+258
+259
+260     transport = (transportImpl*)calloc (1, sizeof (transportImpl ) );
+261     if (transport == NULL)  return MAMA_STATUS_NOMEM;
+262
+263     /*We need to create the throttle here as properties may be set
+264      before the transport is actually created.*/
+265     if (MAMA_STATUS_OK!=(status=wombatThrottle_allocate (&amp;self-&gt;mThrottle)))
+266     {
+267         mama_log (MAMA_LOG_LEVEL_ERROR, "mamaTransport_allocate (): Could not"
+268                   " create throttle.");
+269         return status;
+270     }
+271
+272     wombatThrottle_setRate (self-&gt;mThrottle,
+273                            MAMA_DEFAULT_THROTTLE_RATE);
+274
+275     if (MAMA_STATUS_OK !=
+276        (status = wombatThrottle_allocate (&amp;self-&gt;mRecapThrottle)))
+277     {
+278         return status;
+279     }
+280
+281     wombatThrottle_setRate (self-&gt;mRecapThrottle,
+282                             MAMA_DEFAULT_RECAP_THROTTLE_RATE);
+283
+284     self-&gt;mDescription          = NULL;
+285     self-&gt;mLoadBalanceCb        = NULL;
+286     self-&gt;mLoadBalanceInitialCb = NULL;
+287     self-&gt;mLoadBalanceHandle    = NULL;
+288     self-&gt;mCurTransportIndex    = 0;
+289     self-&gt;mDeactivateSubscriptionOnError = 1;
+290     self-&gt;mGroupSizeHint        = DEFAULT_GROUP_SIZE_HINT;
+291     *result = (mamaTransport)transport;
+292
+293     self-&gt;mName[0] = '\0';
+294
+295     return MAMA_STATUS_OK;
+296 }
+</code></pre>
+
+<p>cppcheck is able to determine that the local variable <code>transport</code> is never assigned in the two early returns, and thus can never be freed.
+<br /></p>
+
+<p>Not to be outdone, clang-tidy is doing some kind of flow analysis that allows it to catch this one:</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/queue.c:778]: warning: Use of memory after it is freed</p>
+</blockquote>
+
+<p>Here’s a snip of the code that clang-tidy is complaining about:</p>
+
+<pre><code class="language-c">651 mama_status
+652 mamaQueue_destroy (mamaQueue queue)
+653 {
+654     mamaQueueImpl* impl = (mamaQueueImpl*)queue;
+655     mama_status    status = MAMA_STATUS_OK;
+...
+776         free (impl);
+777
+778         mama_log (MAMA_LOG_LEVEL_FINEST, "Leaving mamaQueue_destroy for queue 0x%X.", queue);
+779         status = MAMA_STATUS_OK;
+780     }
+781
+782    return status;
+783 }
+</code></pre>
+
+<p>clang-tidy understands that <code>queue</code> and <code>impl</code> are aliases for the same variable, and thus knows that it is illegal to access <code>queue</code> after <code>impl</code> has been freed.  In this case, the access causes no problems, because we’re only printing the address, but clang-tidy can’t know that<sup id="fnref:interproc"><a href="#fn:interproc" rel="footnote">4</a></sup>.</p>
+
+<h2 id="pointer-errors">Pointer Errors</h2>
+<p>I’ve <del>ranted</del> written <a href="http://btorpey.github.io/blog/2014/09/23/into-the-void/">before</a> on how much I hate <code>void*</code>’s.  For better or worse, the core OpenMAMA code is written in C, so there are a whole bunch of casts between <code>void*</code>s and “real” pointers that have the purpose of encapsulating the internal workings of the internal objects managed by the code.</p>
+
+<p>In C this is about the best that can be done, but it can be hard to keep things straight, which can be a source of errors (like this one):</p>
+
+<blockquote>
+  <p>[mama/c_cpp/src/c/fielddesc.c:76]: (warning) Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?</p>
+</blockquote>
+
+<p>And here’s the code:</p>
+
+<pre><code class="language-c">65  mama_status
+66  mamaFieldDescriptor_destroy (mamaFieldDescriptor descriptor)
+67  {
+68      mamaFieldDescriptorImpl* impl = (mamaFieldDescriptorImpl*) descriptor;
+69
+70      if (impl == NULL)
+71          return MAMA_STATUS_OK;
+72
+73      free (impl-&gt;mName);
+74      free (impl);
+75
+76      descriptor = NULL;
+77      return MAMA_STATUS_OK;
+78  }
+</code></pre>
+
+<p>Of course <code>mamaFieldDescriptor</code> is defined as a <code>void*</code>, so it’s perfectly OK to set it to NULL, but since it’s passed by value, the assignment has no effect other than to zero out the copy of the parameter on the stack.</p>
+
+<h2 id="but-wait-theres-more">But Wait, There’s More!</h2>
+<p>The preceding sections go into detail about specific examples of serious errors detected by cppcheck and clang.  But, these are very much the tip of the iceberg.</p>
+
+<p>Some of the other problems detected include:</p>
+
+<ul>
+  <li>use of non-reentrant system functions (e.g., <code>strtok</code>) in multi-threaded code;</li>
+  <li>use of obsolete functions (e.g., <code>gethostbyname</code>);</li>
+  <li>incorrect usage of <code>printf</code>-style functions;</li>
+  <li>incorrect usage of <code>strcpy</code>-style functions (e.g., leaving strings without terminating NULL characters);</li>
+  <li>incorrect usage of varargs functions;</li>
+  <li>different parameter names in function declarations vs. definitions;</li>
+</ul>
+
+<p>Some of these are nastier than others, but they are all legitimate problems and should be fixed.</p>
+
+<p>The full results for both tools are available in the <a href="https://github.com/btorpey/static/tree/master/openmama">GitHub repo</a>, so it’s easy to compare the warnings against the code.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>The state of the art in static analysis keeps advancing, thanks to people like Daniel Marjamäki and the rest of the <a href="https://github.com/danmar/cppcheck/graphs/contributors">cppcheck team</a>, and Gábor Horváth and the <a href="https://github.com/llvm-mirror/clang/graphs/contributors">team supporting clang</a>.</p>
+
+<p>In particular, the latest releases of cppcheck and clang-tidy are detecting errors that previously could only be found by run-time analyzers like valgrind and Address Sanitizer.  This is great stuff, especially given how easy it is to run static analysis on your code.</p>
+
+<p>The benefits of using one (or more) static analysis tools just keep getting more and more compelling – if you aren’t using one of these tools, I hope this will encourage you to do so.</p>
+
+<p>If you found this article interesting or helpful, you might want to also check out the other posts in <a href="http://btorpey.github.io/blog/categories/static-analysis/">this series</a>.  And please leave a comment below or <a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#119;&#097;&#108;&#108;&#115;&#116;&#112;&#114;&#111;&#103;&#064;&#103;&#109;&#097;&#105;&#108;&#046;&#099;&#111;&#109;">drop me a line</a> with any questions, suggestions, etc.</p>
+
+<hr />
+
+<h2 id="footnotes">Footnotes</h2>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:tools">
+      <p>Simply clone the <a href="https://github.com/btorpey/static">GitHub repo</a> to any directory, and then add the <code>scripts</code> directory to your <code>PATH</code>.<a href="#fnref:tools" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:mamabuild">
+      <p>OpenMAMA has its share of prerequisites – you can get a full list <a href="https://openmama.github.io/openmama_build_instructions.html">here</a>.<a href="#fnref:mamabuild" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:vs">
+      <p>The list of supported platforms for OpenMAMA is <a href="https://openmama.github.io/openmama_supported_platforms.html">here</a>.  You can also find a lot of griping on the intertubes about Microsoft’s refusal to support C99, including <a href="https://visualstudio.uservoice.com/forums/121579-visual-studio-ide/suggestions/2089423-c99-support">this rather weak response</a> from Herb Sutter.  Happily, VS 2013 ended up supporting (most of) C99. <a href="#fnref:vs" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:interproc">
+      <p>Unless it knows what <code>mama_log</code> does.  It turns out that clang-tidy can do inter-procedural analysis, but only within a single translation unit.  There is some work ongoing to add support for analysis across translation units by Gábor Horvath et al. – for more see <a href="http://llvm.org/devmtg/2017-03//2017/02/20/accepted-sessions.html#7">“Cross Translational Unit Analysis in Clang Static Analyzer: Prototype and Measurements”</a>.<a href="#fnref:interproc" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[We Don't Need No Stinkin' Databases]]></title>
@@ -4277,30 +4638,6 @@ this discussion.</p>
     </li>
     <li id="fn:1">
       <p><a href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization</a><a href="#fnref:1" rel="reference">&#8617;</a></p>
-    </li>
-  </ol>
-</div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[What's Old Is New Again]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again/"/>
-    <updated>2014-02-11T00:00:00-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/11/whats-old-is-new-again</id>
-    <content type="html"><![CDATA[<p>Sometimes it seems that all this low-latency, HFT stuff is new, but then
-you see something like this…</p>
-
-<!--more-->
-
-<p><img class="center" src="http://edison.rutgers.edu/images/xx/xx1325.jpg" /> </p>
-
-<p>Source: The Thomas Edison Papers, Rutgers University <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
-
-<div class="footnotes">
-  <ol>
-    <li id="fn:1">
-      <p><a href="http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;">http://edison.rutgers.edu/NamesSearch/glocpage.php3?gloc=X135&amp;</a><a href="#fnref:1" rel="reference">&#8617;</a></p>
     </li>
   </ol>
 </div>

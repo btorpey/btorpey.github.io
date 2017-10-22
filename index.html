@@ -9,7 +9,7 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="I’ve been working on performance analysis recently, and a large part of that is scraping log files to capture interesting events and chart them. I’m &hellip;">
+  <meta name="description" content="OpenMAMA Following along False Positives Style vs. Substance Dead Code Buffer Overflow NULL pointer dereference Leaks Pointer Errors But Wait, There &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,68 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/09/17/lotso-static/">Lots o&#8217; static</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2017-09-17T00:00:00-04:00" pubdate data-updated="true"></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><img class="left" src="/images/static-cat.jpg" width="250" height="188" /></p>
+
+<ul id="markdown-toc">
+  <li><a href="#openmama">OpenMAMA</a></li>
+  <li><a href="#following-along">Following along</a></li>
+  <li><a href="#false-positives">False Positives</a></li>
+  <li><a href="#style-vs-substance">Style vs. Substance</a></li>
+  <li><a href="#dead-code">Dead Code</a></li>
+  <li><a href="#buffer-overflow">Buffer Overflow</a></li>
+  <li><a href="#null-pointer-dereference">NULL pointer dereference</a></li>
+  <li><a href="#leaks">Leaks</a></li>
+  <li><a href="#pointer-errors">Pointer Errors</a></li>
+  <li><a href="#but-wait-theres-more">But Wait, There’s More!</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+  <li><a href="#footnotes">Footnotes</a></li>
+</ul>
+
+<p>I’ve written before about <a href="/blog/categories/static-analysis/">static analysis</a>, but in those earlier posts I wasn’t able to give specific examples of real-world code where static analysis is able to discover latent errors.</p>
+
+<p>In the earlier articles I used a synthetic code-base <a href="https://github.com/regehr/itc-benchmarks">from ITC Research</a> to test clang, cppcheck and PVS-Studio.  I also ran all three tools on the code-bases that I’m responsible for maintaining at my “day job”, but I wasn’t able to share detailed results from that analysis, given that the code is not public.</p>
+
+<p>In this article, I want to expand the discussion of static analysis by diving into a real-world, open-source code base that I’ve been working with lately, with specific examples of the kinds of problems static analysis can expose.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2017/09/17/lotso-static/">&#8230;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -543,56 +605,6 @@ I have to say that I think the C fanboys are just nuts.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/09/21/repent/">Repent, Sinner!</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-09-21T00:00:00-04:00" pubdate data-updated="true"></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><img class="left" src="/images/nun-with-ruler.jpg" width="240" height="160" /> </p>
-
-<p>When I was a kid I went to Catholic school, and back in those days 
-the nuns would indeed rap your knuckles with a ruler if you
-misbehaved. That doesn’t happen so much any more, but when I see someone 
-making use of the <a href="http://c2.com/cgi/wiki?CopyAndPasteProgramming">copy-paste anti-pattern</a>, 
-I’m tempted to reach for a ruler myself. 
-(I know, probably not a good career move ;-)</p>
-
-<p>Short of rapping someone’s knuckles with a ruler, though, how do you show some poor sinner the error of his ways?</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/09/21/repent/">&#8230;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -608,6 +620,10 @@ I’m tempted to reach for a ruler myself.
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2017/09/17/lotso-static/">Lots o&#8217; static</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2017/05/10/join/">We Don&#8217;t Need No Stinkin&#8217; Databases</a>
       </li>
     
@@ -621,10 +637,6 @@ I’m tempted to reach for a ruler myself.
     
       <li class="post">
         <a href="/blog/2016/04/07/mo-static/">Mo&#8217; Static</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/10/13/remote-scripting-with-bash-and-ssh/">Remote Scripting with bash and ssh</a>
       </li>
     
   </ul>

@@ -107,7 +107,7 @@ as a timing source.
 
 Both of these problems are solved in more recent CPUs: a *constant* TSC keeps
 all TSC's synchronized across all cores in a system, and an *invariant* (or
-*nonstop*) TSC keeps the TSC running at a constant rate regardless of changes in
+*nonstop*) TSC keeps the TSC running at a fixed rate regardless of changes in
 CPU frequency. To check whether your CPU supports one or both, execute the
 following and examine the values output in flags:
 
@@ -118,17 +118,14 @@ flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
 
 The flags have the following meanings:
 
-tsc
-:  The system has a TSC clock.
+Flag| Meaning
+------|-------
+tsc|The system has a TSC clock.
+rdtscp|The RDTSCP instruction is available.
+constant_tsc|The TSC is synchronized across all sockets/cores.
+nonstop_tsc| The TSC is not affected by power management code.
 
-rdtscp
-:  The RDTSCP instruction is available.
-
-constant_tsc
-:  The TSC is synchronized across all sockets/cores.
-
-nonstop_tsc
-:  The TSC is not affected by power management code.
+<br/>
 
 ### Other Clock Sources
 
@@ -298,6 +295,7 @@ Next up is a brief discussion of how to read these different clock values from
 software.
 
 <a name="rdtscp"></a>
+
 ### Assembler
 
 In assembler language, the RDTSC instruction returns the value of the TSC

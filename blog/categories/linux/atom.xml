@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2017-10-22T18:35:33-04:00</updated>
+  <updated>2017-11-05T10:59:39-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -57,7 +57,7 @@ I used [cppcheck version 1.80](http://cppcheck.sourceforge.net/) and [clang vers
 
 Check out the [earlier articles in this series](/blog/categories/static-analysis/) for more on building and running the various tools, including a bunch of helper scripts in the [GitHub repo](https://github.com/btorpey/static).
 
-For the OpenMAMA analysis, I first built OpenMAMA using Bear to create a compilation database from the scons build:  
+For the OpenMAMA analysis, I first built OpenMAMA using [Bear](https://github.com/rizsotto/Bear) to create a compilation database from the scons build:  
 
 ~~~bash
 bear scons blddir=build product=mama with_unittest=n \

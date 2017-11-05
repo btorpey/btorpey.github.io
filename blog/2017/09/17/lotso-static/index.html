@@ -9,8 +9,8 @@
   <meta name="author" content="Bill Torpey">
 
   
-  <meta name="description" content="OpenMAMA Following along False Positives Style vs. Substance Dead Code Buffer Overflow NULL pointer dereference Leaks Pointer Errors But Wait, There &hellip;">
-  <meta name="keywords" content="C++, linux, clang, static analysis, cppcheck, PVS-Studio">
+  <meta name="description" content="Running C++ static analysis tools on OpenMAMA middleware">
+  <meta name="keywords" content="C++, linux, clang, static analysis, cppcheck, PVS-Studio, OpenMAMA">
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
@@ -155,7 +155,7 @@
 
 <p>Check out the <a href="/blog/categories/static-analysis/">earlier articles in this series</a> for more on building and running the various tools, including a bunch of helper scripts in the <a href="https://github.com/btorpey/static">GitHub repo</a>.</p>
 
-<p>For the OpenMAMA analysis, I first built OpenMAMA using Bear to create a compilation database from the scons build:  </p>
+<p>For the OpenMAMA analysis, I first built OpenMAMA using <a href="https://github.com/rizsotto/Bear">Bear</a> to create a compilation database from the scons build:  </p>
 
 <pre><code class="language-bash">bear scons blddir=build product=mama with_unittest=n \
 middleware=qpid with_testtools=n with_docs=n
@@ -485,7 +485,7 @@ Similar, but potentially more serious is this one:</p>
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/c-plus-plus/'>c++</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/static-analysis/'>static-analysis</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
+    <a class='category' href='/blog/categories/c-plus-plus/'>c++</a>, <a class='category' href='/blog/categories/linux/'>linux</a>, <a class='category' href='/blog/categories/openmama/'>openmama</a>, <a class='category' href='/blog/categories/static-analysis/'>static-analysis</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
   
 </span>
 

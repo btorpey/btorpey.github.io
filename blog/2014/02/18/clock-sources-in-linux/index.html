@@ -227,7 +227,7 @@ at 100%  no more, no less).</p>
 
 <p>Both of these problems are solved in more recent CPUs: a <em>constant</em> TSC keeps
 all TSC’s synchronized across all cores in a system, and an <em>invariant</em> (or
-<em>nonstop</em>) TSC keeps the TSC running at a constant rate regardless of changes in
+<em>nonstop</em>) TSC keeps the TSC running at a fixed rate regardless of changes in
 CPU frequency. To check whether your CPU supports one or both, execute the
 following and examine the values output in flags:</p>
 
@@ -238,16 +238,34 @@ flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
 
 <p>The flags have the following meanings:</p>
 
-<dl>
-  <dt>tsc</dt>
-  <dd>The system has a TSC clock.</dd>
-  <dt>rdtscp</dt>
-  <dd>The RDTSCP instruction is available.</dd>
-  <dt>constant_tsc</dt>
-  <dd>The TSC is synchronized across all sockets/cores.</dd>
-  <dt>nonstop_tsc</dt>
-  <dd>The TSC is not affected by power management code.</dd>
-</dl>
+<table>
+  <thead>
+    <tr>
+      <th>Flag</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>tsc</td>
+      <td>The system has a TSC clock.</td>
+    </tr>
+    <tr>
+      <td>rdtscp</td>
+      <td>The RDTSCP instruction is available.</td>
+    </tr>
+    <tr>
+      <td>constant_tsc</td>
+      <td>The TSC is synchronized across all sockets/cores.</td>
+    </tr>
+    <tr>
+      <td>nonstop_tsc</td>
+      <td>The TSC is not affected by power management code.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
 
 <h3 id="other-clock-sources">Other Clock Sources</h3>
 
@@ -422,8 +440,9 @@ generate a frequency of exactly 1000 Hz – it’s actually 1000.15 Hz.</p>
 <p>Next up is a brief discussion of how to read these different clock values from
 software.</p>
 
-<p><a name="rdtscp"></a>
-### Assembler</p>
+<p><a name="rdtscp"></a></p>
+
+<h3 id="assembler">Assembler</h3>
 
 <p>In assembler language, the RDTSC instruction returns the value of the TSC
 directly in registers edx:eax. However, since modern CPU’s support out-of-order

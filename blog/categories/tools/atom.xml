@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-14T21:05:48-04:00</updated>
+  <updated>2019-07-14T21:06:49-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -46,7 +46,7 @@ Value | Impl | Checking | Message | Backtrace + mappings (since glibc 2.4+) | Ab
 5 | Slow | Full | Brief | No | Yes
 7 | Slow | Full | Brief | Yes | Yes
 
-</br>
+
 
 What may be surprising is that the default behavior is for `malloc` to do at least minimal checking at runtime, and to **abort the executable with a core file** if those checks fail.  
 

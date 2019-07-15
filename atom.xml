@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-14T21:05:48-04:00</updated>
+  <updated>2019-07-14T21:06:49-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -106,8 +106,6 @@
     </tr>
   </tbody>
 </table>
-
-<p>&lt;/br&gt;</p>
 
 <p>What may be surprising is that the default behavior is for <code>malloc</code> to do at least minimal checking at runtime, and to <strong>abort the executable with a core file</strong> if those checks fail.  </p>
 

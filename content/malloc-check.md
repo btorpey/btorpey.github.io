@@ -26,7 +26,7 @@ Value | Impl | Checking | Message | Backtrace + mappings (since glibc 2.4+) | Ab
 5 | Slow | Full | Brief | No | Yes
 7 | Slow | Full | Brief | Yes | Yes
 
-</br>
+
 
 What may be surprising is that the default behavior is for `malloc` to do at least minimal checking at runtime, and to **abort the executable with a core file** if those checks fail.  
 

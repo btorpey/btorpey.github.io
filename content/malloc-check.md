@@ -34,6 +34,9 @@ This may or may not be what you want.  Given that the minimal checks in the fast
 
 The other relevant point here is that setting `MALLOC_CHECK_` to any non-zero value causes `malloc` to use the slower heap functions that perform additional checks.  I've included a [sample benchmark program](https://github.com/WallStProg/malloc-check/blob/master/malloc-bench.cpp) that shows the additional checking adds about 30% to the overhead of the `malloc`/`free` calls.  (And while the benchmark program is dumb as dirt, its results are similar to results on "real-world" tests).
 
+### Multi-threaded Performance
+If the benchmark code is to be believed, the impact on performance of the extra checking when `MALLOC_CHECK_` is set to a non-zero value is **much** (as in an order of magnitude) greater when multiple threads are accessing the heap concurrently.  This would suggest that there is contention on the data structures used for full checking, over and above normal heap contention.
+
 It would be nice if one could get a fast implementation with the option to output an error message and continue execution, but with the current[^rh7] implementation of glibc that doesn't appear to be possible.  If you want the fast implementation but you don't want to abort on errors, the only option is to turn off checking entirely (by explicitly setting `MALLOC_CHECK_` to 0).  
 
 [^rh7]: Current for RedHat/CentOS 7 in any case, which is glibc 2.17.
@@ -57,6 +60,7 @@ And, of course, the built-in checking in glibc can't detect a *lot* of errors th
 - For production use, you may want to decide whether the benefit of minimal checking is worth the possibility of having programs abort with errors that may be benign.  If the default is not appropriate, you basically have two choices:
   - Setting `MALLOC_CHECK_=1` will allow execution to continue after an error, but will at least provide a message that can be logged[^log] to provide a warning that things are not quite right, and trigger additional troubleshooting, but at the cost of somewhat poorer performance.
   - If you can't afford to give up any performance at all, you can set `MALLOC_CHECK=0`, but any errors detected will be silently ignored.
+- Last but not least, if you're running multi-threaded code the performance penalty with full checking is potentially much more significant.  You'll probably want to benchmark your code  both with and without full checking if you're thinking of enabling full checking.
 
 [^log]: The error message from glibc is written directly to the console (tty device), not to `stderr`, which means that it will not be redirected.  If you need the message to appear on stderr, you will need to [set another environment variable](https://bugzilla.redhat.com/show_bug.cgi?id=1519182):
     `export LIBC_FATAL_STDERR_=1`

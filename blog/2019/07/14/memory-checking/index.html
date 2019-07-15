@@ -202,6 +202,9 @@
 
 <p>The other relevant point here is that setting <code>MALLOC_CHECK_</code> to any non-zero value causes <code>malloc</code> to use the slower heap functions that perform additional checks.  I’ve included a <a href="https://github.com/WallStProg/malloc-check/blob/master/malloc-bench.cpp">sample benchmark program</a> that shows the additional checking adds about 30% to the overhead of the <code>malloc</code>/<code>free</code> calls.  (And while the benchmark program is dumb as dirt, its results are similar to results on “real-world” tests).</p>
 
+<h3 id="multi-threaded-performance">Multi-threaded Performance</h3>
+<p>If the benchmark code is to be believed, the impact on performance of the extra checking when <code>MALLOC_CHECK_</code> is set to a non-zero value is <strong>much</strong> (as in an order of magnitude) greater when multiple threads are accessing the heap concurrently.  This would suggest that there is contention on the data structures used for full checking, over and above normal heap contention.</p>
+
 <p>It would be nice if one could get a fast implementation with the option to output an error message and continue execution, but with the current<sup id="fnref:rh7"><a href="#fn:rh7" rel="footnote">1</a></sup> implementation of glibc that doesn’t appear to be possible.  If you want the fast implementation but you don’t want to abort on errors, the only option is to turn off checking entirely (by explicitly setting <code>MALLOC_CHECK_</code> to 0).  </p>
 
 <p>Note also that the <a href="http://man7.org/linux/man-pages/man3/mallopt.3.html">documentation</a> is a bit misleading:</p>
@@ -234,6 +237,7 @@
       <li>If you can’t afford to give up any performance at all, you can set <code>MALLOC_CHECK=0</code>, but any errors detected will be silently ignored.</li>
     </ul>
   </li>
+  <li>Last but not least, if you’re running multi-threaded code the performance penalty with full checking is potentially much more significant.  You’ll probably want to benchmark your code  both with and without full checking if you’re thinking of enabling full checking.</li>
 </ul>
 
 <h2 id="code">Code</h2>

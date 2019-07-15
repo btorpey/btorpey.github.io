@@ -93,59 +93,63 @@
         <lastmod>2017-10-24T10:56:00-04:00</lastmod>
     </url>
     <url>
+        <loc>http://btorpey.github.io/blog/2019/07/14/memory-checking/</loc>
+        <lastmod>2019-07-14T20:16:45-04:00</lastmod>
+    </url>
+    <url>
+        <loc>http://btorpey.github.io/</loc>
+        <lastmod>2019-07-14T20:16:45-04:00</lastmod>
+    </url>
+    <url>
         <loc>http://btorpey.github.io/about/</loc>
         <lastmod>2014-02-24T19:23:51-05:00</lastmod>
     </url>
     <url>
         <loc>http://btorpey.github.io/blog/archives/</loc>
-        <lastmod>2017-10-24T11:52:28-04:00</lastmod>
-    </url>
-    <url>
-        <loc>http://btorpey.github.io/</loc>
-        <lastmod>2017-10-24T11:52:28-04:00</lastmod>
+        <lastmod>2019-07-14T20:16:45-04:00</lastmod>
     </url>
     <url>
         <loc>http://btorpey.github.io/lots-o-static/</loc>
         <lastmod>2017-09-30T18:50:42-04:00</lastmod>
     </url>
     <url>
-        <loc>http://btorpey.github.io/pages/build_cppcheck.sh/</loc>
-        <lastmod>2016-05-14T12:03:23-04:00</lastmod>
-    </url>
-    <url>
-        <loc>http://btorpey.github.io/pages/cc_driver.pl/</loc>
-        <lastmod>2016-05-11T09:12:24-04:00</lastmod>
+        <loc>http://btorpey.github.io/robots.txt</loc>
+        <lastmod>2014-02-22T17:29:19-05:00</lastmod>
     </url>
     <url>
         <loc>http://btorpey.github.io/pages/clang2csv.pl/</loc>
         <lastmod>2016-05-11T09:22:02-04:00</lastmod>
     </url>
     <url>
-        <loc>http://btorpey.github.io/pages/cppcheck.sh/</loc>
-        <lastmod>2016-05-11T09:13:03-04:00</lastmod>
+        <loc>http://btorpey.github.io/pages/cc_driver.pl/</loc>
+        <lastmod>2016-05-11T09:12:24-04:00</lastmod>
     </url>
     <url>
         <loc>http://btorpey.github.io/pages/cppcheck2csv.pl/</loc>
         <lastmod>2016-05-11T09:16:26-04:00</lastmod>
     </url>
     <url>
-        <loc>http://btorpey.github.io/pages/itc2csv.pl/</loc>
-        <lastmod>2016-05-11T17:19:50-04:00</lastmod>
-    </url>
-    <url>
         <loc>http://btorpey.github.io/pages/pvs2csv.pl/</loc>
         <lastmod>2016-12-16T11:35:44-05:00</lastmod>
     </url>
     <url>
-        <loc>http://btorpey.github.io/pages/REAME.md/</loc>
-        <lastmod>2016-12-16T11:23:41-05:00</lastmod>
+        <loc>http://btorpey.github.io/pages/cppcheck.sh/</loc>
+        <lastmod>2016-05-11T09:13:03-04:00</lastmod>
+    </url>
+    <url>
+        <loc>http://btorpey.github.io/pages/build_cppcheck.sh/</loc>
+        <lastmod>2016-05-14T12:03:23-04:00</lastmod>
     </url>
     <url>
         <loc>http://btorpey.github.io/pages/run_pvs.sh/</loc>
         <lastmod>2016-12-16T11:26:01-05:00</lastmod>
     </url>
     <url>
-        <loc>http://btorpey.github.io/robots.txt</loc>
-        <lastmod>2014-02-22T17:29:19-05:00</lastmod>
+        <loc>http://btorpey.github.io/pages/itc2csv.pl/</loc>
+        <lastmod>2016-05-11T17:19:50-04:00</lastmod>
+    </url>
+    <url>
+        <loc>http://btorpey.github.io/pages/REAME.md/</loc>
+        <lastmod>2016-12-16T11:23:41-05:00</lastmod>
     </url>
 </urlset>

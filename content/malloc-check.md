@@ -23,7 +23,7 @@ Value | Impl | Checking | Message | Backtrace + mappings (since glibc 2.4+) | Ab
 1 | Slow | Full | Detailed | No | No
 2 | Slow | Full | None | No | Yes
 3 | Slow | Full | Detailed | Yes | Yes
-5 | Slow | Full | Brief | No | Yes
+5 | Slow | Full | Brief | No | No
 7 | Slow | Full | Brief | Yes | Yes
 
 <br>

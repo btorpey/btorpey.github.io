@@ -27,6 +27,7 @@ Value | Impl | Checking | Message | Backtrace + mappings (since glibc 2.4+) | Ab
 7 | Slow | Full | Brief | Yes | Yes
 
 <br>
+
 What may be surprising is that the default behavior is for `malloc` to do at least minimal checking at runtime, and to **abort the executable with a core file** if those checks fail.  
 
 This may or may not be what you want.  Given that the minimal checks in the fast implementation only detect certain specific errors, and that those errors (e.g., double free) tend not to cause additional problems, you may decide that a "no harm, no foul" approach is more appropriate (for example with production code where aborting with a core file is frowned upon ;-).

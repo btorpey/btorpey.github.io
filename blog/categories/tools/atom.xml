@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-14T20:52:54-04:00</updated>
+  <updated>2019-07-14T21:00:42-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -50,7 +50,7 @@ What may be surprising is that the default behavior is for `malloc` to do at lea
 
 This may or may not be what you want.  Given that the minimal checks in the fast implementation only detect certain specific errors, and that those errors (e.g., double free) tend not to cause additional problems, you may decide that a "no harm, no foul" approach is more appropriate (for example with production code where aborting with a core file is frowned upon ;-).
 
-The other relevant point here is that setting `MALLOC_CHECK_` to any non-zero value causes `malloc` to use the slower heap functions that perform additional checks.  I've included a [sample benchmark program]() that shows the additional checking adds about 30% to the overhead of the `malloc`/`free` calls.  (And while the benchmark program is dumb as dirt, its results are similar to results on "real-world" tests).
+The other relevant point here is that setting `MALLOC_CHECK_` to any non-zero value causes `malloc` to use the slower heap functions that perform additional checks.  I've included a [sample benchmark program](https://github.com/WallStProg/malloc-check/blob/master/malloc-bench.cpp) that shows the additional checking adds about 30% to the overhead of the `malloc`/`free` calls.  (And while the benchmark program is dumb as dirt, its results are similar to results on "real-world" tests).
 
 It would be nice if one could get a fast implementation with the option to output an error message and continue execution, but with the current[^rh7] implementation of glibc that doesn't appear to be possible.  If you want the fast implementation but you don't want to abort on errors, the only option is to turn off checking entirely (by explicitly setting `MALLOC_CHECK_` to 0).  
 

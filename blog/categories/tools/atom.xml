@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-15T11:22:46-04:00</updated>
+  <updated>2019-07-15T11:24:23-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -80,7 +80,7 @@ And, of course, the built-in checking in glibc can't detect a *lot* of errors th
 - For production use, you may want to decide whether the benefit of minimal checking is worth the possibility of having programs abort with errors that may be benign.  If the default is not appropriate, you basically have two choices:
   - Setting `MALLOC_CHECK_=1` will allow execution to continue after an error, but will at least provide a message that can be logged[^log] to provide a warning that things are not quite right, and trigger additional troubleshooting, but at the cost of somewhat poorer performance.
   - If you can't afford to give up any performance at all, you can set `MALLOC_CHECK=0`, but any errors detected will be silently ignored.
-- Last but not least, if you're running multi-threaded code the performance penalty with full checking is potentially much more significant.  You'll probably want to benchmark your code  both with and without full checking if you're thinking of enabling full checking.
+- Last but not least, if you're running multi-threaded code the performance penalty with full checking is potentially much more significant.  You'll probably want to benchmark your code  both with and without full checking if you're thinking of enabling it in multi-threaded code.
 
 [^log]: The error message from glibc is written directly to the console (tty device), not to `stderr`, which means that it will not be redirected.  If you need the message to appear on stderr, you will need to [set another environment variable](https://bugzilla.redhat.com/show_bug.cgi?id=1519182):
     `export LIBC_FATAL_STDERR_=1`

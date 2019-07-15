@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-15T11:22:46-04:00</updated>
+  <updated>2019-07-15T11:24:23-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -150,7 +150,7 @@
       <li>If you can’t afford to give up any performance at all, you can set <code>MALLOC_CHECK=0</code>, but any errors detected will be silently ignored.</li>
     </ul>
   </li>
-  <li>Last but not least, if you’re running multi-threaded code the performance penalty with full checking is potentially much more significant.  You’ll probably want to benchmark your code  both with and without full checking if you’re thinking of enabling full checking.</li>
+  <li>Last but not least, if you’re running multi-threaded code the performance penalty with full checking is potentially much more significant.  You’ll probably want to benchmark your code  both with and without full checking if you’re thinking of enabling it in multi-threaded code.</li>
 </ul>
 
 <h2 id="code">Code</h2>

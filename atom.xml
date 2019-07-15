@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-14T20:49:23-04:00</updated>
+  <updated>2019-07-14T20:52:54-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -148,7 +148,7 @@
 </ul>
 
 <h2 id="code">Code</h2>
-<p>The code for this article is available <a href="">here</a>.  There’s a benchmark program, which requires <a href="https://github.com/google/benchmark">Google Benchmark</a>.  There are also sample programs which demonstrate a double-free error that can be caught even with minimal checking (<code>double-free.c</code>), and which cannot (<code>double-free2.c</code>), and a simple script that ties everything together.  </p>
+<p>The code for this article is available <a href="https://github.com/WallStProg/malloc-check.git">here</a>.  There’s a benchmark program, which requires <a href="https://github.com/google/benchmark">Google Benchmark</a>.  There are also sample programs which demonstrate a double-free error that can be caught even with minimal checking (<code>double-free.c</code>), and which cannot (<code>double-free2.c</code>), and a simple script that ties everything together.  </p>
 
 <h2 id="footnotes">Footnotes</h2>
 

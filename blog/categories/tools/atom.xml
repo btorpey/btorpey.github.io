@@ -4,7 +4,7 @@
   <title><![CDATA[Category: tools | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/tools/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-14T20:49:23-04:00</updated>
+  <updated>2019-07-14T20:52:54-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -80,7 +80,7 @@ And, of course, the built-in checking in glibc can't detect a *lot* of errors th
     `export LIBC_FATAL_STDERR_=1`
     
 ## Code
-The code for this article is available [here]().  There's a benchmark program, which requires [Google Benchmark](https://github.com/google/benchmark).  There are also sample programs which demonstrate a double-free error that can be caught even with minimal checking (`double-free.c`), and which cannot (`double-free2.c`), and a simple script that ties everything together.  
+The code for this article is available [here](https://github.com/WallStProg/malloc-check.git).  There's a benchmark program, which requires [Google Benchmark](https://github.com/google/benchmark).  There are also sample programs which demonstrate a double-free error that can be caught even with minimal checking (`double-free.c`), and which cannot (`double-free2.c`), and a simple script that ties everything together.  
 
 ## Footnotes
 

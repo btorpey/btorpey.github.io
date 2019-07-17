@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2019-07-15T14:02:36-04:00</updated>
+  <updated>2019-07-17T12:26:09-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -3161,7 +3161,7 @@ scale when it comes to visual thinking. That gave me an insight into the way my
 brain works that I’ve found really helpful ever since. So, this next bit was right up my alley,
 but I’m guessing you’ll like it too.</p>
 
-<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240" /></a></p>
+<p><a href="http://www.overbyte.com.au/misc/Lesson3/CacheFun.html"><img class="right" src="http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png" width="320" height="240" /></a></p>
 
 <p>We read a lot lately about NUMA architecture and how it presents a fundamental
 change in the way we approach writing efficient code: it’s no longer about the

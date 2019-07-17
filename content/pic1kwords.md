@@ -10,7 +10,7 @@ scale when it comes to visual thinking. That gave me an insight into the way my
 brain works that I've found really helpful ever since. So, this next bit was right up my alley,
 but I'm guessing you'll like it too.
 
-[{% img right http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png 320 240 %}](<http://www.overbyte.com.au/misc/Lesson3/CacheFun.html>)
+[{% img right http://overbyte.com.au/wp-content/uploads/2012/01/InteractiveMemAccess-620x424.png 320 240 %}](<http://www.overbyte.com.au/misc/Lesson3/CacheFun.html>)
 
 We read a lot lately about NUMA architecture and how it presents a fundamental
 change in the way we approach writing efficient code: it's no longer about the

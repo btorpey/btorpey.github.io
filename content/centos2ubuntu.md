@@ -1,0 +1,495 @@
+{% img left /images/twins.jpg 234 288 %}
+
+I recently needed to build a Linux development system from scratch, and while I was at it I decided to provide dual-boot capability between CentOS and Ubuntu.  
+
+Having used RH/CentOS pretty much exclusively since moving from Unix (Solaris) to Linux many years back, I learned that even though CentOS and Ubuntu are both Linux, they are very different in ways both large and small.     I shaved a few yaks along the way, and made lots of notes -- hopefully they'll help if you're thinking about making a similar transition.
+
+With [recent events](https://blog.centos.org/2020/12/future-is-centos-stream/) in CentOS-land this has become even more relevant — read on to see how you can easily move back and forth between CentOS and Ubuntu.
+
+<!-- more -->
+<br clear="all">
+
+Not too long ago my main Linux development machine, a tiny NUC-style box, stopped booting.  On investigation it turned out that it may not have been a great idea to build it with a 1TB mSATA SSD — to get 1TB on an mSATA form-factor it ends up being really dense and prone to overheating.  I bought a replacement 1TB SSD in a more capacious 2.5” form-factor, and decided to take the time to revisit the original configuration.
+
+One thing that has changed for me over the past couple of years is that I have spent quite a bit of time at my day job developing a middleware transport based on ZeroMQ.  My employer generously agreed to open-source the resulting code (which you can find [here](https://github.com/nyfix/OZ)), but doing so opened up a bunch of issues.  The biggest one was the fact that my employer’s choice of OS has been RedHat, and later CentOS, and while RH/CentOS has been a great choice in terms of stability for our production environment, it has been much less great as a development system.  Which resulted in me spending a lot of time over the past several years figuring out things like how to [build newer compilers](http://btorpey.github.io/blog/2015/01/02/building-clang/) in order to take advantage of improvements in C++ and related tools.
+
+By contrast, most of the “cool kids” working on open-source projects use something other than RH/CentOS, with [Ubuntu](https://ubuntu.com/) looking to be the most popular.  It’s not reasonable to expect others to spin up a whole new development system just to check out a new open-source project, so being stuck on RH/CentOS would seriously impact any interest we might be hoping to generate in the project.
+
+So, my original plan was to build out the new machine to support at least three OS’s: CentOS 7 (our current production environment), CentOS 8 (which we expected to be our next production environment), and Ubuntu (in order to better support our open-source project).  About halfway through building the system RedHat/CentOS dropped the now well-known bombshell that CentOS 8 was no more — at least, not in any form that would be acceptable to us.  
+
+The result is that I ended up building just the CentOS 7 and Ubuntu systems, leaving space for a possible third OS at some point (perhaps [Rocky](https://rockylinux.org/)?).  I’ve come to really appreciate the more modern tools in Ubuntu, which are a boon for development, and the quirks that drove me nuts on CentOS (like not being able to paste text from my Mac) are pretty much gone.
+But I needed to learn (and un-learn) a lot in the process.  
+
+Moving to a new OS is a fiddly business, so if you’re thinking about moving from RH/CentOS to Ubuntu (which I suspect many people are at this point), this guide can definitely help you make that transition.  
+
+With that bit of background out of the way, let's get started.
+
+# Installing Ubuntu
+We're using Ubuntu 20.04 LTS (long-term support) in this article, since it most closely matches the level of support that we (used to) expect from CentOS.  You can grab an installation ISO [here](https://ubuntu.com/download/desktop).
+
+The Ubuntu install is pretty self-explanatory, (and there's a nice tutorial [here](https://ubuntu.com/tutorials/install-ubuntu-desktop#1-overview)).  I chose "Normal Installation" to get as much as possible at one go.
+
+## sudo vs. root
+
+Specifying a user is where things start to get different -- when installing CentOS, for instance, you enter a password for the superuser (`root`) during installation.  
+
+Ubuntu installations, however, typically don't have a `root` user.  Instead, the user you create during installation is automatically given `sudo` rights to all the things that `root` would normally be allowed to do.
+
+So with Ubuntu, instead of using `root` to administer the system directly, like so:
+
+```
+su - 
+mount ...
+exit
+```
+
+You would just use `sudo` instead:
+
+```
+sudo mount ...
+```
+
+## Fixing `sudo` timeout
+
+One downside of using `sudo` for administration is that by default Ubuntu will ask for your password every single time.  To avoid that, edit the sudoers file:
+
+    sudo vi /etc/sudoers
+
+And add the following line (this will cause the system to remember your `sudo` password for five minutes):
+
+    Defaults        timestamp_timeout=300
+
+
+Even so, it can be a hassle typing `sudo` over and over again, especially if you have a lot of taks to perform.  To get around that, you can create a root shell like so:
+
+    sudo /bin/bash
+
+## Enabling root access
+So far, although we can run commands with superuser permissions using `sudo`, we can't actually login to the system as `root`.  There are lots of good reasons why this is A Good Idea, and they are well explained [here](https://help.ubuntu.com/community/RootSudo).
+
+So, just to be clear, you should never do what I'm about to tell you how to do...
+
+But if you **really** need to login as root, then you'll need to activate the root user by supplying a password:
+
+    sudo passwd root
+    sudo usermod -U root
+
+
+### Logging in as `root` from the console
+
+To enable root login from the console, you need to edit `/etc/pam.d/gdm-password` and comment out the line containing:
+
+    auth required pam_succeed_if.so user != root quiet_success
+
+so that it looks like this:
+
+    #auth required pam_succeed_if.so user != root quiet_success
+
+
+### Logging in as `root` via ssh
+To enable root login via ssh, edit `/etc/ssh/sshd_config` and change 
+
+    #PermitRootLogin prohibit-password
+
+to    
+
+    PermitRootLogin yes
+
+## Set bash as the system default shell
+Unlike CentOS, Ubuntu does not use bash as its [default shell](https://wiki.ubuntu.com/DashAsBinSh).  
+
+While there are lots of "better" shells out there, I've become familiar with bash, and I've got lots of scripts that ~~might~~ will break if moved to another shell, and which I just don't want to futz with.  Plus, if things get too hairy for bash, I generally just switch to a real programming language, [like Perl](http://btorpey.github.io/blog/2014/07/23/perl-stdin/). 
+
+To reconfigure the default shell on Ubuntu, you can use the following command:
+
+    sudo dpkg-reconfigure dash
+
+To change a particular user's default shell from `sh` to `bash`:
+
+    sudo chsh -s /bin/bash {user}
+
+
+## Disable SELinux
+Many users, myself included, find SELinux to be a major hassle, and not appropriate for a development (desktop) OS.  In addition, there is still some software, typically older programs, that don't run properly with SELinux.
+
+In CentOS, I disable SELinux, but it's [already disabled](https://wiki.ubuntu.com/SELinux) in Ubuntu, so nothing needs to be done. The Ubuntu equivalent, [AppArmor](https://wiki.ubuntu.com/AppArmor) has so far not interfered with anything in the way that SELinux does on CentOS, and so I haven't had the need to disable it, or in fact tweak it at all.
+
+## Disable iptables
+In a similar vein, I generally disable iptables in CentOS.  With Ubuntu, iptables is enabled, but by default it allows all traffic.  So, out-of-the-box everything just works, but you can configure the firewall to be more restrictive if you want to.
+    
+## Activate swap partition
+On CentOS, I've generally had to explicitly activate any swap partitions, but Ubuntu automatically detects and mounts any swap partitions that it finds on the boot disk.
+
+## Update everything
+It's generally a good idea to keep the OS up-to-date, and with Ubuntu that can be accomplished with one or more of the following commands:
+
+    sudo apt update        # Fetches the list of available updates
+    sudo apt upgrade       # Installs some updates; does not remove packages
+    sudo apt full-upgrade  # Installs updates; may also remove some packages, if needed
+    sudo apt autoremove    # Removes any old packages that are no longer needed
+
+See [this](https://askubuntu.com/a/196777) for more on keeping Ubuntu up-to-date.
+
+## Install addl packages
+Even with a "normal" installation, there are some useful packages that don't get installed initially:
+
+    sudo apt install tree
+    sudo apt install ddd
+    sudo apt install dwarves
+    sudo apt install oprofile
+    sudo apt install linux-tools
+    sudo apt install linux-tools-generic
+    sudo apt install linux-tools-`uname -r`
+
+## Adding a (shared) user
+In my case, since I'm dual-booting between CentOS and Ubuntu, I wanted to create a user that can share files with the same user on CentOS.  
+
+To do that, create a user with the same username and userid as the CentOS user.  In the example below, 8177 is the numeric ID of the CentOS user, referred to as `myuser`.  This user belongs to the group named `shared`, that also shares the same group ID as the CentOS group.
+
+    sudo groupadd -g 8177 shared
+    sudo useradd -m -g shared -u 8177 myuser
+    sudo passwd myuser
+    sudo usermod -a -G users myuser
+
+Another setting that will make it easier to share files between different users and/or OS's is to make files group-writable by default.  To do this, add the following to your `.bashrc`:
+
+    # Set umask to allow group write access.
+    umask 002
+
+> Note that the umask setting applies only to newly-created files -- it doesn't affect existing files.
+
+## Setup samba
+This step is optional -- you could theoretically use sftp or even NFS (ugh!) to share files with other machines on your network.  
+
+The commands below will setup a minimal Samba system -- again using `myuser` as the name for the shared user -- change that to whatever you choose.
+
+    sudo /bin/bash
+    apt install samba
+    cd /etc/samba
+    cp -p smb.conf smb.conf.orig
+    cat > smb.conf <<EOF
+    [global]
+    	workgroup = WORKGROUP
+    	server string = Samba server
+    
+    	security = user
+    	passdb backend = tdbsam
+    
+    [myuser]
+    	path = /home/myuser
+    	browseable = yes
+    	writable = yes
+    	valid users = @shared
+    
+    [root]
+    	path = /
+    	browseable = yes
+    	writable = no
+    EOF
+    smbpasswd -a myuser
+    systemctl enable smb.service
+    systemctl start smb.service
+    exit
+
+
+## Set up ssh access
+You're going to want to be able to login to the system remotely, so the sooner you setup ssh the better.
+
+The ssh daemon may not have been installed -- if not, you should install it now:
+
+    sudo apt install openssh-client
+    sudo apt install openssh-server
+    sudo systemctl start sshd.service
+    sudo systemctl status sshd.service
+
+Then, from another machine where you have already generated a public/private key-pair:
+
+    ssh-copy-id -i ~/.ssh/<identity> myuser@<host>
+
+This will copy the public key associated with <identity> to myuser's $HOME/.ssh/authorized_keys on the specified host.  This will let you login via ssh without specifying a password.
+
+You will likely also want to copy and/or create private keys in your ~/.ssh directory, so you can access other resources like GitHub, Stash, etc.  
+
+> The short version is that you'll want to have a private key in `~/.ssh` of the system you are connecting *from*, and the corresponding public key in the `~/.ssh/authorized_keys` file of the system you are connecting *to*.  (Certain services, like GitHub, have their own mechansim for storing public keys).  
+
+You can read more about ssh here:
+
+- <https://www.digitalocean.com/community/tutorials/how-to-configure-ssh-key-based-authentication-on-a-linux-server>
+- <https://superuser.com/questions/215504/permissions-on-private-key-in-ssh-folder>
+
+
+## GUI login
+While the good old command line is fine for lots/most things, some applications are only available in GUI form, or can do things in GUI mode that they can't do from the command line.
+
+### Screen Sharing
+There are a few options for screen sharing in Ubuntu -- the simplest is to activate Screen Sharing via the Settings application.  This allows you to require a password, as well as to restrict connections to a particular network adapter.
+
+You can connect to the shared screen using a VNC viewer application by specifying `{hostname}:0`.  
+
+> On Mac, you can also choose "Go","Connect to Server" from the Finder menu, and specify `vnc://{hostname}`. 
+
+This will give you a GUI into the (one-and-only) console screen.  A disadvantage of this approach is that there is only one console screen, and it is a fixed size (matching the size of the physical screen). 
+
+### VNC
+Ubuntu defaults to [TightVNC](https://www.tightvnc.com/), but also provides [TigerVNC](https://tigervnc.org/), which for whatever reason seems to work better for me.  To install it:
+
+    sudo apt install tigervnc-standalone-server
+
+Once it's installed, create a password for accessing your desktop:
+
+    vncpasswd
+    
+There are a bunch of different desktops that you can run with VNC, but I prefer to use Gnome -- for that, configure your VNC startup script like so:
+
+    cd ~/.vnc
+    cp xstartup xstartup.orig
+    cat > xstartup <<EOF
+    #!/bin/sh
+    
+    [ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+    [ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+    vncconfig -iconic &
+    dbus-launch --exit-with-session gnome-session &
+    EOF
+    chmod +x xstartup
+
+To start the VNC server:
+
+    vncserver -localhost no -geometry 1920x1050
+
+(Or whatever geometry you prefer).
+
+- The VNC session can sometimes get "stuck" if the screen saver kicks in.  For that reason it's a good idea to disable the screen saver: You can do this from "Settings", "Power" -- set "Blank Screen" to "Never".
+- If a session does get stuck, you can un-stick it with `sudo loginctl unlock-sessions`.  (See <https://askubuntu.com/questions/1224957/i-cannot-log-in-a-vnc-session-after-the-screen-locks-authentification-error> for more).
+
+There are a number of VNC viewers available:
+
+- [RealVNC](https://www.realvnc.com/en/connect/download/viewer/)
+- [TightVNC](https://www.tightvnc.com/)
+- [TigerVNC](https://tigervnc.org/)
+
+Personally, I find the TigerVNC server and RealVNC viewer to be the best combination, but as always your mileage may vary.
+
+## Enable core files
+
+If you're running *other* people's code, you may need to be able to debug core files ;-)  By default, Ubuntu won't create any, so follow these steps to enable core file creation.
+
+First make sure `ulimit` is set properly (e.g., in your `.bash_profile`):
+
+    ulimit -c unlimited
+
+Ubuntu has its equivalent to CentOS' ABRT service called [`apport`](https://wiki.ubuntu.com/Apport), which *definitely* interferes with creation of core files, so you will need to disable it:
+
+    sudo systemctl disable apport.service
+
+Next set the core file pattern used to create core files -- I use a pattern of the form "{program name}.core.{pid}" (with core file in the processes' current directory), but that is mostly an accident of history.  The full documentation for the tokens you can include in the file name can be found [here](<https://man7.org/linux/man-pages/man5/core.5.html>).
+
+To change the current value (in memory):
+
+    sudo sysctl -w kernel.core_pattern=%e.core.%p
+ 
+To make the change permanent, edit `/etc/sysctl.conf` (as root) and add the following line: 
+
+    kernel.core_pattern=%e.core.%p
+
+I work with in-memory databases that store data in shared memory a lot, so a useful tweak for me is to exclude shared memory segments from core files:
+
+     echo 0x31 > /proc/self/coredump_filter
+
+## Configure gdb
+
+There are a number of non-default settings that can make gdb more useful, or just more pleasant to use. I set these in my [`~/.gdbinit`](https://man7.org/linux/man-pages/man5/gdbinit.5.html):
+
+    # let gdb load settings from anywhere
+    set auto-load safe-path /
+    
+    # allow breakpoints in dynmically loaded modules
+    set breakpoint pending on
+    
+    # esp. useful w/set logging
+    set height 0
+    
+    # more readable strings w/repeating characters
+    set print repeats 0
+    
+    # show libraries as they are loaded
+    set verbose on
+    
+    # load pretty-printers for std::
+    python
+    # find the printers.py file associated with current compiler
+    # (typically in usr/share/<compiler-version>/python/libstdcxx/v6/printers.py), installed from
+    cmd = "echo -n $(dirname $(find $(cd $(dirname $(which gcc))/.. && /bin/pwd) -name printers.py 2>/dev/null))"
+    import os
+    tmp = os.popen(cmd).read()
+    # import the pretty printers
+    import sys
+    sys.path.insert(0, tmp)
+    from printers import register_libstdcxx_printers
+    register_libstdcxx_printers (None)
+    end
+    
+    # if you want to use Ctrl-C w/debugee
+    #handle SIGINT stop pass
+     
+## Enabling gdb attach
+By default, Ubuntu [doesn't let non-child processes attach to another process](https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening#ptrace%20Protection).  
+
+Obviously, this breaks `gdb -p ...` and related.  To disable this feature, edit `/etc/sysctl.d/10-ptrace.conf` (as root) and change: 
+
+    kernel.yama.ptrace_scope = 1
+
+to 
+
+    kernel.yama.ptrace_scope = 0
+ 
+To change the current value in memory:
+
+    sudo echo 0 > /proc/sys/kernel/yama/ptrace_scope
+    
+
+## Configuring perf    
+
+The `perf` program and its friends are very useful for seeing where a particular program spends its time.  But by default, it has [certain restrictions](https://unix.stackexchange.com/a/14256/198530).
+
+To remove those restrictions permanently, edit `/etc/sysctl.conf` and add:
+
+    kernel.perf_event_paranoid = 0
+
+To make a temporary change (until reboot):
+
+    echo 0 > /proc/sys/kernel/perf_event_paranoid
+    
+## Compiler
+You can determine which compiler was used to build the kernel on Linux -- on Ubuntu it shows that the system compiler is gcc 9.3.0 (2019) (vs gcc 4.8.5 (2015) on CentOS 7):  
+
+    $ cat /proc/version    Linux version 5.8.0-43-generic (buildd@lcy01-amd64-018) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #49~20.04.1-Ubuntu SMP Fri Feb 5 09:57:56 UTC 2021
+
+The newer compiler includes a bunch of new features, bug fixes, etc. and also has different [default settings for some diagnostics](https://wiki.ubuntu.com/ToolChain/CompilerFlags#Default_Flags), including:
+
+    -fasynchronous-unwind-tables
+    -fstack-protector-strong
+    -Wformat
+    -Wformat-security
+    -fstack-clash-protection
+    -fcf-protection
+
+In addition to the above flags, gcc 9.3.0 on Ubuntu includes a default setting for `-D_FORTIFY_SOURCE=2`, which causes additional checks to be inserted -- one of them is a check for buffer overflow, which will cause an executable to abort if an overflow is detected:
+
+    *** buffer overflow detected ***: terminated
+    Aborted (core dumped)
+
+A typical stack trace at the time of the core will look something like this:
+
+    #0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+    #1  0x00007f55d1bec859 in __GI_abort () at abort.c:79
+    #2  0x00007f55d1c573ee in __libc_message (action=action@entry=do_abort, fmt=fmt@entry=0x7f55d1d8107c "*** %s ***: terminated\n") at ../sysdeps/posix/libc_fatal.c:155
+    #3  0x00007f55d1cf9b4a in __GI___fortify_fail (msg=msg@entry=0x7f55d1d81012 "buffer overflow detected") at fortify_fail.c:26
+    #4  0x00007f55d1cf83e6 in __GI___chk_fail () at chk_fail.c:28
+    #5  0x00007f55d1cf7cc6 in __strcpy_chk (dest=dest@entry=0x7f55cd871808 "\001", src=src@entry=0x7f55c0039e0b ".0000000000000001", destlen=destlen@entry=17) at strcpy_chk.c:30
+    #6  0x00007f55cfa303d3 in strcpy (__src=0x7f55c0039e0b ".0000000000000001", __dest=0x7f55cd871808 "\001") at /usr/include/x86_64-linux-gnu/bits/string_fortified.h:90
+    ...
+
+For more information, see [Stackguard interals](https://en.wikibooks.org/wiki/GNU_C_Compiler_Internals/Stackguard_4_1).
+
+The default Ubuntu settings proved their worth quickly by identifying an "off-by-one" buffer overflow in [OZ](https://github.com/nyfix/OZ) that had eluded Address Sanitizer, valgrind, glibc, cppcheck, clang-tidy and PVS-Studio.
+
+## Linker
+
+### Unresolved symbols
+If you suddenly start getting "unresolved symbol" errors from your builds, one possible reason is that the Ubuntu linker (`ld`) works differently than on CentOS.
+
+Unlike RedHat/CentOS, the Ubuntu linker only searches a library *once*, at the point that it is encountered on the command line (<https://manpages.ubuntu.com/manpages/focal/man1/ld.1.html>):
+
+> The linker will search an archive only once, at the location where it is specified on
+           the command line.  If the archive defines a symbol which was undefined in some object
+           which appeared before the archive on the command line, the linker will include the
+           appropriate file(s) from the archive.  However, an undefined symbol in an object
+           appearing later on the command line **will not cause the linker to search the archive
+           again.**
+
+This is the documented behavior in the man pages, but the CentOS linker actually behaves as if all the libraries specified on the command line were specified in `--start-group`/`--end-group` flags. -- in other words, the order of libraries on CentOS is immaterial.
+
+If you are getting "unresolved" errors at link time, it is most likely because the order of libraries used to build the executable is incorrect.  You can either correct the order, add `--start-group`/`--end-group` commands, or possibly use a different linker, as discussed [here](https://stackoverflow.com/questions/34164594/gcc-ld-method-to-determine-link-order-of-static-libraries/34168951).
+
+### Implicit shared library dependencies
+Another difference between CentOS and Ubuntu linkers is the way they handle dependencies between shared libraries.  You can see these [DT_NEEDED](https://man7.org/linux/man-pages/man5/elf.5.html) dependencies with the `readelf --dynamic` command.
+
+These differences are caused by different default flags being passed to the linker -- you can see these with:
+
+    gcc -dumpspecs | less
+    
+The output isn't the easiest thing to understand, but if you look at the output you'll see the template for default parameters following the `*link:` line -- e.g., on CentOS it will look something like this:
+
+    *link:    %{!r:--build-id} --no-add-needed ...
+#### CentOS
+On CentOS, the linker defines `--no-add-needed` (which is a deprecated alias for `--no-copy-dt-needed-entries`), and does *not* define `--as-needed`.  
+
+What this means is that the linker: 
+
+- will output a DT_NEEDED entry for *every* library specified on the command line (even if it is not used to resolve any symbols), and
+- will *not* copy DT_NEEDED entries from libraries specified on the command line.
+
+The second part changed [as of CentOS 7](https://bugzilla.redhat.com/show_bug.cgi?id=1292230), as a result of an upstream [change in Fedora](https://fedoraproject.org/wiki/Features/ChangeInImplicitDSOLinking). 
+
+The short version is you get a DT_NEEDED entry for every library specified on the command line, but not for the libraries that those libraries need.
+
+#### Ubuntu
+Ubuntu does things differently -- its linker defaults to `--as-needed`, which means that the linker:
+
+- will output a DT_NEEDED entry for libraries specified on the command line, but *only* if that library is used to resolve one or more symbols, and
+- will also copy DT_NEEDED entries incluced in any of those libraries, but again *only* if it is needed to resolve a symbol.
+
+The short version is that you get a DT_NEEDED entry *only* for libraries that are used to resolve a symbol.
+
+#### Summary
+
+In short, CentOS adds DT_NEEDED entries for all the libraries specified on the command line, but not for any of their dependencies; while Ubuntu adds entries for libraries specified on the command line, as well as their dependencies, but *only* if those libraries are actually needed.
+
+As always, if you want or need to know more about shared libraries on Linux, you should check out [Drepper's paper](https://akkadia.org/drepper/dsohowto.pdf), which is still the authoritative source.
+
+## clang
+clang goes to a lot of trouble to co-exist with gcc -- for instance,  preferring to use gcc's libstdc++ for the C++ standard library, enabling code compiled by clang to call and be called by code compiled using gcc.
+
+On Ubuntu this can be a problem though, because sometimes clang *thinks* it found a real installation of gcc, but in fact the installation is incomplete, and unusable.  If your clang builds complain about missing include or library files, it's likely that clang is trying to use a borked install of gcc.  
+
+But, how does clang know where to find those files in the first place?  Partly this has to do with [how clang is built](http://btorpey.github.io/blog/2015/01/02/building-clang/), since clang is itself typically built using gcc.  You can see which gcc installations clang finds at run-time, with the following command:
+
+    $ clang++ -v -E
+    clang version 10.0.0-4ubuntu1 
+    Target: x86_64-pc-linux-gnu
+    Thread model: posix
+    InstalledDir: /usr/bin
+    Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+    Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+    Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/10
+    Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9
+    Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+    Candidate multilib: .;@m64
+    Selected multilib: .;@m64
+
+In my case, the gcc 10 installation was incomplete, but clang tried to use it anyway.  And, since ubuntu installs all its gcc versions in `/usr`, passing `--gcc-toolchain` to clang doesn't really help.  In my case, I had to remove the offending, unusable gcc installations:
+
+    sudo apt remove gcc-10
+    sudo apt remove gcc-10-base
+    sudo apt remove libgcc-10-dev
+
+Once that was done, clang found the correct version (9) of gcc:
+
+    $ clang++ -v -E
+    clang version 10.0.0-4ubuntu1 
+    Target: x86_64-pc-linux-gnu
+    Thread model: posix
+    InstalledDir: /usr/bin
+    Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+    Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+    Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/10
+    Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9
+    Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+    Candidate multilib: .;@m64
+    Selected multilib: .;@m64
+
+# Conclusion
+That's all I've found so far, but I'll keep updating this post as I run into more differences between CentOS and Ubuntu.  As I said above, I'm really enjoying Ubuntu, and I intend to use it almost exclusively for development going forward, booting back to CentOS only to regression-test changes, at least in the short term.  In the meantime, I'll be watching what goes on with [Rocky](https://rockylinux.org/) and/or other projects that spring up to fill the void left by IBM/RH/CentOS.
+
+If you have any questions, suggestions, etc. about this article, please leave a comment below, or [email me directly](<mailto:wallstprog@gmail.com>).

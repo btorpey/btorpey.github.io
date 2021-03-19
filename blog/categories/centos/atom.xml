@@ -4,7 +4,7 @@
   <title><![CDATA[Category: centos | Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/blog/categories/centos/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2021-03-14T12:32:05-04:00</updated>
+  <updated>2021-03-19T13:21:09-04:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -83,11 +83,17 @@ And add the following line (this will cause the system to remember your `sudo` p
 Even so, it can be a hassle typing `sudo` over and over again, especially if you have a lot of taks to perform.  To get around that, you can create a root shell like so:
 
     sudo /bin/bash
+    
+or, equivalently:
+
+    sudo -i    
 
 ## Enabling root access
 So far, although we can run commands with superuser permissions using `sudo`, we can't actually login to the system as `root`.  There are lots of good reasons why this is A Good Idea, and they are well explained [here](https://help.ubuntu.com/community/RootSudo).
 
 So, just to be clear, you should never do what I'm about to tell you how to do...
+
+> As several readers have enthusiastically pointed out, you (a) should never need to enable root, and (b) if you do this on a machine that is exposed to the internet you are asking for Big Trouble.  ***You have been warned*** ...
 
 But if you **really** need to login as root, then you'll need to activate the root user by supplying a password:
 
@@ -107,6 +113,9 @@ so that it looks like this:
 
 
 ### Logging in as `root` via ssh
+
+> One more time -- this is A Very Bad Idea, but if you insist ...
+
 To enable root login via ssh, edit `/etc/ssh/sshd_config` and change 
 
     #PermitRootLogin prohibit-password
@@ -114,6 +123,11 @@ To enable root login via ssh, edit `/etc/ssh/sshd_config` and change
 to    
 
     PermitRootLogin yes
+    
+On the other hand, if you want to sleep well at night, secure in the knowledge that you are (somewhat) safe from marauding script kiddies, instead change the setting in `/etc/ssh/sshd_config` to:
+
+    PermitRootLogin no
+
 
 ## Set bash as the system default shell
 Unlike CentOS, Ubuntu does not use bash as its [default shell](https://wiki.ubuntu.com/DashAsBinSh).  
@@ -136,6 +150,8 @@ In CentOS, I disable SELinux, but it's [already disabled](https://wiki.ubuntu.co
 
 ## Disable iptables
 In a similar vein, I generally disable iptables in CentOS.  With Ubuntu, iptables is enabled, but by default it allows all traffic.  So, out-of-the-box everything just works, but you can configure the firewall to be more restrictive if you want to.
+
+> Just to be clear, I disable iptables because (a) I'm on a private subnet with statically-assigned non-routable IP addresses that are not accessible other than from the subnet itself, and (b) I develop network middleware software that both connects to and listens at ephemeral ports, so iptables is pretty much out of the question.  If you don't have similar needs, you're probably better off using iptables the way it was intended -- unfortunately I can't help you with that.
     
 ## Activate swap partition
 On CentOS, I've generally had to explicitly activate any swap partitions, but Ubuntu automatically detects and mounts any swap partitions that it finds on the boot disk.

@@ -173,10 +173,19 @@ But I needed to learn (and un-learn) a lot in the process.  </p>
 <pre><code>sudo /bin/bash
 </code></pre>
 
+<p>or, equivalently:</p>
+
+<pre><code>sudo -i    
+</code></pre>
+
 <h2 id="enabling-root-access">Enabling root access</h2>
 <p>So far, although we can run commands with superuser permissions using <code>sudo</code>, we can’t actually login to the system as <code>root</code>.  There are lots of good reasons why this is A Good Idea, and they are well explained <a href="https://help.ubuntu.com/community/RootSudo">here</a>.</p>
 
 <p>So, just to be clear, you should never do what I’m about to tell you how to do…</p>
+
+<blockquote>
+  <p>As several readers have enthusiastically pointed out, you (a) should never need to enable root, and (b) if you do this on a machine that is exposed to the internet you are asking for Big Trouble.  <strong><em>You have been warned</em></strong> …</p>
+</blockquote>
 
 <p>But if you <strong>really</strong> need to login as root, then you’ll need to activate the root user by supplying a password:</p>
 
@@ -197,6 +206,11 @@ sudo usermod -U root
 </code></pre>
 
 <h3 id="logging-in-as-root-via-ssh">Logging in as <code>root</code> via ssh</h3>
+
+<blockquote>
+  <p>One more time – this is A Very Bad Idea, but if you insist …</p>
+</blockquote>
+
 <p>To enable root login via ssh, edit <code>/etc/ssh/sshd_config</code> and change </p>
 
 <pre><code>#PermitRootLogin prohibit-password
@@ -205,6 +219,11 @@ sudo usermod -U root
 <p>to    </p>
 
 <pre><code>PermitRootLogin yes
+</code></pre>
+
+<p>On the other hand, if you want to sleep well at night, secure in the knowledge that you are (somewhat) safe from marauding script kiddies, instead change the setting in <code>/etc/ssh/sshd_config</code> to:</p>
+
+<pre><code>PermitRootLogin no
 </code></pre>
 
 <h2 id="set-bash-as-the-system-default-shell">Set bash as the system default shell</h2>
@@ -229,6 +248,10 @@ sudo usermod -U root
 
 <h2 id="disable-iptables">Disable iptables</h2>
 <p>In a similar vein, I generally disable iptables in CentOS.  With Ubuntu, iptables is enabled, but by default it allows all traffic.  So, out-of-the-box everything just works, but you can configure the firewall to be more restrictive if you want to.</p>
+
+<blockquote>
+  <p>Just to be clear, I disable iptables because (a) I’m on a private subnet with statically-assigned non-routable IP addresses that are not accessible other than from the subnet itself, and (b) I develop network middleware software that both connects to and listens at ephemeral ports, so iptables is pretty much out of the question.  If you don’t have similar needs, you’re probably better off using iptables the way it was intended – unfortunately I can’t help you with that.</p>
+</blockquote>
 
 <h2 id="activate-swap-partition">Activate swap partition</h2>
 <p>On CentOS, I’ve generally had to explicitly activate any swap partitions, but Ubuntu automatically detects and mounts any swap partitions that it finds on the boot disk.</p>

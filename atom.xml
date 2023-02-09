@@ -4,7 +4,7 @@
   <title><![CDATA[Confessions of a Wall Street Programmer]]></title>
   <link href="http://btorpey.github.io/atom.xml" rel="self"/>
   <link href="http://btorpey.github.io/"/>
-  <updated>2021-03-19T13:21:09-04:00</updated>
+  <updated>2023-02-09T16:27:51-05:00</updated>
   <id>http://btorpey.github.io/</id>
   <author>
     <name><![CDATA[Bill Torpey]]></name>
@@ -12,6 +12,260 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Danger, Will Robinson!]]></title>
+    <link href="http://btorpey.github.io/blog/2023/02/09/danger/"/>
+    <updated>2023-02-09T00:00:00-05:00</updated>
+    <id>http://btorpey.github.io/blog/2023/02/09/danger</id>
+    <content type="html"><![CDATA[<p><img class="right" src="http://btorpey.github.io/images/robot1.jpg" width="183" height="200" /></p>
+
+<p>I’ve recently been dipping my toes in the very deep water that is “undefined behavior” in C and C++, and the more I learn about it, the scarier it is.  </p>
+
+<p>This was inspired by a rather tricky crash that I needed to track down as part of moving the code-base at my day job to more modern compilers and language standards.</p>
+
+<!-- more -->
+<p><br clear="all" /></p>
+
+<p>Compiler writers have been getting more agressive about taking advantage of optimization opportunities presented by undefined behavior.  And, while there has been some push-back to that, it doesn’t appear to have changed things much.</p>
+
+<p>“Why should I care?” you may ask yourself.  “My code compiles without any warnings, so I must not have any UB”.</p>
+
+<p>Unfortunately, it’s not that simple.  <em>Some</em> compilers warn about <em>some</em> UB, but it’s hit-or-miss.  Strictly speaking, the compiler is under no obligation to warn you about your use of UB – in fact, the compiler is under no obligation to do anything at all once your code is found to contain UB.</p>
+
+<p>And even if the compiler warns about some construct, it’s easy to ignore the warning, especially since any negative consequences won’t be apparent until running a release build.  Why is that?  It’s because the worst aspects of UB tend to get triggered in conjunction with code optimization. </p>
+
+<p>In my case, one of my former colleagues had an extreme case of “lazy programmer syndrome” combined with a dose of cleverness, which is a dangerous combination.  He needed to write code to generate C++ classes from a text definition, and one of the things the code needed to do was initialize the class members in the ctor.</p>
+
+<p>Rather than generate initializers for the primitive types (non-primitive types have their ctors called by the compiler), he decided to just nuke everything with a call to <code>memset</code> – after all, zeroes are zeroes, right?</p>
+
+<blockquote>
+  <p>If it doesn’t fit, force it.  If it still doesn’t fit, get a bigger hammer. </p>
+</blockquote>
+
+<p>Well, not quite – since the classes being generated were all <code>virtual</code>, the <code>memset</code> call was also nuking the vtable, causing the app to crash pretty much immediately on launch.  That might have deterred others, but not our intrepid coder, who figured out a really “clever” way to get around the problem, using a dummy ctor and placement <code>new</code>.  The code he ended up with looked more or less like this:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="k">class</span> <span class="nc">BadIdea</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">   <span class="n">BadIdea</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{}</span>
+</span><span class="line">   <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span><span class="p">;</span>
+</span><span class="line">   <span class="kt">int</span> <span class="n">key</span><span class="p">;</span>
+</span><span class="line">   <span class="kt">double</span> <span class="n">value</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">public</span><span class="o">:</span>
+</span><span class="line">   <span class="n">BadIdea</span><span class="p">();</span>
+</span><span class="line">   <span class="k">virtual</span> <span class="o">~</span><span class="n">BadIdea</span><span class="p">()</span> <span class="p">{}</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="n">BadIdea</span><span class="o">::</span><span class="n">BadIdea</span><span class="p">()</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">   <span class="n">memset</span><span class="p">((</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="k">this</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">));</span>
+</span><span class="line">   <span class="k">new</span> <span class="p">(</span><span class="k">this</span><span class="p">)</span>  <span class="n">BadIdea</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>And guess what – it worked!  </p>
+
+<p>OK, every ctor turned into <strong>two</strong> calls, which caused <strong>two</strong> calls to all the base class ctor’s (but only <strong>ONE</strong> call to any base class dtors on the way out – sure hope those ctors didn’t allocate memory).  But hey, the code is clever, so it must be efficient, right?  Anyway, it <em>worked</em>.</p>
+
+<p>Until it didn’t.  </p>
+
+<p>As part of bringing this codebase up to more modern standards, I started building it with different compilers, starting with the system compiler (gcc 4.8.5) on our production OS (CentOS 7), then on to gcc 5.3.0, and clang 10.  Everything fine – no worries.  </p>
+
+<p>Then a couple of things happened – another colleague started working with CentOS 8, whose system compiler is gcc 8.x, and I started using Ubuntu 20.04, where the system compiler is gcc 9.3.0.  All of a sudden, nothing worked, but only when built in release mode – in debug mode, everything was fine.  No warning messages from the compiler, either<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>.</p>
+
+<p>This was the first clue that UB might be the culprit, which was confirmed by running the code in the debugger and setting a breakpoint at the call to <code>memset</code>. </p>
+
+<blockquote>
+  <p>Gregory (Scotland Yard detective): “Is there any other point to which you would wish to draw my attention?”
+<br />
+Holmes: “To the curious incident of the dog in the night-time.”
+<br />
+Gregory: “The dog did nothing in the night-time.”
+<br />
+Holmes: “That was the curious incident.”</p>
+
+  <p>- “Silver Blaze”, Arthur Conan Doyle</p>
+</blockquote>
+
+<p>Of course, nothing happened.  The call to <code>memset</code> was gone – the compiler having determined that the code was UB, and simply refused to generate any machine code for it at all.  So, there was no place for the debugger to put the breakpoint.</p>
+
+<p>Disassembling the generated code provided additional proof that the compiler simply ignored what it rightly determined was an obviously foolish construct:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="n">BadIdea</span><span class="o">::</span> <span class="n">BadIdea</span><span class="p">()</span>
+</span><span class="line"><span class="o">=&gt;</span> <span class="mh">0x00007f61b180d010</span> <span class="o">&lt;+</span><span class="mi">0</span><span class="o">&gt;:</span>	<span class="n">push</span>   <span class="o">%</span><span class="n">rbp</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d011</span> <span class="o">&lt;+</span><span class="mi">1</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span><span class="o">%</span><span class="n">rbp</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d014</span> <span class="o">&lt;+</span><span class="mi">4</span><span class="o">&gt;:</span>	<span class="n">push</span>   <span class="o">%</span><span class="n">r15</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d016</span> <span class="o">&lt;+</span><span class="mi">6</span><span class="o">&gt;:</span>	<span class="n">push</span>   <span class="o">%</span><span class="n">r14</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d018</span> <span class="o">&lt;+</span><span class="mi">8</span><span class="o">&gt;:</span>	<span class="n">push</span>   <span class="o">%</span><span class="n">r13</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d01a</span> <span class="o">&lt;+</span><span class="mi">10</span><span class="o">&gt;:</span>	<span class="n">push</span>   <span class="o">%</span><span class="n">r12</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d01c</span> <span class="o">&lt;+</span><span class="mi">12</span><span class="o">&gt;:</span>	<span class="n">push</span>   <span class="o">%</span><span class="n">rbx</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d01d</span> <span class="o">&lt;+</span><span class="mi">13</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="o">%</span><span class="n">rdi</span><span class="p">,</span><span class="o">%</span><span class="n">rbx</span>
+</span><span class="line">   <span class="mh">0x00007f61b180d020</span> <span class="o">&lt;+</span><span class="mi">16</span><span class="o">&gt;:</span>	<span class="n">lea</span>    <span class="mh">0x28</span><span class="p">(</span><span class="o">%</span><span class="n">rbx</span><span class="p">),</span><span class="o">%</span><span class="n">r13</span>
+</span><span class="line">   <span class="p">...</span>
+</span><span class="line">	<span class="p">{</span>
+</span><span class="line">		<span class="n">memset</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">FixMessage</span><span class="p">));</span>
+</span><span class="line">		<span class="k">new</span> <span class="p">(</span><span class="k">this</span><span class="p">)</span> <span class="n">FixMessage</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class="line">	<span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h2 id="what-is-undefined-behavior">What is Undefined Behavior?</h2>
+
+<p>The definition of undefined bahvior (from the C++98 standard, ISO/IEC 14882) is:</p>
+
+<blockquote>
+  <p>behavior, such as might arise upon use of an erroneous program construct or
+erroneous data, for which this International Standard imposes no requirements.
+Undefined behavior may also be expected when this International Standard omits
+the description of any explicit definition of behavior. [Note: permissible undefined behavior ranges from ignoring the situation completely with unpredictable
+results, to behaving during translation or program execution in a documented
+manner characteristic of the environment (with or without the issuance of a
+diagnostic message), to terminating a translation or execution (with the
+issuance of a diagnostic message). Many erroneous program constructs do not
+engender undefined behavior; they are required to be diagnosed.</p>
+</blockquote>
+
+<p>That’s quite a mouthful, but unfortunately doesn’t say much other than “if the Standard doesn’t specify the behavior of a piece of code, then the behavior of that code is undefined”.</p>
+
+<p>Searching the standard for the word “undefined” yields 191 hits in 110 sections of the document. Some of these are not a whole lot more helpful:</p>
+
+<blockquote>
+  <p>If an argument to a function has an invalid value (such as a value outside the domain of the function, or a pointer invalid for its intended use), the behavior is undefined.</p>
+</blockquote>
+
+<p>I’m not aware of any definitive, comprehensive list of UB.  </p>
+
+<p>So, what are some useful definitions of UB?  Well, here’s a list from the <a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UBSAN home page</a>:</p>
+
+<ul>
+  <li>Array subscript out of bounds, where the bounds can be statically determined</li>
+  <li>Bitwise shifts that are out of bounds for their data type</li>
+  <li>Dereferencing misaligned or null pointers</li>
+  <li>Signed integer overflow</li>
+  <li>Conversion to, from, or between floating-point types which would overflow the destination</li>
+</ul>
+
+<p>Some instances of undefined behavior can be rather surprising – for instance, access to unaligned data (through a pointer), is strictly speaking undefined.  Never mind that the x86 processor is perfectly capable of accessing misaligned data, and in fact <a href="https://lemire.me/blog/2012/05/31/data-alignment-for-speed-myth-or-reality/">does so with little or no penalty</a> – according to the Standard it is still UB, and the compiler is free to do pretty much anything it wants with the code (including silently ignoring it).</p>
+
+<p>So, for instance, typical deserialization code like this won’t necessarily do what you think:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">;</span>
+</span><span class="line"><span class="p">...</span>
+</span><span class="line"><span class="kt">int</span> <span class="n">value</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span> <span class="n">buf</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h2 id="why-is-ub-bad">Why is UB bad?</h2>
+
+<p>Most people would consider it A Bad Thing if the compiler took the source code they wrote and just decided to generate machine code that had nothing to do with the source code.  But that is exactly what the Standard allows – at least according to compiler writers.  And compiler writers take advantage of that to implement optimizations that can completely change the meaning of the original source code – a good example can be found <a href="https://blog.llvm.org/2011/05/what-every-c-programmer-should-know_14.html">here</a>.</p>
+
+<p>There is starting to be some push-back on the “UB allows anything at all” approach, for instance <a href="https://www.yodaiken.com/2021/10/06/plos-2021-paper-how-iso-c-became-unusable-for-operating-system-development/">this paper</a> from one of the members of the ISO C Standard Committee.  But, for now at least, compiler writers apparently feel free to get creative in the presence of UB.</p>
+
+<p>Probably the worst thing about UB, though, is the part that I discuss at the beginning of this article – UB can harmlessly exist in code for years until “something” changes that triggers it.  That “something” could be something “big”, like a new compiler, but it could also be something “small”, like a minor change to the source code that just happens to trigger an optimization that the compiler wasn’t using previously.</p>
+
+<h2 id="what-to-do-about-ub">What to do about UB</h2>
+
+<p>Interestingly, searching online for the <code>class-memaccess</code> compiler warning (sometimes) associated with the <code>memset</code> call in the original example returns a bunch of results where project maintainers simple disabled the warning (<code>-Wno-class-memaccess</code>).</p>
+
+<p>This is probably not what you want.</p>
+
+<p>Ideally, you would eliminate all instances of potential UB from your code, since whether it “works” today is no guarantee that it will behave similarly in the future.  But first, you have to find them, and that’s the tricky bit.</p>
+
+<h2 id="detecting-undefined-behavior">Detecting Undefined Behavior</h2>
+
+<p>Detecting UB would seem to be a real <a href="https://en.wikipedia.org/wiki/Catch-22_(logic)">Catch-22</a>, since the compiler isn’t required to tell you about UB, but on the other hand is allowed to do whatever it wants with it.</p>
+
+<p>The other problem with detecting UB is that it is often, but not always, detectable only at runtime.</p>
+
+<p>The good news is that the clang folks have created a <a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">“sanitizer” expressly for UB</a>.  </p>
+
+<p>If you’ve used <a href="https://clang.llvm.org/docs/AddressSanitizer.html">AddressSanitizer</a> or any of clang’s other sanitizers, using UBSAN is basically straightforward.  A couple of points that may be helpful:</p>
+
+<ul>
+  <li>Typical instances of UB are only detectable at runtime, which means the code that triggers UB must be executed.  </li>
+  <li>Because compilers can (and do) optimize away UB-triggering code, it is best to compile with optimization disabled (<code>-O0</code>).  UBSAN can’t detect UB in code that doesn’t exist.</li>
+  <li>Some helper scripts for UBSAN, ASAN, etc. can be found <a href="https://github.com/nyfix/memleaktest/wiki">here</a>.  These are the scripts that I use to do my testing, and my employer has graciously agreed to release these as open source.   </li>
+</ul>
+
+<h2 id="more-about-undefined-behavior">More About Undefined Behavior</h2>
+
+<p>A lot of really smart people have been writing about UB for a while now – this article just scratches the surface of the topic:</p>
+
+<p><a href="https://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">“What Every C Programmer Should Know About Undefined Behavior”</a> , Chris Lattner</p>
+
+<p><a href="https://blog.regehr.org/archives/213">“A Guide to Undefined Behavior in C and C++”</a> , John Regehr</p>
+
+<p><a href="https://queue.acm.org/detail.cfm?id=3468263">“Schrödinger’s Code, Undefined behavior in theory and practice”</a> , Terence Kelly</p>
+
+<p><a href="https://devblogs.microsoft.com/oldnewthing/20140627-00/?p=633">“Undefined behavior can result in time travel”</a> , Raymond Chen</p>
+
+<p><a href="https://www.youtube.com/watch?v=yG1OZ69H_-o">“Garbage In, Garbage Out: Arguing about Undefined Behavior”</a> , Chandler Carruth</p>
+
+<p><a href="https://www.yodaiken.com/2021/10/06/plos-2021-paper-how-iso-c-became-unusable-for-operating-system-development/">“How ISO C became unusable for operating systems development”</a> , Victor Yodaiken</p>
+
+<h2 id="a-short-digression-on-disassembling-code">A short digression on disassembling code</h2>
+
+<p>There are several ways to get an assembler listing of C++ source code, with varying degrees of usefulness.</p>
+
+<ul>
+  <li>
+    <p>By far the best, in my opinion, is the listing produced by <code>gdb</code>, which is the example used above.  <code>gdb</code> does a great job of marrying up generated code with source file lines, which makes it much easier for people who are not expert in x86 machine code (me!) to see what is happening.  Just set a breakpoint at or near the code you want to see and enter
+ <code>disas /m</code>  </p>
+  </li>
+  <li>
+    <p>Next best is <code>objdump</code>, which does an OK job, but is not nearly as nice as <code>gdb</code>. Use it like so:
+  <code>objdump -drwCl -Mintel &lt;file&gt;</code></p>
+  </li>
+  <li>
+    <p>The least useful format is the intermediate assembler file produced as part of the compilation process.  With gcc, you can generate an assembler listing with the <code>-S -fverbose-asm</code> compiler flags.  (If you’re using <code>cmake</code>, specify <code>-save-temps</code> instead of <code>-S</code>).  This will create <code>.s</code> files with assembler listings alongside the <code>.o</code> files in your build directory.</p>
+  </li>
+</ul>
+
+<hr />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>It turns out that the cast to <code>void*</code> disables the warning message that the compiler would otherwise give on this code.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Moving from CentOS to Ubuntu]]></title>
@@ -1268,7 +1522,7 @@ Timestamp	Recv	Send
     </tr>
     <tr>
       <td><code>-a 1</code></td>
-      <td>Tells <code>join</code> that we want <strong>all</strong> the fields from file #1.</td>
+      <td>Tells <code>join</code> that we want <strong>all</strong> the lines from file #1 (regardless of whether they have a matching line in file #2).</td>
     </tr>
     <tr>
       <td><code>-a 2</code></td>
@@ -3999,537 +4253,6 @@ certain cases, e.g. for debugging code hosted in a JVM.</li>
     </li>
     <li id="fn:5">
       <p>Omitting the frame pointer makes another register (ebp) available to the compiler, but since there are already at least a dozen other registers for the compiler to use, this extra register is unlikely to be critical.  The compiler can also omit the code that saves and restores the register, but that’s a couple of instructions moving data between registers and L1 cache. <a href="#fnref:5" rel="reference">&#8617;</a></p>
-    </li>
-  </ol>
-</div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Measuring Latency in Linux]]></title>
-    <link href="http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux/"/>
-    <updated>2014-02-18T00:00:00-05:00</updated>
-    <id>http://btorpey.github.io/blog/2014/02/18/clock-sources-in-linux</id>
-    <content type="html"><![CDATA[<p><img class="left" src="http://btorpey.github.io/images/dali.png" /></p>
-
-<p>For measuring latency in modern systems, we need to be able to measure intervals
-in microseconds at least, and preferably in nanoseconds or better. The good news
-is that with relatively modern hardware and software, it is possible to
-accurately measure time intervals as small as (some smallish number of)
-nanoseconds. </p>
-
-<p>But, it’s important to understand what you’re measuring and what
-the different edge cases might be to ensure that your results are accurate.          </p>
-
-<!--more-->
-
-<h2 id="tldr">TL;DR</h2>
-
-<p>The short version is that for best results you should be using:</p>
-
-<ul>
-  <li>
-    <p>Linux kernel 2.6.18 or above – this is the first version that includes the
-hrtimers package. Even better is 2.6.32 or above, since this includes
-support for most of the different clock sources.</p>
-  </li>
-  <li>
-    <p>A CPU with a constant, invariant TSC (time-stamp counter). This means that
-the TSC runs at a constant rate across all sockets/cores, regardless of
-frequency changes made to the CPU by power management code. If the CPU
-supports the RDTSCP instruction, so much the better.</p>
-  </li>
-  <li>
-    <p>The TSC should be configured as the clock source for the Linux kernel at
-boot time.</p>
-  </li>
-  <li>
-    <p>You should be measuring the interval between two events that happen on the
-same machine (intra-machine timing).</p>
-  </li>
-  <li>
-    <p>For intra-machine timing, your best bet is generally going to be to read the
-TSC directly using assembler. On my test machine it takes about 100ns 
-to read the TSC from software, so that is the limit of this method’s accuracy. YMMV, of course, which is why I’ve included <a href="https://github.com/btorpey/clocks.git">source code</a> that you can use to do your own measurements.</p>
-    <ul>
-      <li>Note that the 100ns mentioned above is largely due to the fact that my Linux box
-doesn’t support the RDTSCP instruction, so to get reasonably accurate timings it’s also necessary
-to issue a CPUID instruction prior to RDTSC to serialize its execution. On another machine that supports
-the RDTSCP instruction (a recent MacBook Air), overhead is down around 14ns.  More on that 
-<a href="#rdtscp">later…</a></li>
-    </ul>
-  </li>
-</ul>
-
-<p>The following sections will talk about how clocks work on Linux, how to access
-the various clocks from software, and how to measure the overhead of accessing
-them.</p>
-
-<h3 id="intra-machine-vs-inter-machine-timings">Intra-machine vs. Inter-machine Timings</h3>
-
-<p>However, before jumping into the details of the above recommendations, I want to
-talk a little about the different problems in intra-machine vs. inter-machine
-time measurements. Intra-machine timing is the simplest scenario, since it is
-generally pretty easy to ensure that you use the same clock source for all your
-timing measurements.</p>
-
-<p>The problem with inter-machine timing is that, by definition, you’re dealing
-with (at least) two different clock sources. (Unless of course you are timing
-round-trip intervals – if that’s the case, you’re lucky). And the problem with
-having two clock sources is described somewhat amusingly by this old chestnut:</p>
-
-<blockquote>A man with a watch knows what time it is. A man with two watches is never sure.<footer><cite>Segal&#8217;s Law</cite></footer></blockquote>
-
-<p>For inter-machine timings, you’re pretty much stuck with the CLOCK_REALTIME
-clock source (the source for gettimeofday), since you presumably need a clock
-that is synchronized across the two (or more) machines you are testing. In this
-case, the accuracy of your timing measurements will obviously depend on how well
-the clock synchronization works, and in all but the best cases you’ll be
-lucky to get accuracy better than some small number of microseconds.<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
-
-<p>We’re not going to talk much more about inter-machine timing in this article,
-but may get into it another time.</p>
-
-<h2 id="how-linux-keeps-time">How Linux Keeps Time</h2>
-
-<p>With that out of the way, let’s take a look at how Linux keeps time. It starts
-when the system boots up, when Linux gets the current time from the RTC (Real
-Time Clock). This is a hardware clock that is powered by a battery so it
-continues to run even when the machine is powered off. In most cases it is not
-particularly accurate, since it is driven from a cheap crystal oscillator whose
-frequency can vary depending on temperature and other factors.<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup> The boot
-time retrieved from the RTC is stored in memory in the kernel, and is used as an
-offset later by code that derives wall-clock time from the combination of boot
-time and the tick count kept by the TSC.</p>
-
-<p>The other thing that happens when the system boots is that the TSC (Time Stamp
-Counter) starts running. The TSC is a register counter that is also driven from
-a crystal oscillator – the same oscillator that is used to generate the clock
-pulses that drive the CPU(s). As such it runs at the frequency of the CPU, so
-for instance a 2GHz clock will tick twice per nanosecond.</p>
-
-<p>There are a number of other clock sources which we’ll discuss later, but in most
-cases the TSC is the preferred clock source for two reasons: it is very
-accurate, and it is very cheap to query its value (since it is simply a
-register). But, there are a number of caveats to keep in mind when using the TSC
-as a timing source.</p>
-
-<ul>
-  <li>
-    <p>In older CPU’s, each core had its own TSC, so in order to be sure that two
-measurements were accurate relative to each other, it was necessary to pin
-the measuring code to a single core.</p>
-  </li>
-  <li>
-    <p>Also in older CPU’s, the TSC would run at the frequency of the CPU itself,
-and if that changed (for instance, if the frequency was dynamically reduced,
-or the CPU stopped completely for power management), the TSC on that CPU
-would also slow down or stop. (It is sometimes possible to work around this
-problem by disabling power management in the BIOS, so all CPU’s always run
-at 100%  no more, no less).</p>
-  </li>
-</ul>
-
-<p>Both of these problems are solved in more recent CPUs: a <em>constant</em> TSC keeps
-all TSC’s synchronized across all cores in a system, and an <em>invariant</em> (or
-<em>nonstop</em>) TSC keeps the TSC running at a fixed rate regardless of changes in
-CPU frequency. To check whether your CPU supports one or both, execute the
-following and examine the values output in flags:</p>
-
-<pre>
-$ cat /proc/cpuinfo | grep -i tsc
-flags : ... tsc  rdtscp constant_tsc nonstop_tsc ...
-</pre>
-
-<p>The flags have the following meanings:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Meaning</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>tsc</td>
-      <td>The system has a TSC clock.</td>
-    </tr>
-    <tr>
-      <td>rdtscp</td>
-      <td>The RDTSCP instruction is available.</td>
-    </tr>
-    <tr>
-      <td>constant_tsc</td>
-      <td>The TSC is synchronized across all sockets/cores.</td>
-    </tr>
-    <tr>
-      <td>nonstop_tsc</td>
-      <td>The TSC is not affected by power management code.</td>
-    </tr>
-  </tbody>
-</table>
-
-<p><br /></p>
-
-<h3 id="other-clock-sources">Other Clock Sources</h3>
-
-<p>While the TSC is generally the preferred clock source, given its accuracy and
-relatively low overhead, there are other clock sources that can be used:</p>
-
-<ul>
-  <li>
-    <p>The HPET (High Precision Event Timer) was introduced by Microsoft and Intel
-around 2005. Its precision is approximately 100 ns, so it is less accurate
-than the TSC, which can provide sub-nanosecond accuracy. It is also much
-more expensive to query the HPET than the TSC.</p>
-  </li>
-  <li>
-    <p>The acpi_pm clock source has the advantage that its frequency doesn’t change
-based on power-management code, but since it runs at 3.58MHz (one tick every
-279 ns), it is not nearly as accurate as the preceding timers.</p>
-  </li>
-  <li>
-    <p>jiffies signifies that the clock source is actually the same timer used for
-scheduling, and as such its resolution is typically quite poor. (The default
-scheduling interval in most Linux variants is either 1 ms or 10 ms).</p>
-  </li>
-</ul>
-
-<p>To see the clock sources that are available on the system:</p>
-
-<pre>
-$ cat /sys/devices/system/clocksource/clocksource0/available_clocksource
-tsc hpet acpi_pm
-</pre>
-
-<p>And to see which one is being used:</p>
-
-<pre>
-$ cat /sys/devices/system/clocksource/clocksource0/current_clocksource
-tsc
-</pre>
-
-<p>Typically the clock source is set by the kernel automatically at boot time, but
-you can force a particular clock source by including the appropriate
-parameter(s) on the command line that boots Linux (e.g., in
-/boot/grub/grub.conf):</p>
-
-<p><code>ro root=/dev/... clocksource=tsc</code></p>
-
-<p>You can also change the clock source while the system is running  e.g., to
-force use of HPET:</p>
-
-<pre>
-$ echo hpet &gt; /sys/devices/system/clocksource/clocksource0/current_clocksource
-</pre>
-
-<p>The above discusssion refers to what I will call hardware clocks, although
-strictly speaking these clocks are a mixture of hardware and software. At the
-bottom of it all there’s some kind of hardware device that generates periodic
-timing pulses, which are then counted to create the clock. In some cases (e.g.,
-the TSC) the counting is done in hardware, while in others (e.g., jiffies) the
-counting is done in software.</p>
-
-<h2 id="wall-clock-time">Wall-Clock Time</h2>
-
-<p>The hardware (or hardware/software hybrid) clocks just discussed all have one
-thing in common: they are simply counters, and as such have no direct
-relationship to what most of us think of as time, commonly referred to as
-wall-clock time.</p>
-
-<p>To derive wall-clock time from these counters requires some fairly intricate
-software, at least if the wall-clock time is to be reasonably accurate. What
-reasonably accurate means of course depends on how important it is (i.e., how
-much money is available) to make sure that wall-clock time is accurate. </p>
-
-<p>The whole process of synchronizing multiple distributed clocks is hellishly complicated, and we’re not going to go into it here. There are many different mechanisms for synchronizing distributed clocks, from the relatively simple (e.g., NTP<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>) to the not-quite-so-simple (e.g., PTP<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>), up to specialized proprietary solutions<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup>.</p>
-
-<p>The main point is that synchronizing a system’s wall-clock time with other
-systems requires a way to adjust the clock to keep it in sync with its peers.
-There are two ways this can be done:</p>
-
-<ul>
-  <li>
-    <p>Stepping is the process of making (one or more) discontinuous changes to
-the wall-clock component of the system time. This can cause big jumps in the
-wall-clock time, including backwards jumps, although the time adjustment
-software can often be configured to limit the size of a single change. A
-common example is a system that is configured to initialize its clock at
-boot time from an NTP server.</p>
-  </li>
-  <li>
-    <p>Slewing (sometimes called disciplining) involves actually changing the frequency (or frequency
-multiplier) of the oscillator used to drive a hardware counter like the TSC.
-This can cause the clock to run relatively faster or slower, but it cannot
-jump, and so cannot go backwards.</p>
-  </li>
-</ul>
-
-<h2 id="available-clock-sources">Available Clock Sources</h2>
-
-<p>The most common way to get time information in Linux is by calling the
-gettimeofday() system call, which returns the current wall-clock time with
-microsecond precision (although not necessarily microsecond accuracy). Since
-gettimeofday() calls clock_gettime(CLOCK_REALTIME, ), the following discussion
-applies to it as well.</p>
-
-<p>Linux also implements the POSIX clock_gettime() family of functions, which let
-you query different clock sources, including:</p>
-
-<table id="mytab">
-<tbody>
-<tr>
-  <td>CLOCK_REALTIME </td>
-  <td>Represents wall-clock time. Can be both stepped and slewed by time adjustment code (e.g., NTP, PTP).</td>
-</tr>
-<tr>
-  <td>CLOCK_REALTIME_COARSE </td>
-  <td>A lower-resolution version of CLOCK_REALTIME.</td>
-</tr>
-<tr>
-  <td>CLOCK_REALTIME_HR  </td>
-  <td>A higher-resolution version of CLOCK_REALTIME. 
-                        Only available with the real-time kernel.</td>
-</tr>
-<tr>
-  <td>CLOCK_MONOTONIC </td>
-  <td>Represents the interval from an abitrary time. 
-                        Can be slewed but not stepped by time adjustment code. 
-                        As such, it can only move forward, not backward.</td>
-</tr>
-<tr>
-  <td>CLOCK_MONOTONIC_COARSE </td>
-  <td>A lower-resolution version of CLOCK_MONOTONIC.</td>
-</tr>
-<tr>
-  <td>CLOCK_MONOTONIC_RAW </td>
-  <td>A version of CLOCK_MONOTONIC that can neither be slewed nor stepped by time adjustment code.</td>
-</tr>
-<tr>
-  <td>CLOCK_BOOTTIME</td>
-  <td>A version of CLOCK_MONOTONIC that additionally reflects time spent in suspend mode.  Only available in newer (2.6.39+) kernels.</td>
-</tr>
-</tbody>
-</table>
-<p><br /></p>
-
-<p>The availability of the various clocks, as well as their resolution and
-accuracy, depends on the hardware as well as the specific Linux implementation.
-As part of the <a href="https://github.com/btorpey/clocks.git">accompanying source code</a> for this article I’ve
-included a small test program (clocks.c) that when compiled<sup id="fnref:6"><a href="#fn:6" rel="footnote">6</a></sup> and run will
-print the relevant information about the clocks on a system. On my test
-machine<sup id="fnref:7"><a href="#fn:7" rel="footnote">7</a></sup> it shows the following:</p>
-
-<pre>
-clocks.c
-                    clock	       res (ns)	           secs	          nsecs
-             gettimeofday	          1,000	  1,391,886,268	    904,379,000
-           CLOCK_REALTIME	              1	  1,391,886,268	    904,393,224
-    CLOCK_REALTIME_COARSE	        999,848	  1,391,886,268	    903,142,905
-          CLOCK_MONOTONIC	              1	        136,612	    254,536,227
-      CLOCK_MONOTONIC_RAW	    870,001,632	        136,612	    381,306,122
-   CLOCK_MONOTONIC_COARSE	        999,848	        136,612	    253,271,977
-</pre>
-
-<p>Note that it’s important to pay attention to what clock_getres() returns – a particular clock source can (and does, as can be seen above with the COARSE clocks) sometimes return what may look like higher-precision values, but any digits beyond its actual precision are likely to be garbage.  (The exception is gettimeofday – since it returns a timeval, which is denominated in micros, the lower-order digits are all zeros).</p>
-
-<p>Also, the value returned from clock_getres() for CLOCK_MONOTONIC_RAW is clearly garbage, although I’ve seen similar results on several machines.</p>
-
-<p>Finally, note that the resolution listed for CLOCK_REALTIME is close to, but not
-quite, 1 million – this is an artifact of the fact that the oscillator cannot
-generate a frequency of exactly 1000 Hz – it’s actually 1000.15 Hz.</p>
-
-<h2 id="getting-clock-values-in-software">Getting Clock Values in Software</h2>
-
-<p>Next up is a brief discussion of how to read these different clock values from
-software.</p>
-
-<p><a name="rdtscp"></a></p>
-
-<h3 id="assembler">Assembler</h3>
-
-<p>In assembler language, the RDTSC instruction returns the value of the TSC
-directly in registers edx:eax. However, since modern CPU’s support out-of-order
-execution, it has been common practice to insert a serializing instruction (such
-as CPUID) prior to the RDTSC instruction in order to ensure that the execution
-of RDTSC is not reordered by the processor.</p>
-
-<p>More recent CPU’s include the RDTSCP instruction, which does any necessary
-serialization itself. This avoids the overhead of the CPUID instruction, which
-can be considerable (and variable). If your CPU supports RDTSCP, use that instead of the
-CPUID/RDTSC combination.</p>
-
-<h3 id="cc">C/C++</h3>
-
-<p>Obviously, the RDTSC instruction can be called directly from C or C++, using
-whatever mechanism your compiler provides for accessing assembler language, or
-by calling an assembler stub that is linked with the C/C++ program. (An example
-can be found at <a href="http://agner.org/optimize/#asmlib">Agner Fog’s excellent website</a>).</p>
-
-<p>Calling gettimeofday() or clock_gettime() is pretty straightforward – see the
-accompanying <a href="https://github.com/btorpey/clocks/blob/master/clocks.c">clocks.c source file</a> for examples.</p>
-
-<h3 id="java">Java</h3>
-
-<p>Java has only two methods that are relevant to this discussion:</p>
-
-<ul>
-  <li>
-    <p>System.currentTimeMillis() returns the current wall-clock time as the number
-of milliseconds since the epoch. It calls gettimeofday(), which in turn
-calls clock_gettime(CLOCK_REALTIME, …).</p>
-  </li>
-  <li>
-    <p>System.nanoTime returns the number of nanoseconds since some unspecified
-starting point. Depending on the capabilities of the system, it either calls
-gettimeofday(), or clock_gettime(CLOCK_MONOTONIC, ).</p>
-  </li>
-</ul>
-
-<p>The bad news is that if you need clock values other than the above in Java,
-you’re going to need to roll your own, e.g. by calling into C via JNI. The good
-news is that doing so is not much more expensive than calling nanoTime (at least in my tests).</p>
-
-<h3 id="overhead-of-clock-queries">Overhead of Clock Queries</h3>
-
-<p>The Heisenberg Uncertainty Principle says, in a nutshell, that the act of
-observing a phenomenom changes it. A similar issue exists with getting
-timestamps for latency measurement, since it takes a finite (and sometimes
-variable) amount of time to read any clock source.  In other words, just because the TSC on a 2GHz machine ticks twice per nanosecond doesn’t mean we can measure intervals of a nanosecond – we also need to account for the time it takes to read the TSC from software.</p>
-
-<p>So, how expensive is it to perform these different clock queries? Included is some <a href="https://github.com/btorpey/clocks.git">sample code</a> that you can
-use to measure the time it takes to query various clock sources, from both C++
-and Java (using JNI to call C code).</p>
-
-<p>Both the C++ and Java versions take the same approach: call the particular clock
-function in a tight loop, and store the result. We do this a large number of
-times, and hang on to the results from the final iteration. This has the effect
-of allowing Java to do any jitting it needs to, and for both the C++ and Java
-versions to help ensure that code and data is in the processor’s cache memory.</p>
-
-<p>The results of running the test on my test machine are (all timings are in nanoseconds):</p>
-
-<pre>
-ClockBench.cpp
-                   Method       samples     min     max     avg  median   stdev
-           CLOCK_REALTIME       255       54.00   58.00   55.65   56.00    1.55
-    CLOCK_REALTIME_COARSE       255        0.00    0.00    0.00    0.00    0.00
-          CLOCK_MONOTONIC       255       54.00   58.00   56.20   56.00    1.46
-      CLOCK_MONOTONIC_RAW       255      650.00 1029.00  690.35  839.50   47.34
-   CLOCK_MONOTONIC_COARSE       255        0.00    0.00    0.00    0.00    0.00
-              cpuid+rdtsc       255       93.00   94.00   93.23   93.50    0.42
-                    rdtsc       255       24.00   28.00   25.19   26.00    1.50
-Using CPU frequency = 2.660000
-
-ClockBench.java
-                   Method       samples     min     max     avg  median   stdev
-          System.nanoTime       255       54.00   60.00   55.31   57.00    1.55
-           CLOCK_REALTIME       255       60.00   84.00   62.50   72.00    1.92
-              cpuid+rdtsc       255      108.00  112.00  109.03  110.00    1.39
-                    rdtsc       255       39.00   43.00   39.85   41.00    1.37
-Using CPU frequency = 2.660000
-</pre>
-
-<p>A few things to note about these results:</p>
-
-<ul>
-  <li>
-    <p>Both of the COARSE clocks show a latency of zero for getting the clock
-value. This tells us that the time it takes to
-get the clock value is less than the resolution of the clock. (Our previous
-test showed a resolution of 1ms for the COARSE clocks).</p>
-  </li>
-  <li>
-    <p>For some reason, the CLOCK_MONOTONIC_RAW clock is very expensive to query. I
-can’t explain this –  you would think that its lack of adjustment would make
-it faster, not slower. This is unfortunate, as otherwise it would be an
-excellent choice for intra-machine timing.</p>
-  </li>
-  <li>
-    <p>As you might expect, the combination of CPUID and RDTSC is slower than
-RDTSCP, which is slower than RDTSC alone. In general, this would
-suggest that RDTSCP should be preferred if available, with a fallback to
-CPUID+RDTSC if not. (While RDTSC alone is the fastest, the fact that it can
-be inaccurate as a result of out-of-order execution means it is only useful
-for timing relatively long operations where that inaccuracy is not
-significant – but those are precisely the scenarios where its speed is less
-important).</p>
-  </li>
-  <li>
-    <p>Also as expected, the Java versions are slightly slower than the C++
-versions, presumably due to the overhead of going through JNI.</p>
-  </li>
-</ul>
-
-<h3 id="update">Update</h3>
-<p>Well, I admit that Java is not my strong suit, but I nevertheless understand the implications
-of “warm-up” and JIT-ing when benchmarking Java code.  My understanding (and the docs seem to agree)
-is that Java methods get JIT-ed after approx. 10,000 invocations.  I also thought (and still do) that 
-100 iterations of 200 invocations would be more than 10,000.  Whatever – I adjusted the number of iterations
-for the Java benchmark, and that made a big difference – especially in the timings for System.nanotime, which now
-agree much more closely with other published benchmarks, specifically the results published in 
-<a href="http://shipilev.net/blog/2014/nanotrusting-nanotime/">“Nanotrusting the Nanotime”</a>.  Thanks, Aleksey!</p>
-
-<h3 id="update-2">Update #2</h3>
-<p>Slyain Archenault pointed out that the omission of unistd.h in SysTime.c caused it to (silently) fall back
-to using gettimeofday.  I’ve updated the code to include the proper header, and also to issue a warning 
-if _POSIX_TIMERS remains undefined.   Thanks, Sylvain!</p>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>I thought this would be a very brief and somewhat trivial research project. In
-fact, it turned out to be far more complicated (and less well-documented) than I
-expected. I guess I should have known: everything related to time and computers
-turns out to be a major pain in the neck!</p>
-
-<p>Anyway, I hope this proves helpful. (I know I would have been very happy to have
-had this when I started looking into clock sources).  </p>
-
-<p>As always, please feel free to <a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#119;&#097;&#108;&#108;&#115;&#116;&#112;&#114;&#111;&#103;&#064;&#103;&#109;&#097;&#105;&#108;&#046;&#099;&#111;&#109;">contact me</a>
-directly with comments, suggestions, corrections, etc.</p>
-
-<h2 id="additional-resources">Additional Resources</h2>
-
-<p>Following are the main anchor points that I kept coming back to you as I
-researched this article.</p>
-
-<p><a href="http://elinux.org/Kernel_Timer_Systems">http://elinux.org/Kernel_Timer_Systems</a></p>
-
-<p><a href="http://elinux.org/High_Resolution_Timers">http://elinux.org/High_Resolution_Timers</a></p>
-
-<p><a href="http://juliusdavies.ca/posix_clocks/clock_realtime_linux_faq.html">http://juliusdavies.ca/posix_clocks/clock_realtime_linux_faq.html</a></p>
-
-<p><a href="http://en.wikipedia.org/wiki/Time_Stamp_Counter">http://en.wikipedia.org/wiki/Time_Stamp_Counter</a></p>
-
-<p><a href="http://stackoverflow.com/questions/10921210/cpu-tsc-fetch-operation-especially-in-multicore-multi-processor-environment">http://stackoverflow.com/questions/10921210/cpu-tsc-fetch-operation-especially-in-multicore-multi-processor-environment</a></p>
-
-<p><a href="http://www.citihub.com/requesting-timestamp-in-applications/">http://www.citihub.com/requesting-timestamp-in-applications/</a></p>
-
-<p><a href="http://www.intel.com/content/www/us/en/intelligent-systems/embedded-systems-training/ia-32-ia-64-benchmark-code-execution-paper.html">http://www.intel.com/content/www/us/en/intelligent-systems/embedded-systems-training/ia-32-ia-64-benchmark-code-execution-paper.html</a></p>
-
-<div class="footnotes">
-  <ol>
-    <li id="fn:1">
-      <p>The best case being hardware on each machine with a CSAC (chip-scale atomic clock) or OCXO (oven-controlled crystal oscillator). These can be a bit pricey, however.<a href="#fnref:1" rel="reference">&#8617;</a></p>
-    </li>
-    <li id="fn:2">
-      <p>The accuracy of a typical RTC in a PC-type computer is rated at +/- 20ppm, so it can gain or lose 20 us each second. This turns out to be approximately one minute per month, which may be OK for a cheap digital watch, but for a computer is not too good. For more information, see <a href="http://www.maximintegrated.com/app-notes/index.mvp/id/58">http://www.maximintegrated.com/app-notes/index.mvp/id/58</a>.<a href="#fnref:2" rel="reference">&#8617;</a></p>
-    </li>
-    <li id="fn:3">
-      <p>Network Time Protocol, RFC 1305 (<a href="https://tools.ietf.org/html/rfc1305">https://tools.ietf.org/html/rfc1305</a>)<a href="#fnref:3" rel="reference">&#8617;</a></p>
-    </li>
-    <li id="fn:4">
-      <p>Precision Time Protocol, IEEE 1588 (<a href="http://www.nist.gov/el/isd/ieee/ieee1588.cfm">http://www.nist.gov/el/isd/ieee/ieee1588.cfm</a>)<a href="#fnref:4" rel="reference">&#8617;</a></p>
-    </li>
-    <li id="fn:5">
-      <p>From companies like Symmetricon, Corvil, TS Associates and others.<a href="#fnref:5" rel="reference">&#8617;</a></p>
-    </li>
-    <li id="fn:6">
-      <p>Note that the program must be compiled, as well as run, on the target system – it uses the presence or absence of pre-processor symbols to determine whether a particular clock source is available.<a href="#fnref:6" rel="reference">&#8617;</a></p>
-    </li>
-    <li id="fn:7">
-      <p>CentOS 6.5 running on a Dell 490 with dual Xeon 5150’s at 2.6 GHz.<a href="#fnref:7" rel="reference">&#8617;</a></p>
     </li>
   </ol>
 </div>

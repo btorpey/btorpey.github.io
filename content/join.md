@@ -96,7 +96,7 @@ A brief run-down of the parameters is probably in order:
 |----------|------------
 | `-t $'\t'` | The `-t` parameter tells `join` what to use as the separator between fields.  The tab character is the best choice, as most Unix utilities assume that by default, and both Excel and Numbers can work with tab-delimited files.<br>The leading dollar-sign is a [trick](https://unix.stackexchange.com/a/46931/198530) used to to pass a literal tab character on the command line  .
 | `-o 0,1.2,2.2` | Specifies which fields to output.  In this case, we want the "join field" (in this case, the first field from both files), then the second field from file #1, then the second field from file #2.
-| `-a 1` | Tells `join` that we want **all** the fields from file #1.
+| `-a 1` | Tells `join` that we want **all** the lines from file #1 (regardless of whether they have a matching line in file #2).
 | `-a 2` | Ditto for file #2.
 
 <br>
